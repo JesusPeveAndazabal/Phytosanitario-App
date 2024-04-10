@@ -6,14 +6,15 @@ import { SocketData, WorkExecutionConfiguration } from './../core/models/models'
 import { Sensor, SocketEvent, WorkDataChange, WorkStatusChange, config} from './../core/utils/global';
 import { Person } from './../core/models/person';
 import { environment } from './../../environments/environment';
-import { Component, OnInit, ViewChild,AfterViewInit } from '@angular/core';
+import { Component, OnInit, ViewChild,AfterViewInit , ElementRef} from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 import * as moment from 'moment';
-import { AlertController, IonLoading,AlertInput } from '@ionic/angular';
+import { AlertController, IonLoading,AlertInput , ModalController } from '@ionic/angular';
 import Swal from 'sweetalert2';
 import { SettingsComponent } from './settings/settings.component';
 import { ArduinoService } from '../core/services/arduino/arduino.service';
 import { LocalConf } from '../core/models/local_conf';
+
 
 
 
@@ -41,6 +42,8 @@ export class MainComponent implements OnInit,AfterViewInit{
   enModoProductivo: boolean = false;
   velocidadCronometro: number = 1;
 
+  volume: number;
+
   workStatus : WorkStatusChange = WorkStatusChange.STOP;
   classButtonPower = "power-button-off";
   classButtonGps = "classButtonGps";
@@ -56,8 +59,8 @@ export class MainComponent implements OnInit,AfterViewInit{
       name : 'txt_vol',
       min: 1,
       attributes : {
-        required: true
-      }
+        required: true,
+      },
     },
   ];
 
@@ -66,6 +69,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     private alertController : AlertController,
     private route : ActivatedRoute,
     public alerta: SettingsComponent,
+    private modalController: ModalController,
     public arduinoService : ArduinoService
     ) {
       // console.log(this.login, "main.component... constructor");
@@ -293,6 +297,25 @@ export class MainComponent implements OnInit,AfterViewInit{
         res.present();
       });
     }
+  }
+
+  async openVolumeModal() {
+    const modal = await this.modalController.create({
+      component: 'volume-modal' // Identificador del modal
+    });
+    await modal.present();
+  }
+
+  async closeVolumeModal() {
+    await this.modalController.dismiss();
+  }
+
+  async submitVolume() {
+    // Aquí manejas el volumen ingresado, por ejemplo, puedes guardar los datos o realizar alguna acción con él
+    console.log('Volumen ingresado:', this.volume);
+
+    // Cierra el modal después de manejar los datos
+    await this.modalController.dismiss();
   }
 
   async onEndListenPower($event: any){

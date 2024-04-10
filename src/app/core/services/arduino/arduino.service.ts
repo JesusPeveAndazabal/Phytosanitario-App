@@ -40,6 +40,7 @@ export class ArduinoService {
   currentTime: number = 0;
 
   now = moment();
+  reealNow = moment();
 
   detail_number = 0;
   DEBUG = true;
@@ -127,7 +128,7 @@ export class ArduinoService {
     let instance = this;
 
     setInterval(async () => {
-      await this.checkInternetConnection();
+      //await this.checkInternetConnection();
       let onExecution = false;
     
       // Agregar sensores para futuros cambios
@@ -150,7 +151,7 @@ export class ArduinoService {
         arduino.message_from_device = new Map<Sensor, number | number[]>();
       });
       
-      this.hasGPSData = await this.data[Sensor.GPS] !== undefined && await instance.data[Sensor.GPS] !== null && await instance.data[Sensor.GPS] != this.gpsVar;
+      this.hasGPSData = this.data[Sensor.GPS] !== undefined && instance.data[Sensor.GPS] !== null && instance.data[Sensor.GPS] != this.gpsVar;
       if (instance.hasGPSData) {
         instance.dataGps = true;
         //console.log("Si hay datos del gps.");
@@ -160,7 +161,7 @@ export class ArduinoService {
         // Aquí puedes agregar cualquier lógica de alerta que necesites
       }
 
-      this.gpsVar = await instance.data[Sensor.GPS];
+      this.gpsVar = instance.data[Sensor.GPS];
 
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
@@ -171,23 +172,23 @@ export class ArduinoService {
         if (!onExecution) {
           onExecution = true;
     
-          if (await instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
-            instance.tiempocondicion = 1;
+          if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
+            instance.tiempocondicion = 990;
             //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
-            await instance.data[Sensor.DISTANCE_NEXT_SECTION] == await instance.data[Sensor.SPEED] / 3.6;
+            instance.data[Sensor.DISTANCE_NEXT_SECTION] == await instance.data[Sensor.SPEED] / 3.6;
           }else {
-            instance.tiempocondicion = 4;
+            instance.tiempocondicion = 3990;
           }
-    
+          instance.reealNow =  moment();
           const iteration = async () => {
             let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
     
             if (currentWork) {
-              if (await instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
+              if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
-                instance.accumulated_volume += await instance.data[`${Sensor.VOLUME}`];
-                instance.accumulated_distance += await instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
+                instance.accumulated_volume += instance.data[`${Sensor.VOLUME}`];
+                instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
 
               } else {
                 instance.tiempoImproductivo.start();
@@ -201,7 +202,7 @@ export class ArduinoService {
             }
     
             if (currentWork && instance.isRunning) {
-              let gps = await instance.data[Sensor.GPS];
+              let gps = instance.data[Sensor.GPS];
 
               // Evaluar los eventos
               let events: string[] = [];
@@ -209,53 +210,54 @@ export class ArduinoService {
     
               //console.log("Trabajo" , currentWork);
 
-              instance.caudalNominal = await JSON.parse(currentWork.configuration).water_flow;
-              instance.info = await JSON.parse(currentWork.configuration).pressure;
-              instance.speedalert = await JSON.parse(currentWork.configuration).speed;
+              instance.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
+              instance.info = JSON.parse(currentWork.configuration).pressure;
+              instance.speedalert = JSON.parse(currentWork.configuration).speed;
 
               instance.precision = {
-                ...await instance.precision,
-                [Sensor.WATER_FLOW] : Math.round(100 - ((Math.abs(await instance.data[`${Sensor.WATER_FLOW}`] - instance.caudalNominal)/instance.caudalNominal) * 100)),
-                [Sensor.PRESSURE] : Math.round(100 - ((Math.abs(await instance.data[`${Sensor.PRESSURE}`] - instance.info) / instance.info) * 100)),
-                [Sensor.SPEED] : Math.round(100  - ((Math.abs(await instance.data[`${Sensor.SPEED}`] - instance.speedalert) / instance.speedalert) * 100)),
+                ...instance.precision,
+                [Sensor.WATER_FLOW] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.WATER_FLOW}`] - instance.caudalNominal)/instance.caudalNominal) * 100)),
+                [Sensor.PRESSURE] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.PRESSURE}`] - instance.info) / instance.info) * 100)),
+                [Sensor.SPEED] : Math.round(100  - ((Math.abs(instance.data[`${Sensor.SPEED}`] - instance.speedalert) / instance.speedalert) * 100)),
               }
 
-              if (await instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.5 || await instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5) {
+              if (instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.5 || instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5) {
                 has_events = true;
                 events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
               }
     
-              if (await instance.data[Sensor.PRESSURE] < instance.info * 0.5 || await instance.data[Sensor.PRESSURE] > instance.info * 1.5) {
+              if (instance.data[Sensor.PRESSURE] < instance.info * 0.5 || instance.data[Sensor.PRESSURE] > instance.info * 1.5) {
                 has_events = true;
                 events.push("LA PRESIÓN ESTA FUERA DEL RANGO ESTABLECIDO");
               }
     
-              if (await instance.data[Sensor.SPEED] < instance.speedalert * 0.5 || await instance.data[Sensor.SPEED] > instance.speedalert * 1.5 || await instance.data[Sensor.SPEED] < instance.speedalert * 0.5 || await instance.data[Sensor.SPEED] > instance.speedalert * 1.5) {
+              if (instance.data[Sensor.SPEED] < instance.speedalert * 0.5 || instance.data[Sensor.SPEED] > instance.speedalert * 1.5 || instance.data[Sensor.SPEED] < instance.speedalert * 0.5 || await instance.data[Sensor.SPEED] > instance.speedalert * 1.5) {
                 has_events = true;
                 events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
               }
 
-              if(await instance.data[Sensor.PRESSURE] < instance.info || await instance.data[Sensor.PRESSURE] > instance.info * 1.5 || await instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.5 || await instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5){
+              if(instance.data[Sensor.PRESSURE] < instance.info || instance.data[Sensor.PRESSURE] > instance.info * 1.5 || await instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.5 || await instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5){
                 has_events = true;
                 events.push("CAUDAL , PRESIÓN Y VELOCIDAD FUERA DE RANGO");
               }
     
-              if (!has_events) {
-                events.push("NO HAY EVENTOS REGISTRADOS");
-              }
-    
+              // if (!has_events) {
+              //   events.push("NO HAY EVENTOS REGISTRADOS");
+              // }
+              
+              
               let wExecutionDetail: WorkExecutionDetail = {
                 id_work_execution: currentWork.id,
-                time: moment(),
+                time: instance.reealNow,
                 sended: false,
-                data: JSON.stringify(await instance.data),
-                precision: JSON.stringify(await instance.precision),
-                gps: JSON.stringify(await gps),
+                data: JSON.stringify(instance.data),
+                precision: JSON.stringify(instance.precision),
+                gps: JSON.stringify(gps),
                 has_events: has_events,
                 events: events.join(", "),
                 id: 0,
               };
-              //console.log("data" , JSON.stringify(this.data));
+              console.log("wExecutionDetail : " , JSON.stringify(wExecutionDetail));
               //console.log("precision" , JSON.stringify(this.precision));
               //Guardar solo cuando haya datos del gps
 
@@ -269,16 +271,15 @@ export class ArduinoService {
     
             onExecution = false;
           }
-          let currentTime = moment();
-          console.log("Current time: " + currentTime);
-          if (currentTime.diff(instance.now, 'seconds') >= instance.tiempocondicion) {
-            instance.now = currentTime;
+          //let currentTime = moment();
+          console.log("Current time: " + instance.reealNow.format("YYYY-MM-DD H:mm:ss.SSS"));
+          if (instance.reealNow.diff(instance.now, 'milliseconds') >= instance.tiempocondicion) {
+            instance.now = instance.reealNow;
             await iteration();
-            console.log("now" , instance.now);
           }
         }
       
-    }, 220);
+    }, 200);
     
   }
 
@@ -463,13 +464,13 @@ export class ArduinoService {
         if (sensorType === Sensor.VOLUME  && tiempoActual - this.ultimoTiempoNotificacion >= 1000 ) {
             this.ultimoTiempoNotificacion = tiempoActual;
             let volumenInicial = this.initialVolume;
-            console.log("Volumen inicial" , volumenInicial);
+            //console.log("Volumen inicial" , volumenInicial);
             // Resta la diferencia del valor anteriormente descontado
             let valor = value as number;
             this.volumenAcumul = valor + this.volumenAcumul;
-            console.log("Volumen acumul" , this.volumenAcumul);
+            //console.log("Volumen acumul" , this.volumenAcumul);
             this.currentRealVolume = volumenInicial - this.volumenAcumul;
-            console.log("Current Volumen" , this.currentRealVolume);
+            //console.log("Current Volumen" , this.currentRealVolume);
         }
     }
   }

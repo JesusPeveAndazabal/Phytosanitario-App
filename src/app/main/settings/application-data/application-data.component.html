@@ -44,10 +44,10 @@
     <span class="error-message" *ngIf="isSubmitted && formData.controls['product'].errors?['required'] : null">
       Debe elegir el producto de la aplicación.
     </span>
-    <ion-item>
-      <label for="">Hectareas</label>
-      <input appKeyboard formControlName="hectare" class="form-control" aria-label="Hectáreas" type="number" placeholder="0" class="right-value-text"/>
-    </ion-item>
+    <div style="display: flex; align-items: center;">
+      <label for="hectare" style="margin-left: 3%;">Hectareas</label>
+      <input appKeyboard style="margin-left: 69%;" formControlName="hectare" id="hectare" class="form-control" type="number" placeholder="0">
+    </div>
     <span class="error-message" *ngIf="isSubmitted && formData.controls['hectare'].errors?['required'] : null">
       Debe digitar las hectáreas.
     </span>

@@ -38,28 +38,32 @@
               <span class="pi pi-power-off"></span>
             </ion-fab-button>
 
-                        <!-- Teclado numérico -->
-<!--             <div class="numeric-keyboard" id="numeric-keyboard">
-              <button (click)="appendToInput(1)">1</button>
-              <button (click)="appendToInput(2)">2</button>
-              <button (click)="appendToInput(3)">3</button>
-              <button (click)="appendToInput(4)">4</button>
-              <button (click)="appendToInput(5)">5</button>
-              <button (click)="appendToInput(6)">6</button>
-              <button (click)="appendToInput(7)">7</button>
-              <button (click)="appendToInput(8)">8</button>
-              <button (click)="appendToInput(9)">9</button>
-              <button class="delete-button" (click)="deleteLastCharacter()">Delete</button>
-              <button (click)="appendToInput(0)">0</button>
-              <button (click)="confirmInput()">Confirm</button>
-            </div>
- -->
-
             <ion-fab-button id="internet-conection" shape="round" size="small" 
             class="m-0" [ngClass]="{'internet-button-on': arduinoService.conectInternet, 'internet-button-off': !arduinoService.conectInternet}">
             <i class="bi bi-wifi" style="font-size:151%;"></i>
             </ion-fab-button>
-
+           
+            <ion-modal id="volume-modal">
+              <ion-header>
+                <ion-toolbar>
+                  <ion-title>Ingresar Volumen</ion-title>
+                  <ion-buttons slot="end">
+                    <ion-button (click)="closeVolumeModal()">
+                      <ion-icon slot="icon-only" name="close"></ion-icon>
+                    </ion-button>
+                  </ion-buttons>
+                </ion-toolbar>
+              </ion-header>
+              <ion-content>
+                <!-- Contenido del modal para ingresar el volumen -->
+                <ion-item>
+                  <ion-label position="floating">Volumen</ion-label>
+                  <ion-input type="number" [(ngModel)]="volume"></ion-input>
+                </ion-item>
+                <ion-button expand="block" (click)="submitVolume()">Guardar</ion-button>
+              </ion-content>
+            </ion-modal>
+            
 
             <ion-fab-button id="person-button" shape="round" size="small" class="m-0">
               <span class="pi pi-user"></span>

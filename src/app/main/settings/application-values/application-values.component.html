@@ -50,17 +50,12 @@
             </div>
             <div class="flex-auto">
               <label class="mb-1 block font-bold" for="horizontal">Ancho (m)</label>
-              <p-inputNumber appKeyboard
+              <input appKeyboard type="number" formControlName="width" placeholder="Ingrese el ancho" class="form-control" style="min-height: 45px;">
+<!--               <p-inputNumber appKeyboard
                 formControlName="width" [showButtons]="true" buttonLayout="horizontal" inputId="horizontal" spinnerMode="horizontal" [step]="0.1"
                 decrementButtonClass="p-button-danger" incrementButtonClass="p-button-success" [min]="0" locale="es-PE" [minFractionDigits]="2"
                 incrementButtonIcon="pi pi-plus" decrementButtonIcon="pi pi-minus" [inputStyle]="{'width': 'calc(100% - 6rem)'}">
-              </p-inputNumber>
-              <small  *ngIf="isSubmitted && handleError('width','required')" class="p-error">
-                Este campo es requerido
-              </small>
-              <small  *ngIf="isSubmitted && handleError('width','min')" class="p-error">
-                El valor no es válido
-              </small>
+              </p-inputNumber> -->
             </div>
             <div class="flex-auto">
               <label class="mb-1 block font-bold">Velocidad (Km/h)</label>
