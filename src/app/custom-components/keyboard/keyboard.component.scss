@@ -1,0 +1,21 @@
+.simple-keyboard {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 999999999999999;
+  }
+
+// .simple-keyboard {
+//   position: fixed;
+//   background-color: black;
+//   border-radius: 4px;
+//   color: #ffffff;
+//   font-family: Arial;
+//   padding: 3px 6px;
+//   font-size: 13px;
+//   margin-top: 5px;
+//   transform:translateX(-50%);
+//   width: 100%;
+// }
