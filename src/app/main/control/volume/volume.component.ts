@@ -87,19 +87,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
       //console.log("Valor de la distancia" , this.distance.toFixed(2));
     });
 
-    this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_DISTANCE).subscribe((value: number) => {
-      let ancho = JSON.parse(this.wExecution.configuration).width;
-      //console.log("valor metros", value);
-      this.valueCalculo = value;
-      this.distanceCalculo = (value * ancho)/10000;
-      this.distanceCalculo = parseFloat(this.distanceCalculo.toFixed(4));
-
-      //alert("Se deben apagar las electrovalvulas");
-    
-      //console.log("Valor de la distancia" , this.distance.toFixed(2));
-    });
-
-
     // Suponiendo que tienes una variable volumenInicial definida en tu clase
 
   interval(1000).pipe(
@@ -110,7 +97,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
     // Actualiza el volumen actual en tu clase
     this.volume = this.arduinoService.currentRealVolume;
     this.volume = parseFloat(this.volume.toFixed(2));
-    
     
     //console.log("THIS.VOLUME", this.volume);
 

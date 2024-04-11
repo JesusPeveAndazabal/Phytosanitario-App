@@ -66,7 +66,7 @@ export class ArduinoService {
   precision : any = {};
 
   volumenDescontado = 0;
-  volumenInicial = 100;
+  //volumenInicial = 0;
 
   /* vARIABLES PARA LOS EVENTOS */
   caudalNominal: number = 0;
@@ -127,6 +127,8 @@ export class ArduinoService {
     //Iteracion para recorre los valores de los sensores y guardarlos localmente
     let instance = this;
 
+      // Declarar una variable para almacenar el volumen anterior
+    let volumenAnterior = 0;
     setInterval(async () => {
       //await this.checkInternetConnection();
       let onExecution = false;
@@ -140,7 +142,7 @@ export class ArduinoService {
         [Sensor.HUMIDITY]: 0,
         [Sensor.VOLUME_CONTAINER]: 0,
         [Sensor.DISTANCE_NEXT_SECTION]: 0,
-        [Sensor.ACCUMULATED_VOLUME] : parseFloat(instance.accumulated_volume.toFixed(2)),
+        [Sensor.ACCUMULATED_VOLUME] : 0,
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
       }
       
@@ -163,6 +165,8 @@ export class ArduinoService {
 
       this.gpsVar = instance.data[Sensor.GPS];
 
+      instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME];
+
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
           let sensor = parseInt(value[0]) as Sensor;
@@ -174,8 +178,10 @@ export class ArduinoService {
     
           if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
             instance.tiempocondicion = 990;
+            
             //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
-            instance.data[Sensor.DISTANCE_NEXT_SECTION] == await instance.data[Sensor.SPEED] / 3.6;
+            instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
+                
           }else {
             instance.tiempocondicion = 3990;
           }
@@ -187,10 +193,13 @@ export class ArduinoService {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
-                instance.accumulated_volume += instance.data[`${Sensor.VOLUME}`];
+  
                 instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
-
+                instance.data[Sensor.VOLUME] = Math.round((instance.data[Sensor.ACCUMULATED_VOLUME] - volumenAnterior) * 100) / 100;
+                volumenAnterior = instance.data[Sensor.ACCUMULATED_VOLUME];
+                
               } else {
+                instance.data[Sensor.VOLUME] = 0;
                 instance.tiempoImproductivo.start();
                 instance.tiempoProductivo.stop();
               }
@@ -244,8 +253,7 @@ export class ArduinoService {
               // if (!has_events) {
               //   events.push("NO HAY EVENTOS REGISTRADOS");
               // }
-              
-              
+                  
               let wExecutionDetail: WorkExecutionDetail = {
                 id_work_execution: currentWork.id,
                 time: instance.reealNow,
@@ -257,11 +265,13 @@ export class ArduinoService {
                 events: events.join(", "),
                 id: 0,
               };
-              console.log("wExecutionDetail : " , JSON.stringify(wExecutionDetail));
+              //console.log("wExecutionDetail : " , JSON.stringify(wExecutionDetail));
               //console.log("precision" , JSON.stringify(this.precision));
               //Guardar solo cuando haya datos del gps
 
               await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
+
+              instance.data[Sensor.VOLUME] = 0;
               /* if (this.dataGps) {
                 
               } else {
@@ -272,7 +282,7 @@ export class ArduinoService {
             onExecution = false;
           }
           //let currentTime = moment();
-          console.log("Current time: " + instance.reealNow.format("YYYY-MM-DD H:mm:ss.SSS"));
+          //console.log("Current time: " + instance.reealNow.format("YYYY-MM-DD H:mm:ss.SSS"));
           if (instance.reealNow.diff(instance.now, 'milliseconds') >= instance.tiempocondicion) {
             instance.now = instance.reealNow;
             await iteration();
@@ -463,13 +473,13 @@ export class ArduinoService {
         this.sensorSubjectMap.get(sensorType)!.next(value);
         if (sensorType === Sensor.VOLUME  && tiempoActual - this.ultimoTiempoNotificacion >= 1000 ) {
             this.ultimoTiempoNotificacion = tiempoActual;
-            let volumenInicial = this.initialVolume;
             //console.log("Volumen inicial" , volumenInicial);
             // Resta la diferencia del valor anteriormente descontado
             let valor = value as number;
-            this.volumenAcumul = valor + this.volumenAcumul;
-            //console.log("Volumen acumul" , this.volumenAcumul);
-            this.currentRealVolume = volumenInicial - this.volumenAcumul;
+            console.log("Valor sensor", valor);
+            
+            this.currentRealVolume = this.initialVolume - valor;
+            console.log("this.cuurent",this.currentRealVolume);
             //console.log("Current Volumen" , this.currentRealVolume);
         }
     }

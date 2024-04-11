@@ -17,17 +17,17 @@ export enum Mode{
 
 export enum Sensor{
     SPEED = 1,
-    WATER_FLOW = 2,
+    WATER_FLOW = 2, //Valor del caudal
     PRESSURE = 3,
     GPS = 4,
-    VOLUME = 5,
+    VOLUME = 5, //resta del anterior con el siguiente
     PPM = 6,
     PH = 7,
     TEMPERATURE = 8,
     HUMIDITY = 9,
     VOLUME_CONTAINER = 10,
     DISTANCE_NEXT_SECTION = 11, //Calcula la distancia por tramo - calculo por velocidad
-    ACCUMULATED_VOLUME = 12,
+    ACCUMULATED_VOLUME = 12, //Valor del sensor acumulado
     ACCUMULATED_HECTARE= 13, //Acumulado de la distancia - calculo por velocidad
 
     TOTAL_DISTANCE = 14, //Total por tramo : formula

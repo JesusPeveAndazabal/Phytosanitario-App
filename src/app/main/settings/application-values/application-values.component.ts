@@ -68,7 +68,7 @@ export class ApplicationValuesComponent  implements OnInit {
   private invalid_rows = 0;
 
   constructor(private modalCtrl: ModalController, private dbService : DatabaseService,
-    private alertController : AlertController,private fb:FormBuilder) {
+    private arduinoService:ArduinoService , private alertController : AlertController,private fb:FormBuilder) {
       this.formData = this.fb.group({
         volume: [0,[Validators.required,]],
         speed: ['',[Validators.required,Validators.min(0.01)]],
