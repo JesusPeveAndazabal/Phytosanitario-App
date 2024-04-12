@@ -14,6 +14,7 @@ import Swal from 'sweetalert2';
 import { SettingsComponent } from './settings/settings.component';
 import { ArduinoService } from '../core/services/arduino/arduino.service';
 import { LocalConf } from '../core/models/local_conf';
+import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 
 
 
@@ -44,6 +45,9 @@ export class MainComponent implements OnInit,AfterViewInit{
 
   volume: number;
 
+  volumenTanque: number = 0;
+
+
   workStatus : WorkStatusChange = WorkStatusChange.STOP;
   classButtonPower = "power-button-off";
   classButtonGps = "classButtonGps";
@@ -53,11 +57,12 @@ export class MainComponent implements OnInit,AfterViewInit{
   alertInputs : any = [
     {
       label: "Nuevo volumen",
-      type: 'number' as any,
+      type: 'number',
       placeholder: '1000',  
       id:'txt_vol',
       name : 'txt_vol',
       min: 1,
+      appKeyboard : 'numeric',
       attributes : {
         required: true,
       },
@@ -231,75 +236,72 @@ export class MainComponent implements OnInit,AfterViewInit{
     the new volume of water in the tank must be entered.*/
 
     if (command.type == WorkStatusChange.START){
-      this.alertController.create({
-        header: 'Iniciar/Reiniciar aplicaciòn de trabajo',
-        subHeader: 'Volumen de aplicaciòn',
-        message: `Digite el volumen en litros (L) actual.`,
-        inputs: this.alertInputs,
-        backdropDismiss : false,
-        buttons: [
-          {
-            text: 'Confirmar',
-            handler: async (event) => {
-              console.log(event, "event");
-              let val = parseFloat(event.txt_vol);
-              console.log(val, "val confirmar");
-              if (val){
-                this.localConfig = await this.databaseService.getLocalConfig();
-                console.log("GETLOCALCONFIG" , this.localConfig);
-                this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-                console.log("GETLASTWORK" , this.lastWorkExecution);
-                await this.openIfNotConnected();
-                let volume : WaterVolumes = { id :0 ,volume: val,work_exec_id : this.lastWorkExecution!.id };
-                console.log(volume, "volume");
-                let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
-                console.log("CONF.VOLUMEN" , conf.volume);
-                console.log("VAL" , val);
-                conf.volume = conf.volume + val;
-                console.log(volume, this.lastWorkExecution!, "info a guardar");
-                // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
-                this.lastWorkExecution!.configuration = JSON.stringify(conf);
-                await this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!);
-                // console.log(this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!));
-                // await this.databaseService.closeDB();
-                command.data.current_volume = val;
-
-                //Regular la presión cada vez que se configure el volumen del tanque
-                //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
-
-                //Configurar el volumen mínimo e inicial en el servicio.
-                console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
-                this.arduinoService.inicializarContenedor(val,this.localConfig.vol_alert_on);
-                
-                this.workStatus = WorkStatusChange.START;
-                this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
-
-                //this.arduinoService.isRunning = true;
-                //Mostrar el loader con el mensaje cargando hasta que termine de regular
-                //this.loading_message = "Cargando...";
-                //this.loader.present();
-                return true;
-              } 
-              else return false;
-            }
-          },
-          {
-            text: 'Cancelar',
-            role : 'cancel',
-            handler: () => {
-              console.log('Let me think');
-            }
-          },
-        ]
-      })
-
-      .then((res) => {
-        res.present();
+      const modal = await this.modalController.create({
+        component: ModalInicioAppComponent, // Reemplaza YourModalComponent por el nombre de tu componente modal
+        componentProps: {
+          lastWorkExecutionId: this.lastWorkExecution!.id
+        }
       });
+
+      modal.onDidDismiss().then(async (data) => {
+        if (data && data.data) {
+          this.volumenTanque = parseFloat(data.data);
+          if (!isNaN(this.volumenTanque)) {
+            this.localConfig = await this.databaseService.getLocalConfig();
+            console.log("GETLOCALCONFIG" , this.localConfig);
+            this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
+            console.log("GETLASTWORK" , this.lastWorkExecution);
+            await this.openIfNotConnected();
+            let volume : WaterVolumes = { id :0 ,volume: this.volumenTanque,work_exec_id : this.lastWorkExecution!.id };
+            console.log(volume, "volume");
+            let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
+            console.log("CONF.VOLUMEN" , conf.volume);
+            console.log("VAL" ,this.volumenTanque);
+            conf.volume = conf.volume + this.volumenTanque;
+            console.log(volume, this.lastWorkExecution!, "info a guardar");
+            // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
+            this.lastWorkExecution!.configuration = JSON.stringify(conf);
+            await this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!);
+            // console.log(this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!));
+            // await this.databaseService.closeDB();
+            command.data.current_volume = this.volumenTanque;
+
+            //Regular la presión cada vez que se configure el volumen del tanque
+            //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
+
+            //Configurar el volumen mínimo e inicial en el servicio.
+            console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
+            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);
+            
+            this.workStatus = WorkStatusChange.START;
+            this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
+            // Tu lógica para guardar el volumen y realizar acciones con él
+            console.log("Volumen capturado:", volume);
+          }
+        }
+      });
+
+      await modal.present();
     }
   }
 
-  async openVolumeModal() {
+
+/*   confirmVolume() {
+    // Obtener el valor del campo de entrada
+    const volumenInput = document.getElementById('volumenInput') as HTMLInputElement;
+    console.log()
+    if (volumenInput) {
+      // Obtener el valor como un número
+      this.volumen = parseFloat(volumenInput.value);
+      // Cerrar el modal después de confirmar si es necesario
+      console.log("VOLUMEN", volumenInput);
+      // Aquí puedes realizar las operaciones necesarias con this.volumen
+    }
+
+
+  } */
+
+ /*  async openVolumeModal() {
     const modal = await this.modalController.create({
       component: 'volume-modal' // Identificador del modal
     });
@@ -316,7 +318,7 @@ export class MainComponent implements OnInit,AfterViewInit{
 
     // Cierra el modal después de manejar los datos
     await this.modalController.dismiss();
-  }
+  } */
 
   async onEndListenPower($event: any){
     let endTime : moment.Moment = moment();
@@ -354,6 +356,7 @@ export class MainComponent implements OnInit,AfterViewInit{
               config.lastWorkExecution = false;
               this.arduinoService.isRunning = false;
               this.finished;
+              this.arduinoService.resetVolumenInit();
               // console.log(finalizar, "finalizar");
             }
           },

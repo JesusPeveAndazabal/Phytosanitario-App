@@ -13,9 +13,10 @@ import {ChipsModule} from 'primeng/chips';
 import { MainRoutingModule } from './main-routing.module';
 import { MainComponent } from './main.component';
 import { KeyboardModule } from '../custom-components/keyboard/keyboard.module';
+import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 
 @NgModule({
-  declarations: [MainComponent],
+  declarations: [MainComponent, ModalInicioAppComponent],
   providers:[],
   imports: [
     IonicModule,

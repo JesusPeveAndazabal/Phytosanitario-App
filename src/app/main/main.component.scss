@@ -41,28 +41,28 @@ ion-footer::before{
 //     top:auto;
 // }
 
-ion-modal {
+/* ion-modal {
   --width: 80%;
   --height: 70%;
   --border-radius: 16px;
   --box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
 }
-
+ */
 #numeric-keyboard {
   display: none;
 }
 
 
-ion-modal::part(backdrop) {
+/* ion-modal::part(backdrop) {
   background: rgb(0, 0, 0);
   opacity: 1;
-}
+} */
 
-ion-modal ion-toolbar {
+/* ion-modal ion-toolbar {
   --background: rgb(14 116 144);
   --color: white;
 }
-
+ */
 .unselected-fab-button{
   --background : transparent !important;
   --border-color : var(--ion-color-tertiary, #1c22c4);
