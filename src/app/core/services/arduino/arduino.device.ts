@@ -15,6 +15,10 @@ export class ArduinoDevice {
   private port: any;
   private message_to_device : string[] = [];
   public message_from_device: Map<Sensor, number|number[]> = new Map();
+
+  // Guarda los valores 
+  private savedValues:Map<Sensor, number | number[]> = new Map();;
+
   private messageInterval: any;
   private SensorWatterflow: any;
   private SensorVolumen:any;
@@ -23,6 +27,7 @@ export class ArduinoDevice {
   /* Variables para conexion y reconexion */
   private isReconnecting: boolean = false;
   public isConnected: boolean = false;
+
 
   //Creamos un sujeto (Subject) por cada sensor
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
@@ -130,9 +135,28 @@ export class ArduinoDevice {
 
         //this.arduinoService.notifySensorValue(sensorType, numericValue);
       });
-      //console.log('Received message from Arduino:',this.mapToObject(this.message_from_device)) ;
+      this.saveCurrentValues();
     });
   }
+
+  private saveCurrentValues(): void {
+    // Guardar los valores actuales de los sensores
+    this.savedValues = new Map(this.message_from_device);
+    //console.log("GUARDADO" , this.savedValues);
+  }
+
+/*   private restoreSavedValues(): void {
+   // Verifica si hay valores guardados para restaurar
+  if (this.savedValues.size > 0) {
+    // Itera sobre los valores guardados y los envía al dispositivo Arduino nuevamente
+    this.savedValues.forEach((SensorType, numericValue) => {
+      // Envía el valor al dispositivo Arduino utilizando el servicio adecuado
+      this.message_from_device.set(SensorType, numericValue);
+    });
+    // Limpia los valores guardados después de restaurarlos
+    this.savedValues.clear();
+    }
+  } */
 
   public sendCommand(command: string): void {
     if (this.port && this.port.writable) {
@@ -154,10 +178,13 @@ export class ArduinoDevice {
         } else {
           console.log('Disconnected from Arduino');
           this.isConnected = false;
+          /* this.restoreSavedValues(); */
         }
       });
     }
   }
+
+
   public  mapToObject(map: Map<any, any>): { [key: string]: any } {
     const obj: { [key: string]: any } = {};
     map.forEach((value, key) => {

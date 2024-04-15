@@ -1225,20 +1225,21 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-     //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
-  async getWorkExecutionDetail(work : number): Promise<WorkExecutionDetail[]> {
-    return new Promise<WorkExecutionDetail[]>((resolve, reject) =>{
-      let db = new this.sqlite.Database(this.file);
-      let sql = "SELECT * from work_execution_details WHERE id_work_execution = ? and sended = 0";
-      db.all(sql,[work],(err,rows : WorkExecutionDetail[])=>{
-        if(err){
-          process.nextTick(() => reject(err));
-        }
-        process.nextTick(() => resolve(rows));
-      });
-      db.close();
+  //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
+  async getLastWorkExecutionDetail(work: number): Promise<WorkExecutionDetail> {
+    return new Promise<WorkExecutionDetail>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql = "SELECT * FROM work_execution_details WHERE id_work_execution = ? AND JSON_EXTRACT(data, '$.\"12\"') > 0 ORDER BY id DESC";
+        db.get(sql, [work], (err, rows: any) => {
+            if (err) {
+                process.nextTick(() => reject(err));
+            }
+            process.nextTick(() => resolve(rows));
+        });
+        db.close();
     });
-  }
+}
+  
 
   async getWorkExecutionDetailReal(work : number): Promise<WorkExecutionDetail[]> {
     return new Promise<WorkExecutionDetail[]>((resolve, reject) =>{

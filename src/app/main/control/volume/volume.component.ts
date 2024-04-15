@@ -102,7 +102,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
 
     if (this.volume < this.minVolume && this.arduinoService.isRunning) {
       //this.shouldBlink = true;  
-      this.apagarValvulas();
+     /*  this.apagarValvulas(); */
       this.arduinoService.isRunning = false;
     } else {
       this.shouldBlink = false;

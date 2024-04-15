@@ -1,25 +1,33 @@
-<nav class="navbar bg-body-tertiary mt-5">
-  <div class="container d-flex justify-content-center">
-    <span class="navbar-brand mb-0 h1"><strong>Parámetros de trabajo</strong></span>
-  </div>
-</nav>
+<div class="login">
+		<div class="login-screen">
+			<div class="app-title">
+				<h1>Parámetros de trabajo</h1>
+			</div>
 
+			<div class="login-form">
+				<div class="control-group">
+          <form [formGroup]="formData" (submit)="save()" class="was-validated mt-5">
+            <div class="form-group row">
+              <label for="vol_alert_on" class="col-sm-2 col-form-label">Volumen mínimo (L):</label>
+              <div class="col-sm-10">
+                <input appKeyboard type="text" class="form-control" id="vol_alert_on" formControlName="vol_alert_on" placeholder="100" pattern="^(?:1\d{2}|2000|[1-9]\d{2,3})$" required>
+                <div id="textoo" class="form-text">
+                  <strong>Cuando el volumen de agua llegue al mínimo se pausará el trabajo y deberá recargar</strong> 
+                </div>
+                <div class="invalid-feedback">
+                  Por favor ingrese un valor válido entre 100 y 2000
+                </div>
+              </div>
+            </div>
+           
+          </form>
+				</div>
+        <button type="button" class="btn btn-primary btn-block mt-3" (click)="save()">Verificar y guardar</button>
+			</div>
+		</div>
+	</div>
 
-<div class="container mt-1">
-  <form [formGroup]="formData" (submit)="save()" class="was-validated mt-5">
-    <div class="form-group row">
-      <label for="vol_alert_on" class="col-sm-2 col-form-label">Volumen mínimo (L):</label>
-      <div class="col-sm-10">
-        <input appKeyboard type="text" class="form-control" id="vol_alert_on" formControlName="vol_alert_on" placeholder="100" pattern="^(?:1\d{2}|2000|[1-9]\d{2,3})$" required>
-        <div id="textoo" class="form-text">
-          <strong>Cuando el volumen de agua llegue al mínimo se pausará el trabajo y deberá recargar</strong> 
-        </div>
-        <div class="invalid-feedback">
-          Por favor ingrese un valor válido entre 100 y 2000
-        </div>
-      </div>
-    </div>
-    <hr style="background-color:black;">
-    <button type="button" class="btn btn-primary btn-block mt-3" (click)="save()">Verificar y guardar</button>
-  </form>
+<div class="loader-overlay" *ngIf="showLoader">
+  <div class="loader"></div>
+  <p>{{ loading_message }}</p>
 </div>

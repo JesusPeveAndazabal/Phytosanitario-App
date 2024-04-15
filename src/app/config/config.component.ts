@@ -22,6 +22,8 @@ export class ConfigComponent implements OnInit {
   // testSocket : WebSocketSubject<any> | undefined;
   pressure_items : Array<any> = [];
 
+  showLoader: boolean = false; // Variable para controlar la visibilidad del loader
+
   constructor(
     private location: Location,
     private fb:FormBuilder,
@@ -60,6 +62,7 @@ export class ConfigComponent implements OnInit {
     //console.log("el botón 'Validar y Guardar' fue presionado",this.formData, "config.component.ts 1");
     // alert("info correcta");
     if(this.formData.valid){
+      this.showLoader = true; //Mostrar el loader
       //console.log("condicion1");
       environment.apiURL = this.formData.value.api_server;
       environment.minVolume = this.formData.value.vol_alert_on;
@@ -88,6 +91,8 @@ export class ConfigComponent implements OnInit {
       }else{
         this.router.navigate(['/login']);
       }
+
+      this.showLoader = false; // Ocultar el loader después de completar la acción
     }
   }
 

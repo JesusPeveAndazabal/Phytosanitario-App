@@ -1,4 +1,4 @@
-<div class="container mt-5">
+<!-- <div class="container mt-5">
   <div class="row justify-content-center">
     <div class="col-md-6">
       <h1>Login</h1>
@@ -20,15 +20,40 @@
               </select>
             </div>
             <button type="button" class="btn btn-primary" (click)="login()">Login</button>
-            <!-- <p-messages></p-messages> -->
           </form>
         </div>
       </div>
     </div>
   </div>
-</div>
+</div> -->
 
 
-<div>
-  <!-- Loading spinner o indicador aquí (si es necesario) -->
-</div>
+	<div class="login">
+		<div class="login-screen">
+			<div class="app-title">
+				<h1>Control Fitosanitario - Login</h1>
+			</div>
+
+			<div class="login-form">
+				<div class="control-group">
+          <form [formGroup]="formData" (submit)="login()">
+            <div class="form-group">
+              <label for="code">Código/DNI</label>
+              <input appKeyboard formControlName="code" type="number" class="form-control" placeholder="000000">
+            </div>
+            <div class="form-group">
+              <label for="supervisor">Supervisor</label>
+              <select formControlName="supervisor" class="form-control">
+                <option value="0">-- Sin supervisor --</option>
+                <option *ngFor="let sup of supervisors" value="{{sup.id}}">{{ sup.fullname }}</option>
+              </select>
+            </div> 
+            <!-- <p-messages></p-messages> -->
+          </form>
+				</div>
+				<button type="button" class="btn btn-primary" (click)="login()">Login</button>
+				<a class="login-link" href="#">Lost your password?</a>
+			</div>
+		</div>
+	</div>
+
