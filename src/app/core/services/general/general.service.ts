@@ -1,10 +1,12 @@
-import { Cultivation, Farm, Lot, NozzleColor, NozzleType, Nozzles, Person, Product, Weather, Work, WorkExecution } from './../../models/models';
+import { Cultivation, Farm, Lot, NozzleColor, NozzleType, Nozzles, Person, Product, Weather, Work} from './../../models/models';
 import { environment } from './../../../../environments/environment';
 import { Injectable } from '@angular/core';
 import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { Configuration } from '../../utils/configuration';
 // import {  } from 'src/app/core/models/models';
+
+import { WorkExecutionOrder } from '../../models/workExecutionOrder';
 
 @Injectable({
   providedIn: 'root'
@@ -49,6 +51,10 @@ export class GeneralService {
 
   public getWorks(): Observable<Array<Work>> {
     return this.http.get<Array<Work>>(`${Configuration.urlRest}/api/work-app/`);
+  }
+
+  public getWorkOrder(): Observable<Array<WorkExecutionOrder>> {
+    return this.http.get<Array<WorkExecutionOrder>>(`${Configuration.urlRest}/api/work-execution-order-app/`);
   }
 
   /**

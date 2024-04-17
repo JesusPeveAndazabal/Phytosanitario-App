@@ -101,9 +101,9 @@ export class ArduinoService {
 
 
   /* Parametros para conexion */
-  coneectedCaudal;
-  connectedPresion;
-  connectedGps;
+  coneectedCaudal: boolean;
+  connectedPresion:boolean;
+  connectedGps:boolean;
 
   
   inputPressureValue: number | undefined;
@@ -112,6 +112,8 @@ export class ArduinoService {
 
   // Almacena el valor anterior del acumulador de volumen
   previousAccumulatedVolume = 0;
+
+  
   
   
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
@@ -151,8 +153,15 @@ export class ArduinoService {
       sensorGps: false
     };
 
+    // Variables para controlar el estado de conexión del Arduino del sensor de volumen
+    let wasConnectedCaudal: boolean = false;
+
+    // Variable para guardar el último valor del sensor de volumen antes de la desconexión
+    let lastVolumeValue: number = 0;
+
 
     let lastValidAccumulatedVolume = 0;
+    let previousSensorConnectedState = false; // Variable para almacenar
 
     setInterval(async () => {
       //await this.checkInternetConnection();
@@ -171,13 +180,8 @@ export class ArduinoService {
         [Sensor.ACCUMULATED_VOLUME] : 0,
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
       }
-    let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
-     
-      
-/*       if(currentWorkPrueba){
-        data2 = JSON.parse(currentWorkPrueba.data);
-        console.log("DATA" , data2);
-      } */
+        
+
     
       instance.listArduinos.forEach(arduino => {
         arduino.message_from_device.forEach((sensor) => {
@@ -187,55 +191,51 @@ export class ArduinoService {
       });
 
       if(instance.data[Sensor.VOLUME] > 0){
-        instance.datosCaudal = instance.data[Sensor.VOLUME] + this.previousAccumulatedVolume;
+        instance.datosCaudal = instance.data[Sensor.VOLUME];
         //console.log("datosCaudal: " , instance.datosCaudal);
       }
 
        // Aquí puedes colocar la parte relacionada con el sensor
-      const sensorVolume = Sensor.WATER_FLOW; // El sensor que deseas verificar
-      const sensorPressure = Sensor.PRESSURE; // El sensor que deseas verificar
-      const sensorGps = Sensor.GPS; // El sensor que deseas verificar
-      this.coneectedCaudal = this.isSensorConnected(sensorVolume);
-      this.connectedPresion = this.isSensorConnected(sensorPressure);
-      this.connectedGps = this.isSensorConnected(sensorGps);
-
-      //console.log(`El sensor ${sensorVolume} está conectado: ${this.coneectedCaudal}`);
-      //console.log(`El sensor ${sensorPressure} está conectado: ${this.connectedPresion}`);
-      //console.log(`El sensor ${sensorGps} está conectado: ${this.connectedGps}`);
+      let sensorVolume = Sensor.WATER_FLOW; // El sensor que deseas verificar
+      let sensorPressure = Sensor.PRESSURE; // El sensor que deseas verificar
+      let sensorGps = Sensor.GPS; // El sensor que deseas verificar
+      instance.coneectedCaudal = instance.isSensorConnected(sensorVolume);
+      instance.connectedPresion = instance.isSensorConnected(sensorPressure);
+      instance.connectedGps = instance.isSensorConnected(sensorGps);
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
-      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
+/*       if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
+        let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
         let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
         if (currentWorkPrueba) {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
-            this.currentRealVolume = this.initialVolume - this.datosCaudal;
-            console.log("Current Volumen", this.currentRealVolume);
-
+          
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
             isCurrentRealVolumeReset = true;
             previousSensorConnections.sensorVolume = true;
         }
-      }
+      } */
 
       // Compara el estado actual con el estado anterior para detectar cambios
-      if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
+/*       if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
         console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectó' : 'desconectó'}`);
         previousSensorConnections.sensorVolume = this.coneectedCaudal;
         console.log(previousSensorConnections.sensorVolume);
 
-      // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
-      if (!this.coneectedCaudal) {
-        let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
-        console.log(currentWorkPrueba);  
-        if(currentWorkPrueba){
-          instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
-          console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
+        // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
+        if (!this.coneectedCaudal) {
+          let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
+          let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
+          console.log(currentWorkPrueba);  
+          if(currentWorkPrueba){
+            instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
+            console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
+          }
         }
-      }
-      }
-      
+      } */
+
       this.hasGPSData = this.data[Sensor.GPS] !== undefined && instance.data[Sensor.GPS] !== null && instance.data[Sensor.GPS] != this.gpsVar;
       if (instance.hasGPSData) {
         instance.dataGps = true;
@@ -248,8 +248,7 @@ export class ArduinoService {
 
       this.gpsVar = instance.data[Sensor.GPS];
 
-      instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME] + this.previousAccumulatedVolume;
-
+      instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
 
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
@@ -275,6 +274,7 @@ export class ArduinoService {
     
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
+                this.currentRealVolume = this.initialVolume - (this.datosCaudal + instance.previousAccumulatedVolume);
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   
@@ -584,7 +584,7 @@ export class ArduinoService {
     //console.log(`Nuevo valor para ${sensorType}: ${value}`)
     if (this.sensorSubjectMap.has(sensorType)) {
         this.sensorSubjectMap.get(sensorType)!.next(value);
-        if (sensorType === Sensor.VOLUME  && tiempoActual - this.ultimoTiempoNotificacion >= 1000 ) {
+        /* if (sensorType === Sensor.VOLUME  && tiempoActual - this.ultimoTiempoNotificacion >= 1000 ) {
             this.ultimoTiempoNotificacion = tiempoActual;
             //console.log("Volumen inicial" , this.initialVolume);
             // Resta la diferencia del valor anteriormente descontado
@@ -596,7 +596,7 @@ export class ArduinoService {
             //console.log("this.cuurent",this.currentRealVolume);
           
             //console.log("Current Volumen" , this.currentRealVolume);
-        }
+        } */
     }
   }
 

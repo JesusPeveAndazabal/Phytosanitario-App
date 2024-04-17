@@ -1,5 +1,7 @@
 export interface WorkExecution{
   id : number;
+  work_execution_order : number;
+  atomizer : number;
   work : number;
   lot : number;
   worker : number;

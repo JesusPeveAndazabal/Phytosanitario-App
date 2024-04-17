@@ -36,7 +36,7 @@ export class ConfigComponent implements OnInit {
 
     this.formData = this.fb.group({
       // ws_server: ['',[Validators.required,Validators.pattern('(?:(?:(?:ht|f)tp)s?://)|(ws?s)?[\\w_-]+(?:\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?')]],
-      api_server: 'https://ps-test.fitosatbeta.com',
+      api_server: 'http://192.168.234.209:8000',
       vol_alert_on: [0,[Validators.required,Validators.min(1)]],
     });
    }
@@ -115,7 +115,11 @@ export class ConfigComponent implements OnInit {
       const nozzles = await firstValueFrom(this.apiService.getNozzles());
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
+      const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
+      //console.log(workOrder);
+      console.log(workOrders);
       // const we = await firstValueFrom(this.apiService.getWE());
+      
 
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
@@ -190,6 +194,14 @@ export class ConfigComponent implements OnInit {
         const existingWork = await this.dbService.getRecordById('work', work.id);
         if (!existingWork) {
           await this.dbService.syncWorkData([work]);
+        }
+      }
+
+       // await this.dbService.syncWorkData(works);
+       for (const workOrder of workOrders) {
+        const existingWork = await this.dbService.getRecordById('work_execution_order', workOrder.id);
+        if (!existingWork) {
+          await this.dbService.syncWorkOrder([workOrder]);
         }
       }
 

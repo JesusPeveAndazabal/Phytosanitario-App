@@ -248,17 +248,17 @@ export class MainComponent implements OnInit,AfterViewInit{
           this.volumenTanque = parseFloat(data.data);
           if (!isNaN(this.volumenTanque)) {
             this.localConfig = await this.databaseService.getLocalConfig();
-            console.log("GETLOCALCONFIG" , this.localConfig);
+            //console.log("GETLOCALCONFIG" , this.localConfig);
             this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-            console.log("GETLASTWORK" , this.lastWorkExecution);
+            //console.log("GETLASTWORK" , this.lastWorkExecution);
             await this.openIfNotConnected();
             let volume : WaterVolumes = { id :0 ,volume: this.volumenTanque,work_exec_id : this.lastWorkExecution!.id };
             console.log(volume, "volume");
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
-            console.log("CONF.VOLUMEN" , conf.volume);
-            console.log("VAL" ,this.volumenTanque);
+            //console.log("CONF.VOLUMEN" , conf.volume);
+            //console.log("VAL" ,this.volumenTanque);
             conf.volume = conf.volume + this.volumenTanque;
-            console.log(volume, this.lastWorkExecution!, "info a guardar");
+            //console.log(volume, this.lastWorkExecution!, "info a guardar");
             // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
             this.lastWorkExecution!.configuration = JSON.stringify(conf);
             await this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!);
@@ -270,13 +270,13 @@ export class MainComponent implements OnInit,AfterViewInit{
             //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
 
             //Configurar el volumen mínimo e inicial en el servicio.
-            console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
+            //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);
             
             this.workStatus = WorkStatusChange.START;
             this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
             // Tu lógica para guardar el volumen y realizar acciones con él
-            console.log("Volumen capturado:", volume);
+            //console.log("Volumen capturado:", volume);
           }
         }
       });

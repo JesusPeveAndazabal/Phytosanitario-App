@@ -7,6 +7,7 @@ import * as moment from 'moment';
 import { SocketEvent,WorkDataChange } from '../../utils/global';
 import { LocalConf } from '../../models/local_conf';
 import { Login } from '../../models/login';
+import { WorkExecutionOrder } from '../../models/workExecutionOrder';
 
 @Injectable({
   providedIn: 'root'
@@ -86,14 +87,51 @@ export class DatabaseService extends ElectronService {
                 + "	risk_name TEXT, \n"
                 + "	pressure_tolerance REAL \n"
                 + "	); \n"
+                
+                /* TABLA AÑADIDA */
+                + " CREATE TABLE IF NOT EXISTS pre_configuration( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " work INTEGER \n"
+                + " consume REAL, \n"
+                + " pressure REAL, \n"
+                + " unit_pressure INTEGER, \n"
+                + " description TEXT, \n"
+                + " nozzles TEXT \n"
+                + " watter_flow REAL, \n"
+                + " speed REAL, \n"
+                + " width REAL, \n"
+                + " type_implement INTEGER \n"
+                + "	); \n"
 
+                /* TABLA AÑADIDA */
+                + "CREATE TABLE IF NOT EXISTS work_execution_order( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " work INTEGER, \n"
+                + " lot INTEGER, \n"
+                + " worker INTEGER, \n"
+                + " supervisor INTEGER, \n"
+                + " date_start TEXT, \n"
+                + " date_final TEXT, \n"
+                + " type_implement INTEGER, \n"
+                + " configuration TEXT, \n"
+                + " pre_configuration TEXT, \n"
+                + " working_time TEXT, \n"
+                + " downtime TEXT, \n"
+                + " hectare REAL, \n"
+                + " product INTEGER, \n"
+                + " atomizer INTEGER \n"
+                + "	); \n"
+
+                /* TAVBALA MODIFICICADA */
                 + "	CREATE TABLE IF NOT EXISTS work_execution( \n"
                 + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
+                + " work_execution_order INTEGER, \n"
+                + " atomizer INTEGER, \n"
                 + "	work INTEGER, \n"
                 + "	lot INTEGER, \n"
-                + "	date TEXT, \n"
                 + "	worker INTEGER, \n"
                 + "	supervisor INTEGER, \n"
+                + "	date TEXT, \n"
                 + "	configuration TEXT, \n"
                 + "	working_time TEXT, \n"
                 + "	downtime TEXT, \n"
@@ -107,22 +145,61 @@ export class DatabaseService extends ElectronService {
                 + "	); \n"
 
                 + " CREATE TABLE IF NOT EXISTS work_execution_details( \n"
-                + "  id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
-                + "  id_work_execution INTEGER, \n"
-                + "  time TEXT, \n"
-                + "  sended BOOLEAN, \n"
-                + "  data TEXT, \n"
-                + "  precision TEXT, \n"
-                + "  gps TEXT, \n"
-                + "  has_events BOOLEAN, \n"
-                + "  events TEXT, \n"
-                + "  FOREIGN KEY (id_work_execution) REFERENCES work_execution(id) \n"
+                + " id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
+                + " id_work_execution INTEGER, \n"
+                + " time TEXT, \n"
+                + " sended BOOLEAN, \n"
+                + " data TEXT, \n"
+                + " precision TEXT, \n"
+                + " gps TEXT, \n"
+                + " has_events BOOLEAN, \n"
+                + " events TEXT, \n"
+                + " FOREIGN KEY (id_work_execution) REFERENCES work_execution(id) \n"
+                + "); \n"
+
+                /* TABLA AÑADIDA */
+                + "CREATE TABLE IF NOT EXISTS type_implement( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " description TEXT, \n"
+                + " min_volume INTEGER \n"
+                + "); \n"
+
+                /* TABLA AÑADIDA */
+                + "CREATE TABLE IF NOT EXISTS implement( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " nombre TEXT, \n"
+                + " type_implement INTEGER\n"
                 + "); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS water_volumes( \n"
                 + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
                 + "	work_exec_id INTEGER, \n"
                 + "	volume REAL \n"
+                + "	); \n"
+
+                /* TABALA AÑADIDA */
+                + " CREATE TABLE IF NOT EXISTS manufaturer( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " document TEXT, \n"
+                + " name TEXT \n"
+                + "	); \n"
+
+                /* TABLA AÑADIDA */
+                + " CREATE TABLE IF NOT EXISTS recharge_point( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " name TEXT, \n"
+                + " farma INTEGER, \n"
+                + " ppm REAL, \n"
+                + " ph REAL \n"
+                + "	); \n"
+
+                /* TABLA AÑADIDA */
+                + " CREATE TABLE IF NOT EXISTS atomizer ( \n"
+                + " id INTEGER PRIMARY KEY, \n"
+                + " name TEXT, \n"
+                + " uuid INTEGER TEXT, \n"
+                + " active BOOLEAN, \n"
+                + " machine TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS lot( \n"
@@ -169,9 +246,13 @@ export class DatabaseService extends ElectronService {
                 + "	name TEXT \n"
                 + "	); \n"
 
+                /* TABLA MODIFICADA */
                 + "	CREATE TABLE IF NOT EXISTS product( \n"
                 + "	id INTEGER PRIMARY KEY, \n"
                 + "	name TEXT \n"
+                + " manufacturer INTEGER, \n"
+                + " formula TEXT, \n"
+                + " register TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS login( \n"
@@ -1062,6 +1143,36 @@ export class DatabaseService extends ElectronService {
       data.forEach((o) => {
         db.run(sql, [o.id, o.name], (err: Error | null) => {
           if (err) {
+            console.error("SQLITE INSERT error", err);
+            reject(err);
+          }
+        });
+      });
+
+      // Cerrar la base de datos después de que todas las inserciones se hayan completado
+      db.close((err: Error | null) => {
+        if (err) {
+          console.error("Error al cerrar la base de datos", err);
+          reject(err);
+        } else {
+          //console.log("Base de datos cerrada");
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "INSERT INTO work_execution_order (id, work, lot , worker, supervisor , date_start, data_final, type_implement, configuration, preconfiguration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+
+      // Iterar sobre los datos y realizar la inserción por cada uno
+      data.forEach((o) => {
+        db.run(sql, [o.id, o.work , o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement,o.configuration, o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
+          if (err && err.message.includes('UNIQUE constraint failed')) {
+            console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
+          } else if (err) {
             console.error("SQLITE INSERT error", err);
             reject(err);
           }
