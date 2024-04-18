@@ -205,10 +205,10 @@ export class ArduinoService {
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
-/*       if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
+      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
         let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
-        let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
-        if (currentWorkPrueba) {
+        if (currentWork && currentWork.id) {
+          let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
           
@@ -216,10 +216,10 @@ export class ArduinoService {
             isCurrentRealVolumeReset = true;
             previousSensorConnections.sensorVolume = true;
         }
-      } */
+      }
 
       // Compara el estado actual con el estado anterior para detectar cambios
-/*       if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
+      if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
         console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectó' : 'desconectó'}`);
         previousSensorConnections.sensorVolume = this.coneectedCaudal;
         console.log(previousSensorConnections.sensorVolume);
@@ -227,14 +227,13 @@ export class ArduinoService {
         // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
         if (!this.coneectedCaudal) {
           let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
-          let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
-          console.log(currentWorkPrueba);  
-          if(currentWorkPrueba){
+          if(currentWork && currentWork.id){
+            let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
           }
         }
-      } */
+      }
 
       this.hasGPSData = this.data[Sensor.GPS] !== undefined && instance.data[Sensor.GPS] !== null && instance.data[Sensor.GPS] != this.gpsVar;
       if (instance.hasGPSData) {

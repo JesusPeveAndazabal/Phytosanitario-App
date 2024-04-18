@@ -102,9 +102,10 @@ export class ConfigComponent implements OnInit {
    * The data will be used to settings the work executions.
    */
   async syncPrimaryTables() : Promise<boolean>{
-    this.loading_message = "Verificando url del API...";
+    console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
+      console.log("EMNTRO AL TRY");
       // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
@@ -116,11 +117,13 @@ export class ConfigComponent implements OnInit {
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
-      //console.log(workOrder);
-      console.log(workOrders);
+      const atomizers = await firstValueFrom(this.apiService.getAtomizer());
+      const implementss = await firstValueFrom(this.apiService.getImplement());
+      console.log("impleement" , implementss);
+      console.log("works");
       // const we = await firstValueFrom(this.apiService.getWE());
       
-
+      
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
@@ -199,9 +202,36 @@ export class ConfigComponent implements OnInit {
 
        // await this.dbService.syncWorkData(works);
        for (const workOrder of workOrders) {
-        const existingWork = await this.dbService.getRecordById('work_execution_order', workOrder.id);
-        if (!existingWork) {
-          await this.dbService.syncWorkOrder([workOrder]);
+        const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
+        if (!existingWorkOrder) {
+            // Convertir el objeto configuration a JSON
+            const workOrderWithJSONConfiguration = { ...workOrder, configuration: JSON.stringify(workOrder.configuration) };
+            // Convertir el campo atomizer a un array
+            const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
+            // Crear el objeto con el campo atomizer convertido a JSON
+            const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
+            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
+        }
+      }
+
+      // await this.dbService.syncWorkData(works);
+      for (const atomizer of atomizers) {
+        const existingAtomizer = await this.dbService.getRecordById('atomizer', atomizer.id);
+        console.log(existingAtomizer);
+        if (!existingAtomizer) {
+          console.log(this.dbService.syncAtomizer([atomizer]));
+          await this.dbService.syncAtomizer([atomizer]);
+        }
+      }
+
+      for (const implement of implementss) {
+        console.log("IMPLEMENTSS" , implementss);
+        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
+        console.log(existingImplement);
+        if (!existingImplement) {
+          console.log("IMPLEMENTSS" , implementss , implement);
+          console.log(this.dbService.syncImplement([implement]));
+          await this.dbService.syncImplement([implement]);
         }
       }
 

@@ -7,6 +7,8 @@ import { Configuration } from '../../utils/configuration';
 // import {  } from 'src/app/core/models/models';
 
 import { WorkExecutionOrder } from '../../models/workExecutionOrder';
+import { Atomizer } from '../../models/Atomizer';
+import { Implement } from '../../models/Implements';
 
 @Injectable({
   providedIn: 'root'
@@ -55,6 +57,14 @@ export class GeneralService {
 
   public getWorkOrder(): Observable<Array<WorkExecutionOrder>> {
     return this.http.get<Array<WorkExecutionOrder>>(`${Configuration.urlRest}/api/work-execution-order-app/`);
+  }
+
+  public getAtomizer(): Observable<Array<Atomizer>> {
+    return this.http.get<Array<Atomizer>>(`${Configuration.urlRest}/api/atomizer-app`);
+  }
+
+  public getImplement(): Observable<Array<Implement>> {
+    return this.http.get<Array<Implement>>(`${Configuration.urlRest}/api/implement-app`);
   }
 
   /**

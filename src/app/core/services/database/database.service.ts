@@ -8,6 +8,8 @@ import { SocketEvent,WorkDataChange } from '../../utils/global';
 import { LocalConf } from '../../models/local_conf';
 import { Login } from '../../models/login';
 import { WorkExecutionOrder } from '../../models/workExecutionOrder';
+import { Atomizer } from '../../models/Atomizer';
+import { Implement } from '../../models/Implements';
 
 @Injectable({
   providedIn: 'root'
@@ -107,19 +109,22 @@ export class DatabaseService extends ElectronService {
                 + "CREATE TABLE IF NOT EXISTS work_execution_order( \n"
                 + " id INTEGER PRIMARY KEY, \n"
                 + " work INTEGER, \n"
+                + " work_name TEXT, \n"
                 + " lot INTEGER, \n"
                 + " worker INTEGER, \n"
                 + " supervisor INTEGER, \n"
                 + " date_start TEXT, \n"
                 + " date_final TEXT, \n"
-                + " type_implement INTEGER, \n"
+                + " implement INTEGER, \n"
+                + " implement_name TEXT, \n"
                 + " configuration TEXT, \n"
+                + " configuration_consume TEXT, \n"
                 + " pre_configuration TEXT, \n"
                 + " working_time TEXT, \n"
                 + " downtime TEXT, \n"
                 + " hectare REAL, \n"
                 + " product INTEGER, \n"
-                + " atomizer INTEGER \n"
+                + " atomizer TEXT \n"
                 + "	); \n"
 
                 /* TAVBALA MODIFICICADA */
@@ -168,7 +173,7 @@ export class DatabaseService extends ElectronService {
                 + "CREATE TABLE IF NOT EXISTS implement( \n"
                 + " id INTEGER PRIMARY KEY, \n"
                 + " nombre TEXT, \n"
-                + " type_implement INTEGER\n"
+                + " type_implement INTEGER \n"
                 + "); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS water_volumes( \n"
@@ -257,10 +262,9 @@ export class DatabaseService extends ElectronService {
 
                 + "	CREATE TABLE IF NOT EXISTS login( \n"
                 + "	operador INTEGER, \n"
-                + "	supervisor INTEGER, \n"
+                + " implement INTEGER, \n"
                 + "	fechahora TEXT, \n"
-                + " FOREIGN KEY (operador) REFERENCES person(id), \n"
-                + " FOREIGN KEY (supervisor) REFERENCES person(id) \n"
+                + " FOREIGN KEY (operador) REFERENCES person(id) \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS local_conf( \n"
@@ -622,6 +626,20 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  async getWorkExecutionOrder(): Promise<WorkExecutionOrder[]> {
+    return new Promise<WorkExecutionOrder[]>((resolve, reject) =>{
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * from work_execution_order";
+      db.all(sql,[ ],(err,rows : WorkExecutionOrder[])=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        process.nextTick(() => resolve(rows));
+      });
+      db.close();
+    });
+  }
+
   /**
    * Get the WorkExecution's data from the database
    * @returns Array of WorkExecution class
@@ -926,6 +944,20 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  async getWorkImplement(implement : number) : Promise<WorkExecutionOrder>{
+    return new Promise<WorkExecutionOrder>((resolve,reject)=>{
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * FROM work_execution_order WHERE implement = ?";
+      db.all(sql,[implement],(err,rows : WorkExecutionOrder)=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        process.nextTick(() => resolve(rows));
+      });
+      db.close();
+    });
+  }
+
   async getNotSendedExecutionDetail(id_work_execution : number) : Promise<WorkExecutionDetail[]>{
     return new Promise<WorkExecutionDetail[]>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
@@ -939,6 +971,8 @@ export class DatabaseService extends ElectronService {
       db.close();
     });
   }
+
+
 
   /**
    * Save WorkExecution's data from server to local db for offline case uses
@@ -1165,11 +1199,11 @@ export class DatabaseService extends ElectronService {
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO work_execution_order (id, work, lot , worker, supervisor , date_start, data_final, type_implement, configuration, preconfiguration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, implement , implement_name , configuration, configuration_consume, pre_configuration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.work , o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement,o.configuration, o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
+        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.implement, o.implement_name , o.configuration, o.configuration_consume , o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {
@@ -1191,6 +1225,80 @@ export class DatabaseService extends ElectronService {
       });
     });
   }
+
+  async syncAtomizer(data: Array<Atomizer>): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "INSERT INTO atomizer (id, name , uuid , machine , active) VALUES (?, ? , ? , ? , ?);";
+
+      // Iterar sobre los datos y realizar la inserción por cada uno
+      data.forEach((o) => {
+        db.run(sql, [o.id, o.name, o.uuid , o.machine , o.active], (err: Error | null) => {
+          if (err) {
+            console.error("SQLITE INSERT error", err);
+            reject(err);
+          }
+        });
+      });
+
+      // Cerrar la base de datos después de que todas las inserciones se hayan completado
+      db.close((err: Error | null) => {
+        if (err) {
+          console.error("Error al cerrar la base de datos", err);
+          reject(err);
+        } else {
+          //console.log("Base de datos cerrada");
+          resolve(true);
+        }
+      });
+    });
+  }
+
+  async syncImplement(data: Array<Implement>): Promise<boolean> {
+    return new Promise((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "INSERT INTO implement (id,nombre,type_implement) VALUES (?,?,?);";
+
+      // Iterar sobre los datos y realizar la inserción por cada uno
+      data.forEach((o) => {
+        db.run(sql, [o.id, o.name , o.typeImplement], (err: Error | null) => {
+          if (err) {
+            console.error("SQLITE INSERT error", err);
+            reject(err);
+          }
+        });
+      });
+
+      // Cerrar la base de datos después de que todas las inserciones se hayan completado
+      db.close((err: Error | null) => {
+        if (err) {
+          console.error("Error al cerrar la base de datos", err);
+          reject(err);
+        } else {
+          //console.log("Base de datos cerrada");
+          resolve(true);
+        }
+      });
+    });
+  }
+
+    /**
+   * Get the Person's data from the database
+   * @returns Array of Person class
+   */
+    async getImplemenData(): Promise<Implement[]> {
+      return new Promise<Implement[]>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql = "SELECT * from implement";
+        db.all(sql,[ ],(err,rows : Implement[])=>{
+          if(err){
+            process.nextTick(() => reject(err));
+          }
+          process.nextTick(() => resolve(rows));
+        });
+        db.close();
+      });
+    }
 
 
   /**
@@ -1306,11 +1414,11 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-  async saveLogin(operador: number, supervisor: number): Promise<boolean> {
+  async saveLogin(operador: number, implement: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO login (operador,supervisor, fechahora) VALUES (?,?,?);";
-      db = db.run(sql,[operador,supervisor, moment().format('HH:mm:ss')],
+      let sql = "INSERT INTO login (operador,implement, fechahora) VALUES (?,?,?);";
+      db = db.run(sql,[operador,implement, moment().format('HH:mm:ss')],
         (err : Error)=>{
           if(err){
             console.log("SQLITE INSERT error", err);
@@ -1325,7 +1433,7 @@ export class DatabaseService extends ElectronService {
   async getLogin(): Promise<Login> {
     return new Promise<Login>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "SELECT operador,p1.id as 'id_op', p1.code as 'code_op', p1.fullname as 'fullname_op', p1.document as 'document_op', p1.type as 'type_op', p1.is_deleted as 'isdeleted_op', supervisor, person.id as 'id_sup', person.code as 'code_sup', person.fullname as 'fullname_sup', person.document as 'document_sup', person.type as 'type_sup', person.is_deleted as 'isdeleted_sup', fechahora FROM login INNER JOIN person p1 ON login.operador = p1.id INNER JOIN person ON login.supervisor=person.id ORDER BY fechahora DESC LIMIT 1 ;";
+      let sql = "SELECT * from login  ORDER BY fechahora DESC LIMIT 1 ;";
       db.get(sql,[],(err,rows : Login)=>{
         if(err){
           process.nextTick(() => reject(err));

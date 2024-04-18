@@ -168,10 +168,6 @@ export class SettingsComponent  implements OnInit {
         }
       }
       this.router.navigate(['/main']);
-      console.log(this.info, "valor del info");
-      let data = +this.info;
-      console.log("Impresion de el valor de presion" , data);
-      this.arduinoService.regulatePressureWithBars(data);
       return true;
     }catch(err : any){
       console.error("Error during synchronization:", err);

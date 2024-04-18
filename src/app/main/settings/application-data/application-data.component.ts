@@ -104,7 +104,7 @@ export class ApplicationDataComponent  implements OnInit {
         is_finished : 0,
         working_time : moment('0:00:00', 'H:mm:ss'),
         worker : (await this.dbService.getLogin()).operador,
-        supervisor : (await this.dbService.getLogin()).supervisor,
+        /* supervisor : (await this.dbService.getLogin()).supervisor, */
         ...this.formData.value
       };
 

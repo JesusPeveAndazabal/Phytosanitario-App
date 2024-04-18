@@ -6,6 +6,6 @@ export interface TypesImplement{
 
 export interface Implement{
     id : number;
-    nombre : string;
-    type_implement: number; 
+    name : string;
+    typeImplement: number; 
 }

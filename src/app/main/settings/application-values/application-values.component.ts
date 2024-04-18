@@ -203,7 +203,7 @@ export class ApplicationValuesComponent  implements OnInit {
         is_finished: 0,
         working_time: this.currentWorkExecution ? moment(this.currentWorkExecution.working_time, 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
         worker: this.currentWorkExecution ? this.currentWorkExecution.worker : (await this.dbService.getLogin()).operador,
-        supervisor: this.currentWorkExecution ? this.currentWorkExecution.supervisor : (await this.dbService.getLogin()).supervisor,
+        supervisor: 0,
         cultivation: this.currentWorkExecution ? this.currentWorkExecution.cultivation : 0,
         farm: this.currentWorkExecution ? this.currentWorkExecution.farm : 0,
         hectare: this.currentWorkExecution ? this.currentWorkExecution.hectare : 0,
