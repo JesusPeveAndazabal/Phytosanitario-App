@@ -89,21 +89,6 @@ export class DatabaseService extends ElectronService {
                 + "	risk_name TEXT, \n"
                 + "	pressure_tolerance REAL \n"
                 + "	); \n"
-                
-                /* TABLA AÑADIDA */
-                + " CREATE TABLE IF NOT EXISTS pre_configuration( \n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " work INTEGER \n"
-                + " consume REAL, \n"
-                + " pressure REAL, \n"
-                + " unit_pressure INTEGER, \n"
-                + " description TEXT, \n"
-                + " nozzles TEXT \n"
-                + " watter_flow REAL, \n"
-                + " speed REAL, \n"
-                + " width REAL, \n"
-                + " type_implement INTEGER \n"
-                + "	); \n"
 
                 /* TABLA AÑADIDA */
                 + "CREATE TABLE IF NOT EXISTS work_execution_order( \n"
@@ -115,8 +100,8 @@ export class DatabaseService extends ElectronService {
                 + " supervisor INTEGER, \n"
                 + " date_start TEXT, \n"
                 + " date_final TEXT, \n"
-                + " implement INTEGER, \n"
-                + " implement_name TEXT, \n"
+                + " type_implement INTEGER, \n"
+                + " type_implement_name TEXT , \n"
                 + " configuration TEXT, \n"
                 + " configuration_consume TEXT, \n"
                 + " pre_configuration TEXT, \n"
@@ -130,12 +115,11 @@ export class DatabaseService extends ElectronService {
                 /* TAVBALA MODIFICICADA */
                 + "	CREATE TABLE IF NOT EXISTS work_execution( \n"
                 + "	id INTEGER PRIMARY KEY AUTOINCREMENT, \n"
-                + " work_execution_order INTEGER, \n"
-                + " atomizer INTEGER, \n"
+                + " weorder INTEGER, \n"
+                + " implement INTEGER, \n"
                 + "	work INTEGER, \n"
                 + "	lot INTEGER, \n"
                 + "	worker INTEGER, \n"
-                + "	supervisor INTEGER, \n"
                 + "	date TEXT, \n"
                 + "	configuration TEXT, \n"
                 + "	working_time TEXT, \n"
@@ -143,6 +127,7 @@ export class DatabaseService extends ElectronService {
                 + "	hectare REAL, \n"
                 + "	cultivation INTEGER, \n"
                 + "	product INTEGER, \n"
+                + "	supervisor INTEGER, \n"
                 + "	is_finished INTEGER, \n"
                 + " id_from_server INTEGER, \n"
                 + "	sended INTEGER, \n"
@@ -172,8 +157,8 @@ export class DatabaseService extends ElectronService {
                 /* TABLA AÑADIDA */
                 + "CREATE TABLE IF NOT EXISTS implement( \n"
                 + " id INTEGER PRIMARY KEY, \n"
-                + " nombre TEXT, \n"
-                + " type_implement INTEGER \n"
+                + " name TEXT, \n"
+                + " typeImplement INTEGER \n"
                 + "); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS water_volumes( \n"
@@ -196,15 +181,6 @@ export class DatabaseService extends ElectronService {
                 + " farma INTEGER, \n"
                 + " ppm REAL, \n"
                 + " ph REAL \n"
-                + "	); \n"
-
-                /* TABLA AÑADIDA */
-                + " CREATE TABLE IF NOT EXISTS atomizer ( \n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " name TEXT, \n"
-                + " uuid INTEGER TEXT, \n"
-                + " active BOOLEAN, \n"
-                + " machine TEXT \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS lot( \n"
@@ -709,12 +685,14 @@ export class DatabaseService extends ElectronService {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let insertSql =
-        "INSERT INTO work_execution (work,lot,worker,supervisor,date,configuration,working_time,downtime,hectare,cultivation,product,is_finished,id_from_server,sended,execution_from) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+        "INSERT INTO work_execution (weorder,implement,work,lot,worker,supervisor,date,configuration,working_time,downtime,hectare,cultivation,product,is_finished,id_from_server,sended,execution_from) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Ejecutar la inserción en la tabla 'work_execution'
       db.run(
         insertSql,
         [
+          o.work_execution_order,
+          o.implement,
           o.work,
           o.lot,
           o.worker,
@@ -944,11 +922,11 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
-  async getWorkImplement(implement : number) : Promise<WorkExecutionOrder>{
+  async getWorkImplement(type_implement : number) : Promise<WorkExecutionOrder>{
     return new Promise<WorkExecutionOrder>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
       let sql = "SELECT * FROM work_execution_order WHERE implement = ?";
-      db.all(sql,[implement],(err,rows : WorkExecutionOrder)=>{
+      db.all(sql,[type_implement],(err,rows : WorkExecutionOrder)=>{
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -1199,11 +1177,11 @@ export class DatabaseService extends ElectronService {
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, implement , implement_name , configuration, configuration_consume, pre_configuration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.implement, o.implement_name , o.configuration, o.configuration_consume , o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
+        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {
@@ -1257,7 +1235,7 @@ export class DatabaseService extends ElectronService {
   async syncImplement(data: Array<Implement>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO implement (id,nombre,type_implement) VALUES (?,?,?);";
+      let sql = "INSERT INTO implement (id,name,typeImplement) VALUES (?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {

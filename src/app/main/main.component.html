@@ -29,21 +29,22 @@
             <ion-fab-button shape="round" size="small"
               *ngIf="canStart"
               (mousedown)="onStartListenPower($event)"
-              (mouseup)="onEndListenPower($event)"
               (touchstart)="onStartListenPower($event)"
-              (touchend)="onEndListenPower($event)"
               (click)="onClickPower()"
               [ngClass]="classButtonPower" class="m-0">
-              <span class="pi pi-power-off"></span>
+              <span class="bi bi-moisture"></span>
             </ion-fab-button>
 
-            <ion-fab-button id="internet-conection" shape="round" size="small" 
-            class="m-0" [ngClass]="{'internet-button-on': arduinoService.conectInternet, 'internet-button-off': !arduinoService.conectInternet}">
-            <i class="bi bi-wifi" style="font-size:151%;"></i>
+            <ion-fab-button shape="round" size="small"
+              *ngIf="canStart" 
+              (mouseup)="onEndListenPower($event)"
+              (touchend)="onEndListenPower($event)" 
+              class="m-0 selected-fab-button">
+              <span class="pi pi-power-off"></span>
             </ion-fab-button>
         
 
-  <!--           <ion-fab-button id="person-button" shape="round" size="small" class="m-0">
+            <ion-fab-button id="person-button" shape="round" size="small" class="m-0">
               <span class="pi pi-user"></span>
             </ion-fab-button>
 
@@ -62,32 +63,10 @@
                     <ion-list-header>
                       <ion-label>Datos del operador</ion-label>
                     </ion-list-header>
-                    <ion-item>
-                      <ion-label>Código / DNI</ion-label>
-                      <ion-label>{{ login.id_op}} / {{ login.document_op }}</ion-label>
-                    </ion-item>
-                    <ion-item>
-                      <ion-label>Nombres completos</ion-label>
-                      <ion-label>{{ login.fullname_op }}</ion-label>
-                    </ion-item>
-                  </ion-list>
-
-                  <ion-list>
-                    <ion-list-header>
-                      <ion-label>Datos del supervisor</ion-label>
-                    </ion-list-header>
-                    <ion-item>
-                      <ion-label>Código / DNI</ion-label>
-                      <ion-label>{{ login.id_sup }} / {{ login.document_sup }}</ion-label>
-                    </ion-item>
-                    <ion-item>
-                      <ion-label>Nombres completos</ion-label>
-                      <ion-label>{{ login.fullname_sup }}</ion-label>
-                    </ion-item>
                   </ion-list>
                 </ion-content>
               </ng-template>
-            </ion-modal> -->
+            </ion-modal>
 
           </div>
         </ion-col>

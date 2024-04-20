@@ -117,11 +117,9 @@ export class ConfigComponent implements OnInit {
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
-      const atomizers = await firstValueFrom(this.apiService.getAtomizer());
       const implementss = await firstValueFrom(this.apiService.getImplement());
-      console.log("impleement" , implementss);
-      console.log("works");
       // const we = await firstValueFrom(this.apiService.getWE());
+      console.log(implementss);
       
       
 
@@ -214,23 +212,10 @@ export class ConfigComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncWorkData(works);
-      for (const atomizer of atomizers) {
-        const existingAtomizer = await this.dbService.getRecordById('atomizer', atomizer.id);
-        console.log(existingAtomizer);
-        if (!existingAtomizer) {
-          console.log(this.dbService.syncAtomizer([atomizer]));
-          await this.dbService.syncAtomizer([atomizer]);
-        }
-      }
-
       for (const implement of implementss) {
-        console.log("IMPLEMENTSS" , implementss);
         const existingImplement = await this.dbService.getRecordById('implement', implement.id);
-        console.log(existingImplement);
+        console.log("existingImplement",existingImplement);
         if (!existingImplement) {
-          console.log("IMPLEMENTSS" , implementss , implement);
-          console.log(this.dbService.syncImplement([implement]));
           await this.dbService.syncImplement([implement]);
         }
       }

@@ -6,6 +6,7 @@ import { Component, Injectable, OnInit, ViewChild } from '@angular/core';
 import { IonLoading, ModalController } from '@ionic/angular';
 import { ApplicationValuesComponent } from './application-values/application-values.component';
 import { ApplicationDataComponent } from './application-data/application-data.component';
+import { OrdenesTrabajoComponent } from './ordenes-trabajo/ordenes-trabajo.component';
 import { KeyboardComponent } from '../../custom-components/keyboard/keyboard.component';
 import { firstValueFrom } from 'rxjs';
 import { Router } from '@angular/router';
@@ -70,6 +71,14 @@ export class SettingsComponent  implements OnInit {
     modal.present();
 
     const { data, role } = await modal.onWillDismiss();
+  }
+
+  async openOrdenesTrabajo(){
+    const modal = await this.modalCtrl.create({
+      component : OrdenesTrabajoComponent,
+      id : 'ordenes-trabajo'
+    });
+    modal.present();
   }
 
   /**

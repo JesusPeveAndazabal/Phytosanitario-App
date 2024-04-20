@@ -19,6 +19,7 @@ import { OverlayPanelModule } from 'primeng/overlaypanel';
 import { ToolbarModule } from 'primeng/toolbar';
 import { DialogService } from 'primeng/dynamicdialog';
 import { KeyboardModule } from '../../custom-components/keyboard/keyboard.module';
+import { OrdenesTrabajoComponent } from './ordenes-trabajo/ordenes-trabajo.component';
 
 // import { HeaderModule } from 'primeng/header';
 // import { CustomComponentsModule } from 'src/app/custom-components/custom-components.module';
@@ -45,6 +46,7 @@ import { KeyboardModule } from '../../custom-components/keyboard/keyboard.module
     SettingsComponent,
     ApplicationDataComponent,
     ApplicationValuesComponent,
+    OrdenesTrabajoComponent,
 ]
 })
 export class SettingsModule {}

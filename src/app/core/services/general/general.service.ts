@@ -59,10 +59,6 @@ export class GeneralService {
     return this.http.get<Array<WorkExecutionOrder>>(`${Configuration.urlRest}/api/work-execution-order-app/`);
   }
 
-  public getAtomizer(): Observable<Array<Atomizer>> {
-    return this.http.get<Array<Atomizer>>(`${Configuration.urlRest}/api/atomizer-app`);
-  }
-
   public getImplement(): Observable<Array<Implement>> {
     return this.http.get<Array<Implement>>(`${Configuration.urlRest}/api/implement-app`);
   }

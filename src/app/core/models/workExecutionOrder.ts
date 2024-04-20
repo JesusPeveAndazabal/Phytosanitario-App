@@ -7,8 +7,8 @@ export interface WorkExecutionOrder{
     supervisor :number;
     date_start: moment.Moment;
     date_final: moment.Moment;
-    implement: number;
-    implement_name : string;
+    type_implement : number;
+    type_implement_name : number;
     configuration : string;
     configuration_consume : string;
     preconfiguration: string;

@@ -1,0 +1,19 @@
+<ion-header>
+    <ion-toolbar>
+      <ion-buttons slot="start">
+        <ion-button color="medium" (click)="cancel()">Cancelar</ion-button>
+      </ion-buttons>
+      <ion-title class="text-center">Lista de Ordenes de Trabajo</ion-title>
+      <ion-buttons slot="end">
+        <ion-button (click)="confirm()" [disabled]="!selectedWorkOrder" [strong]="true">Confirmar</ion-button>
+      </ion-buttons>
+    </ion-toolbar>
+  </ion-header>
+  <ion-content class="ion-padding">
+    <ion-list>
+      <ion-item [class.selected]="order === selectedWorkOrder" *ngFor="let order of ordenesTrabajoPorTipoImplemento" (click)="selectOrder(order)">
+        <ion-label>{{ order.work_name }}</ion-label>
+      </ion-item>
+    </ion-list>
+  </ion-content>
+  

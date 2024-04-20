@@ -69,6 +69,9 @@ export class MainComponent implements OnInit,AfterViewInit{
     },
   ];
 
+   // Variable para almacenar el estado del botón de encendido
+   powerButtonOn: boolean = false;
+
   constructor(private databaseService: DatabaseService,
     private router: Router,
     private alertController : AlertController,
@@ -213,6 +216,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
   
   async onClickPower(){
+    this.powerButtonOn = !this.powerButtonOn;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     //console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
@@ -285,54 +289,13 @@ export class MainComponent implements OnInit,AfterViewInit{
     }
   }
 
-
-/*   confirmVolume() {
-    // Obtener el valor del campo de entrada
-    const volumenInput = document.getElementById('volumenInput') as HTMLInputElement;
-    console.log()
-    if (volumenInput) {
-      // Obtener el valor como un número
-      this.volumen = parseFloat(volumenInput.value);
-      // Cerrar el modal después de confirmar si es necesario
-      console.log("VOLUMEN", volumenInput);
-      // Aquí puedes realizar las operaciones necesarias con this.volumen
-    }
-
-
-  } */
-
- /*  async openVolumeModal() {
-    const modal = await this.modalController.create({
-      component: 'volume-modal' // Identificador del modal
-    });
-    await modal.present();
-  }
-
-  async closeVolumeModal() {
-    await this.modalController.dismiss();
-  }
-
-  async submitVolume() {
-    // Aquí manejas el volumen ingresado, por ejemplo, puedes guardar los datos o realizar alguna acción con él
-    console.log('Volumen ingresado:', this.volume);
-
-    // Cierra el modal después de manejar los datos
-    await this.modalController.dismiss();
-  } */
-
   async onEndListenPower($event: any){
-    let endTime : moment.Moment = moment();
-
-    let diff = endTime.diff(this.listenTime,"milliseconds");
-    if(diff < 10) return;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     let command : SocketData = {
       event:SocketEvent.WORK_STATUS_CHANGES,
       type: WorkStatusChange.STOP,
       data : {id : this.lastWorkExecution!.id}
     }
-
-    if(diff > 1000) {
       //Confirm and finish the work execution
       this.alertController.create({
         header: '¡Atención!',
@@ -370,7 +333,7 @@ export class MainComponent implements OnInit,AfterViewInit{
       }).then((res) => {
         res.present();
       });
-    }
+    
   }
 
 

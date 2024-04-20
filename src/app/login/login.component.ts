@@ -17,6 +17,7 @@ import { ElectronService } from '../core/services';
 import { WorkExecution } from '../core/models/work-execution';
 import { Implement } from '../core/models/Implements';
 import { WorkExecutionOrder } from '../core/models/workExecutionOrder';
+import * as moment from 'moment';
 // import { WorkExecutionConfiguration } from '../core/models/we-configuration';
 // import { WorkExecution } from '../core/models/work-execution';
 
@@ -35,7 +36,9 @@ export class LoginComponent implements OnInit {
   implementData : Array<Implement> = [];
   workExecution : WorkExecution;
   workExecutionOrder : WorkExecutionOrder[];
-  // currentWorkExecution : WorkExecution | undefined = undefined;
+  wExecutionOrder : WorkExecutionOrder | undefined = undefined;
+  public implemento;
+    // currentWorkExecution : WorkExecution | undefined = undefined;
   constructor(private fb:FormBuilder,
     private dbService : DatabaseService,
     private generalService:GeneralService,
@@ -55,9 +58,10 @@ export class LoginComponent implements OnInit {
     // this.databaseService.openConnection();
     await this.dbService.openConnection();
     this.personData = await this.dbService.getPersonData();
-    this.implementData = await this.dbService.getImplemenData();
-    this.workExecution = await this.dbService.getLastWorkExecution();
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
+    this.workExecution = await this.dbService.getLastWorkExecution();
+    this.implementData = await this.dbService.getImplemenData();
+   
 
     console.log(this.implementData, "data");
 
@@ -85,46 +89,49 @@ export class LoginComponent implements OnInit {
         || person.document == this.formData.value.code) && person.type == PersonType.OPERADOR))
       {
 
-        let workImplement = await this.databaseService.getWorkImplement(this.formData.value.implement);
+       /*  this.wExecutionOrder = await this.databaseService.getWorkImplement(this.formData.value.implement); */
+    /*     console.log("Respuesta de getWorkImplement:", this.wExecutionOrder);
 
-        if(workImplement){
-          console.log("CONDICION", workImplement);
+
+        if(this.wExecutionOrder){
+          let workOrder = this.wExecutionOrder[0]
+          console.log("CONDICION", workOrder);
           try{
-            let workExecution: WorkExecution = {
-              id : workImplement.id,
-              work_execution_order : workImplement.id,
-              atomizer : await JSON.parse(workImplement.atomizer),
-              work : workImplement.work,
-              lot : workImplement.lot,
-              worker : workImplement.worker,
-              supervisor : workImplement.supervisor,
-              date : workImplement.date_start,
-              configuration : await JSON.parse(workImplement.configuration),
-              working_time : workImplement.working_time,
-              downtime : workImplement.downtime,
-              hectare : workImplement.hectare,
-              product : workImplement.product,
-              is_finished : 0,
-              id_from_server : 0,
-              sended : 0,
-              execution_from : 1,
-              cultivation : 1,
-              farm : 0,
-              min_volume : 100,
+              let workExecution: WorkExecution = {
+                id :1,
+                work_execution_order : workOrder ? workOrder.id : 0,
+                implemento : workOrder ? workOrder.implement : 0,
+                work :workOrder ? workOrder.work : 0,
+                lot : workOrder ? workOrder.lot : 0,
+                worker : workOrder ? workOrder.worker : 0,
+                supervisor : workOrder ? workOrder.supervisor:0,
+                date : workOrder ? moment(workOrder.date_start , 'YYYY-MM-DD H:mm:ss') : moment(),
+                configuration : await workOrder.configuration,
+                working_time : workOrder ? moment(workOrder.working_time , 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
+                downtime : workOrder ? moment(workOrder.downtime , 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
+                hectare : workOrder ? workOrder.hectare : 0,
+                product : workOrder ? workOrder.product : 0,
+                is_finished : 0,
+                id_from_server : 0,
+                sended : 0,
+                execution_from : 1,
+                cultivation : 1,
+                farm : 0,
+                min_volume : 100,
             }
             console.log("EJECUCION");
             console.log(workExecution);
-            //wait this.databaseService.saveWorkExecutionData(workExecution);
-            await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
-            this.router.navigateByUrl('/main');
+            await this.databaseService.saveWorkExecutionData(workExecution);
+          
           } catch (error){
             console.error("Error al guardar los datos de ejecución de trabajo:", error);
           }
   
-        }
+        } */
           
-
-  
+        this.implemento = this.formData.value.implement;
+        await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
+        this.router.navigateByUrl('/main');
         
       }
       else{
@@ -148,11 +155,9 @@ export class LoginComponent implements OnInit {
       const nozzles = await firstValueFrom(this.apiService.getNozzles());
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
-      const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
-      const atomizers = await firstValueFrom(this.apiService.getAtomizer());
       const implementss = await firstValueFrom(this.apiService.getImplement());
-      console.log("impleement" , implementss);
-      console.log("works");
+      const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
+      console.log("WORKS LOGI N" , workOrders);
       // const we = await firstValueFrom(this.apiService.getWE());
       
 
@@ -232,8 +237,14 @@ export class LoginComponent implements OnInit {
         }
       }
 
-       // await this.dbService.syncWorkData(works);
-       for (const workOrder of workOrders) {
+      for (const implement of implementss) {
+        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
+        if (!existingImplement) {
+          await this.dbService.syncImplement([implement]);
+        }
+      }
+      // await this.dbService.syncWorkData(works);
+      for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
             // Convertir el objeto configuration a JSON
@@ -242,28 +253,8 @@ export class LoginComponent implements OnInit {
             const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
             // Crear el objeto con el campo atomizer convertido a JSON
             const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
+            console.log("SINCRONIZACION" , await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]))
             await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
-        }
-      }
-
-      // await this.dbService.syncWorkData(works);
-      for (const atomizer of atomizers) {
-        const existingAtomizer = await this.dbService.getRecordById('atomizer', atomizer.id);
-        console.log(existingAtomizer);
-        if (!existingAtomizer) {
-          console.log(this.dbService.syncAtomizer([atomizer]));
-          await this.dbService.syncAtomizer([atomizer]);
-        }
-      }
-
-      for (const implement of implementss) {
-        console.log("IMPLEMENTSS" , implementss);
-        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
-        console.log(existingImplement);
-        if (!existingImplement) {
-          console.log("IMPLEMENTSS" , implementss , implement);
-          console.log(this.dbService.syncImplement([implement]));
-          await this.dbService.syncImplement([implement]);
         }
       }
 

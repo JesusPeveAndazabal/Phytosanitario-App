@@ -180,7 +180,8 @@ export class ArduinoService {
         [Sensor.ACCUMULATED_VOLUME] : 0,
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
       }
-        
+      let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
+      //console.log("CURRENT", currentWork); 
 
     
       instance.listArduinos.forEach(arduino => {
@@ -205,13 +206,11 @@ export class ArduinoService {
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
-      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
-        let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
-        if (currentWork && currentWork.id) {
-          let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
+      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) { 
+        let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
+        if (currentWorkPrueba) {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
-          
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
             isCurrentRealVolumeReset = true;
             previousSensorConnections.sensorVolume = true;
@@ -226,9 +225,8 @@ export class ArduinoService {
 
         // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
         if (!this.coneectedCaudal) {
-          let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();  
-          if(currentWork && currentWork.id){
-            let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
+          let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
+          if(currentWorkPrueba){
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
           }
@@ -253,11 +251,12 @@ export class ArduinoService {
         Object.entries(this.data).forEach((value) => {
           let sensor = parseInt(value[0]) as Sensor;
           instance.notifySensorValue(sensor, sensor == Sensor.GPS ? value[1] as number[] : value[1] as number);
+          //console.log(sensor);
         }); 
-    
+        //console.log(onExecution);
         if (!onExecution) {
           onExecution = true;
-    
+          
           if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
             instance.tiempocondicion = 1;
             
@@ -274,6 +273,7 @@ export class ArduinoService {
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
                 this.currentRealVolume = this.initialVolume - (this.datosCaudal + instance.previousAccumulatedVolume);
+                console.log("curreent" , this.currentRealVolume);
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   
