@@ -105,8 +105,6 @@ export class DatabaseService extends ElectronService {
                 + " configuration TEXT, \n"
                 + " configuration_consume TEXT, \n"
                 + " pre_configuration TEXT, \n"
-                + " working_time TEXT, \n"
-                + " downtime TEXT, \n"
                 + " hectare REAL, \n"
                 + " product INTEGER, \n"
                 + " atomizer TEXT \n"
@@ -642,6 +640,28 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  async getLastWorkExecutionOrder(): Promise<WorkExecution> {
+    return new Promise<WorkExecution>((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * from work_execution ORDER BY id DESC LIMIT 1";
+      db.get(sql,[ ],(err,rows : any)=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        if(rows){
+          let row2 : WorkExecution = {
+            ...rows,
+            working_time : moment(rows.working_time,"HH:mm:ss"),
+            downtime : moment(rows.downtime,"HH:mm:ss")
+          };
+          process.nextTick(() => resolve(row2));
+        }else 
+          process.nextTick(() => resolve(rows));   
+      });
+      db.close();
+    });
+  }
+
   /**
    * Get the WorkExecution's data from the database
    * @returns Array of WorkExecution class
@@ -691,7 +711,7 @@ export class DatabaseService extends ElectronService {
       db.run(
         insertSql,
         [
-          o.work_execution_order,
+          o.weorder,
           o.implement,
           o.work,
           o.lot,
@@ -1177,11 +1197,11 @@ export class DatabaseService extends ElectronService {
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, working_time, downtime, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration,o.working_time, o.downtime , o.hectare, o.product, o.atomizer], (err: Error | null) => {
+        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration, o.hectare, o.product, o.atomizer], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {

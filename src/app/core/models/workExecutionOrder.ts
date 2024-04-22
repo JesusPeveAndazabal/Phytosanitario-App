@@ -12,8 +12,6 @@ export interface WorkExecutionOrder{
     configuration : string;
     configuration_consume : string;
     preconfiguration: string;
-    working_time : moment.Moment;
-    downtime : moment.Moment;
     hectare : number;
     product : number;
     atomizer : string;

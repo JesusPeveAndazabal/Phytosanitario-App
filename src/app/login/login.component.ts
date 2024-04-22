@@ -88,47 +88,7 @@ export class LoginComponent implements OnInit {
       if(this.personData.find(person => (person.code == this.formData.value.code
         || person.document == this.formData.value.code) && person.type == PersonType.OPERADOR))
       {
-
-       /*  this.wExecutionOrder = await this.databaseService.getWorkImplement(this.formData.value.implement); */
-    /*     console.log("Respuesta de getWorkImplement:", this.wExecutionOrder);
-
-
-        if(this.wExecutionOrder){
-          let workOrder = this.wExecutionOrder[0]
-          console.log("CONDICION", workOrder);
-          try{
-              let workExecution: WorkExecution = {
-                id :1,
-                work_execution_order : workOrder ? workOrder.id : 0,
-                implemento : workOrder ? workOrder.implement : 0,
-                work :workOrder ? workOrder.work : 0,
-                lot : workOrder ? workOrder.lot : 0,
-                worker : workOrder ? workOrder.worker : 0,
-                supervisor : workOrder ? workOrder.supervisor:0,
-                date : workOrder ? moment(workOrder.date_start , 'YYYY-MM-DD H:mm:ss') : moment(),
-                configuration : await workOrder.configuration,
-                working_time : workOrder ? moment(workOrder.working_time , 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
-                downtime : workOrder ? moment(workOrder.downtime , 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
-                hectare : workOrder ? workOrder.hectare : 0,
-                product : workOrder ? workOrder.product : 0,
-                is_finished : 0,
-                id_from_server : 0,
-                sended : 0,
-                execution_from : 1,
-                cultivation : 1,
-                farm : 0,
-                min_volume : 100,
-            }
-            console.log("EJECUCION");
-            console.log(workExecution);
-            await this.databaseService.saveWorkExecutionData(workExecution);
-          
-          } catch (error){
-            console.error("Error al guardar los datos de ejecución de trabajo:", error);
-          }
-  
-        } */
-          
+         
         this.implemento = this.formData.value.implement;
         await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
         this.router.navigateByUrl('/main');

@@ -10,7 +10,7 @@
             <div class="form-group row">
               <label for="vol_alert_on" class="col-sm-2 col-form-label">Volumen mínimo (L):</label>
               <div class="col-sm-10">
-                <input appKeyboard type="text" class="form-control" id="vol_alert_on" formControlName="vol_alert_on" placeholder="100" pattern="^(?:1\d{2}|2000|[1-9]\d{2,3})$" required>
+                <input appKeyboard type="text" class="form-control" id="vol_alert_on" formControlName="vol_alert_on" placeholder="100" pattern="^(?:[5-9]\d|[1-4]\d{2}|500)$" required>
                 <div id="textoo" class="form-text">
                   <strong>Cuando el volumen de agua llegue al mínimo se pausará el trabajo y deberá recargar</strong> 
                 </div>

@@ -15,6 +15,7 @@ import { SettingsComponent } from './settings/settings.component';
 import { ArduinoService } from '../core/services/arduino/arduino.service';
 import { LocalConf } from '../core/models/local_conf';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
+import { VolumeComponent } from './control/volume/volume.component';
 
 
 
@@ -78,7 +79,8 @@ export class MainComponent implements OnInit,AfterViewInit{
     private route : ActivatedRoute,
     public alerta: SettingsComponent,
     private modalController: ModalController,
-    public arduinoService : ArduinoService
+    public arduinoService : ArduinoService,
+    public volumenCompont : VolumeComponent
     ) {
       // console.log(this.login, "main.component... constructor");
 
@@ -180,6 +182,7 @@ export class MainComponent implements OnInit,AfterViewInit{
 
   openNumericKeyboard() {
     document.getElementById('numeric-keyboard')!.style.display = 'block';
+    this.volumenCompont.alertaRecarga;
   }
 
   appendToInput(value: number) {
@@ -320,6 +323,9 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.arduinoService.isRunning = false;
               this.finished;
               this.arduinoService.resetVolumenInit();
+              this.arduinoService.currentRealVolume = 0;
+              this.arduinoService.inicializarContenedor(0 ,this.localConfig.vol_alert_on );
+              this.cerrarSesion();
               // console.log(finalizar, "finalizar");
             }
           },

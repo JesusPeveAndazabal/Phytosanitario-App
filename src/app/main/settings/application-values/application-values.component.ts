@@ -214,7 +214,7 @@ export class ApplicationValuesComponent  implements OnInit {
         execution_from: this.currentWorkExecution ? this.currentWorkExecution.execution_from : 1,
         sended: this.currentWorkExecution ? this.currentWorkExecution.sended : 0,
         min_volume: 0,
-        work_execution_order: 0,
+        weorder: 0,
         implement: 0
       };
 

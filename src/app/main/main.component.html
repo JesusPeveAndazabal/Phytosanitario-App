@@ -36,10 +36,11 @@
             </ion-fab-button>
 
             <ion-fab-button shape="round" size="small"
-              *ngIf="canStart" 
+              *ngIf="canStart && powerButtonOn"
               (mouseup)="onEndListenPower($event)"
-              (touchend)="onEndListenPower($event)" 
-              class="m-0 selected-fab-button">
+              (touchend)="onEndListenPower($event)"
+              [ngClass]="{'power-button-on': powerButtonOn, 'power-button-off': !powerButtonOn}"
+              class="m-0">
               <span class="pi pi-power-off"></span>
             </ion-fab-button>
         

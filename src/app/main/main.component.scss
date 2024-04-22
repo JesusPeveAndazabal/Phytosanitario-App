@@ -11,6 +11,20 @@ ion-footer::before{
   height: 0px;
 }
 
+.alerta-red {
+  animation: alerta-red-animation 1s infinite alternate;
+}
+
+@keyframes alerta-red-animation {
+  from {
+    background-color: #ff0000; /* Rojo */
+  }
+  to {
+    background-color: inherit; /* Usa el color de fondo original */
+  }
+}
+
+
 .toolbar-menu{
   --background: transparent;
   --min-height: 10px;

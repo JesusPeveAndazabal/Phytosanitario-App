@@ -1,6 +1,6 @@
 export interface WorkExecution{
   id : number;
-  work_execution_order : number;
+  weorder : number;
   implement : number;
   work : number;
   lot : number;

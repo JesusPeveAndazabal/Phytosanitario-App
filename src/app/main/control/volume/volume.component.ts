@@ -25,6 +25,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
   @Input("latitudGPS") latitudGPS : number = 0;
   @Input("longitudGPS") longitudGPS : number = 0;
 
+  
+
     // Output
   // @Output() leftControlActiveChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   // @Output() rightControlActiveChange: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -45,6 +47,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
   derecha: boolean = false;
   izquierda: boolean = false;
   distanciaTramo = 0;
+
+  public alertaRecarga : boolean = false;
 
 
   distance: number = 0;
@@ -89,25 +93,25 @@ export class VolumeComponent  implements OnInit,OnChanges {
 
     // Suponiendo que tienes una variable volumenInicial definida en tu clase
 
-  interval(1000).pipe(
-    startWith(0), // Emite un valor inicial para que comience inmediatamente
-    switchMap(() => this.arduinoService.getSensorObservable(Sensor.VOLUME))
-  ).subscribe((valorDelSensor: number) => {
+    interval(1000).pipe(
+      startWith(0), // Emite un valor inicial para que comience inmediatamente
+      switchMap(() => this.arduinoService.getSensorObservable(Sensor.VOLUME))
+    ).subscribe((valorDelSensor: number) => {
 
-    // Actualiza el volumen actual en tu clase
-    this.volume = this.arduinoService.currentRealVolume;
-    this.volume = parseFloat(this.volume.toFixed(2));
-    
-    //console.log("THIS.VOLUME", this.volume);
+      // Actualiza el volumen actual en tu clase
+      this.volume = this.arduinoService.currentRealVolume;
+      this.volume = parseFloat(this.volume.toFixed(2));
+      
+      //console.log("THIS.VOLUME", this.volume);
 
-    if (this.volume < this.minVolume && this.arduinoService.isRunning) {
-      //this.shouldBlink = true;  
-     /*  this.apagarValvulas(); */
-      this.arduinoService.isRunning = false;
-    } else {
-      this.shouldBlink = false;
-    }
-  });
+      if (this.volume < this.minVolume && this.arduinoService.isRunning) {
+        //this.shouldBlink = true;  
+        this.apagarValvulas();
+        this.arduinoService.isRunning = false;
+      } else {
+        this.shouldBlink = false;
+      }
+    });
 
     this.container = new Wave({
       unit: 10, // wave size

@@ -20,7 +20,7 @@
 }
 
 .blink-red {
-  background-color: rgb(173, 3, 3);
+  background-color: rgb(255, 31, 31);
   animation: blink-animation 1s infinite alternate;
   position: absolute;
   //top:40%;
@@ -41,9 +41,11 @@
     background-color: transparent;
   }
   to {
-    background-color: rgb(173, 3, 3);
+    background-color: rgb(255, 35, 35);
   }
 }
+
+
 
 #volume-info {
   position: absolute;
