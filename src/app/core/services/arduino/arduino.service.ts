@@ -101,9 +101,9 @@ export class ArduinoService {
 
 
   /* Parametros para conexion */
-  coneectedCaudal: boolean;
-  connectedPresion:boolean;
-  connectedGps:boolean;
+  public coneectedCaudal: boolean;
+  public connectedPresion:boolean;
+  public connectedGps:boolean;
 
   
   inputPressureValue: number | undefined;
@@ -206,15 +206,17 @@ export class ArduinoService {
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
-      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) { 
-        let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
-        if (currentWorkPrueba) {
+      if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
+        if(currentWork){
+          let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
+          if (currentWorkPrueba) {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
             isCurrentRealVolumeReset = true;
             previousSensorConnections.sensorVolume = true;
-        }
+          }
+        }   
       }
 
       // Compara el estado actual con el estado anterior para detectar cambios
@@ -225,10 +227,12 @@ export class ArduinoService {
 
         // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
         if (!this.coneectedCaudal) {
-          let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
-          if(currentWorkPrueba){
-            instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
-            console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
+          if(currentWork){
+            let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
+            if(currentWorkPrueba){
+              instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
+              console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
+            }
           }
         }
       }
@@ -273,7 +277,6 @@ export class ArduinoService {
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
                 this.currentRealVolume = this.initialVolume - (this.datosCaudal + instance.previousAccumulatedVolume);
-                console.log("curreent" , this.currentRealVolume);
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   
@@ -468,6 +471,7 @@ export class ArduinoService {
     public activateLeftValve(): void {
       this.izquierdaActivada = true;
       const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
+      console.log("Comand" , command);
       this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
     }
 
@@ -475,6 +479,7 @@ export class ArduinoService {
     public deactivateLeftValve(): void {
       this.izquierdaActivada = false;
       const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
+      console.log("Comand" , command);
       this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
       //console.log("Comando desactivar valvula izquierda", command);
     }
@@ -483,6 +488,7 @@ export class ArduinoService {
     public activateRightValve(): void {
       this.derechaActivada = true;
       const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
+      console.log("Comand" , command);
       //console.log(command, "comand");
       this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
     }
@@ -491,6 +497,7 @@ export class ArduinoService {
     public deactivateRightValve(): void {
       this.derechaActivada = false;
       const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
+      console.log("Comand" , command);
       this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
       //console.log("Comando desactivar valvula derecha", command);
     }

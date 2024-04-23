@@ -35,29 +35,33 @@
   <h5 class="text-center" style="color: aliceblue; margin-top:-1px; margin-bottom:-10px;">PRESIÓN</h5>
   <ion-row class="h-full">
     <ion-col size="6" class="flex flex-column h-full">
-      <!-- Hexagono -->
+      <!-- Hexágono -->
       <div class="panel-donut">
         <span id="teoric-water-flow">
-          <svg class="half-svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275"  xmlns="http://www.w3.org/2000/svg">
-            <polygon  fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#1e5512" stroke-width="15" />
-            <text text-anchor="middle" style="white-space: pre; fill: rgb(255, 252, 252);"  dy="55%" dx="50%" font-size="35pt">{{teoric_pressure.value}} {{teoric_pressure.unit}}</text>
+          <svg class="half-svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275" xmlns="http://www.w3.org/2000/svg">
+            <polygon fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#1e5512" stroke-width="15" />
+            <text text-anchor="middle" style="white-space: pre; fill: rgb(255, 252, 252);" dy="55%" dx="50%" font-size="35pt">{{teoric_pressure.value}} {{teoric_pressure.unit}}</text>
           </svg>
         </span>
       </div>
-      <!-- fin de hexágono -->
+      <!-- Fin de hexágono -->
       <div class="panel-donut">
         <span id="efficiency-water-flow">
-          <svg class="half-svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275"  xmlns="http://www.w3.org/2000/svg">
-            <polygon  fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#fff" stroke-width="15" />
+          <svg class="half-svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275" xmlns="http://www.w3.org/2000/svg">
+            <polygon fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#fff" stroke-width="15" />
             <text text-anchor="middle" style="white-space: pre; fill: rgb(255, 252, 252);" dy="55%" dx="50%" font-size="35pt">{{efficiency_pressure.value}} {{efficiency_pressure.unit}}</text>
           </svg>
         </span>
       </div>
     </ion-col>
     <ion-col size="6" class="flex flex-column justify-content-center h-full">
+      <!-- Mensaje de desconexión -->
+      <div *ngIf="!arduinoService.connectedPresion" class="disconnected-message">
+        <div class="centered-text">Desconectado</div>
+      </div>
       <div class="panel-water-flow">
-        <svg class="svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275"  xmlns="http://www.w3.org/2000/svg">
-          <polygon  fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#fff" stroke-width="15" />
+        <svg class="svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275" xmlns="http://www.w3.org/2000/svg">
+          <polygon fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#fff" stroke-width="15" />
           <text text-anchor="middle" style="white-space: pre; fill: rgb(255, 252, 252);" dy="55%" dx="50%" font-size="30pt">{{pressure.value}} {{pressure.unit}}</text>
         </svg>
       </div>

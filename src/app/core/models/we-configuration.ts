@@ -15,5 +15,5 @@ export interface WorkExecutionConfiguration {
     temperature : number;
     humidity : number;
     wind_kmh : number;
-    consumo : number;
+    consume : number;
 }

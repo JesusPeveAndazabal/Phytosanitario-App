@@ -7,6 +7,7 @@ import { Implement } from '../../../core/models/Implements';
 import * as moment from 'moment';
 import { Login } from '../../../core/models/login';
 import { config } from '../../../core/utils/global';
+import { WorkExecutionConfiguration } from '../../../core/models/we-configuration';
 
 @Component({
   selector: 'app-ordenes-trabajo',
@@ -19,6 +20,7 @@ export class OrdenesTrabajoComponent implements OnInit {
   wExecutionOrder : WorkExecutionOrder | undefined = undefined;
   selectedWorkOrder: WorkExecutionOrder | null = null;
   lastWorkExecution: WorkExecution | null = null;
+  weConfiguration : WorkExecutionConfiguration | undefined;
   ejecucionesTrabajo : WorkExecution | null = null;
   ordenesTrabajoPorTipoImplemento: WorkExecutionOrder[] = [];
   login : Login;
@@ -31,7 +33,6 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
     //Obtiene las ejecuciones de trabajo 
     this.ejecucionesTrabajo = await this.dbService.getLastWorkExecutionOrder();
-    console.log("EJECUCIONES DE TRABAJO", this.ejecucionesTrabajo);
 
     // Identificar el tipo de implemento del usuario que ha iniciado sesión
     const tipoImplementoLogin = this.implementData.find(implemento => implemento.id === this.login.implement)?.typeImplement;
@@ -47,9 +48,7 @@ export class OrdenesTrabajoComponent implements OnInit {
     // Filtrar las órdenes de trabajo que ya se han ejecutado
     if (this.ejecucionesTrabajo) {
       const idEjecutada = this.ejecucionesTrabajo.weorder;
-      console.log("IDE EJECUTADA" , idEjecutada);
       this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => order.id !== idEjecutada);
-      console.log("ORDENES FILTRADAS POR EJECUCION", this.ordenesTrabajoPorTipoImplemento);
     }
 
   }
@@ -58,9 +57,7 @@ export class OrdenesTrabajoComponent implements OnInit {
   }
 
   selectOrder(order: WorkExecutionOrder) {
-    console.log('Seleccionando orden:', order); // Verificar si se selecciona correctamente
     this.selectedWorkOrder = order;
-    console.log('Orden seleccionada Funcion:', this.selectedWorkOrder); // Verificar si la orden seleccionada se establece correctamente
   }
 
   /* Funcion para formatear la fecha y la hora de la interfaza */
@@ -80,8 +77,6 @@ export class OrdenesTrabajoComponent implements OnInit {
 
   async confirm(){
     if (this.selectedWorkOrder) {
-      // Aquí puedes realizar la acción que desees con la orden seleccionada
-      console.log("Orden seleccionada antes de guardar:", this.selectedWorkOrder);
       let workExecution: WorkExecution = {
         id :1,
         weorder : this.selectedWorkOrder ? this.selectedWorkOrder.id : 0,
@@ -105,7 +100,6 @@ export class OrdenesTrabajoComponent implements OnInit {
         min_volume : 100,
       }
       //Guardamos la ejecucion de Trabajo
-      console.log("GUARDADO DE EJECUCION" , workExecution);
       await this.dbService.saveWorkExecutionData(workExecution);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;

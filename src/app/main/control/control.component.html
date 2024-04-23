@@ -14,18 +14,13 @@
 
       </div>
     </ion-col>
-    <ion-col size="4" style="margin-top: 1%;">
-    <app-volume [latitudGPS]="latitud" [longitudGPS]="longitud"
+    <ion-col size="4" style="margin-top: 1%; z-index: 20000;">
+    <app-volume style="z-index: 20000;" [latitudGPS]="latitud" [longitudGPS]="longitud"
         [ngClass]="{'blink-red': shouldBlink}"
-        [leftControlActive]="leftControlActive"
-        [rightControlActive]="rightControlActive"
         [wExecution]="wExecution"
         [maxCurrentVolume]="maxVolume"
         [currentVolume]="volume"
-        [currentPh]="currentPh"
-        (onLeftChange)="toggleValvulaIzquierda()"
-        (onRightChange)="toggleValvulaDerecha()"
-      >
+        [currentPh]="currentPh">
     </app-volume>
 
     </ion-col>

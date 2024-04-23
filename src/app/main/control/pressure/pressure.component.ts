@@ -28,7 +28,7 @@ export class PressureComponent  implements OnChanges,AfterViewInit {
 
   private wConfig : WorkExecutionConfiguration | undefined;
 
-  constructor(private volume:VolumeComponent, private arduinoService: ArduinoService, private dbService:DatabaseService) { }
+  constructor(private volume:VolumeComponent, public  arduinoService: ArduinoService, private dbService:DatabaseService) { }
 
   ngAfterViewInit() {
     if(this.wExecution){

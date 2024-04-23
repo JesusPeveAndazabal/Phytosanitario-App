@@ -74,6 +74,13 @@ export class DatabaseService extends ElectronService {
                 + "	is_deleted integer\n"
                 + "	);\n"
 
+                + "	CREATE TABLE IF NOT EXISTS login( \n"
+                + "	operador INTEGER, \n"
+                + " implement INTEGER, \n"
+                + "	fechahora TEXT, \n"
+                + " FOREIGN KEY (operador) REFERENCES person(id) \n"
+                + "	); \n"
+
                 + "	CREATE INDEX IF NOT EXISTS person_index_code ON person (code);\n"
 
                 + "	CREATE INDEX IF NOT EXISTS person_index_document ON person (document);\n"
@@ -96,7 +103,6 @@ export class DatabaseService extends ElectronService {
                 + " work INTEGER, \n"
                 + " work_name TEXT, \n"
                 + " lot INTEGER, \n"
-                + " worker INTEGER, \n"
                 + " supervisor INTEGER, \n"
                 + " date_start TEXT, \n"
                 + " date_final TEXT, \n"
@@ -232,13 +238,6 @@ export class DatabaseService extends ElectronService {
                 + " manufacturer INTEGER, \n"
                 + " formula TEXT, \n"
                 + " register TEXT \n"
-                + "	); \n"
-
-                + "	CREATE TABLE IF NOT EXISTS login( \n"
-                + "	operador INTEGER, \n"
-                + " implement INTEGER, \n"
-                + "	fechahora TEXT, \n"
-                + " FOREIGN KEY (operador) REFERENCES person(id) \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS local_conf( \n"
@@ -1197,11 +1196,11 @@ export class DatabaseService extends ElectronService {
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , worker, supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.work , o.work_name, o.lot, o.worker,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration, o.hectare, o.product, o.atomizer], (err: Error | null) => {
+        db.run(sql, [o.id, o.work , o.work_name, o.lot,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration, o.hectare, o.product, o.atomizer], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {

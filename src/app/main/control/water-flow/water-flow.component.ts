@@ -1,6 +1,7 @@
 import { WorkExecutionConfiguration } from './../../../core/models/we-configuration';
 import { WorkExecution } from './../../../core/models/work-execution';
 import { Component, Input, OnInit, SimpleChanges } from '@angular/core';
+import { ArduinoService } from '../../../core/services/arduino/arduino.service';
 
 declare var d3 : any;
 
@@ -20,16 +21,19 @@ export class WaterFlowComponent  implements OnInit {
   teoric_water_flow : number = 0;
   efficiency : string = '0';
 
+  connectedCaudal: boolean;
+
   bubblesStyle = {
     "animation-duration" : "1500ms",
   };
 
 
-  constructor() { }
+  constructor(public arduinoService: ArduinoService) { }
 
-  ngOnInit() {
+  async ngOnInit() {
     //this.drawDonutChart("#efficiency-water-flow",0,".35em");
-
+// Asigna el valor de connectedCaudal según la lógica de tu aplicación
+    console.log("CONEXION ARDUINO" , this.arduinoService.coneectedCaudal);
     this.setRealWaterflow(0);
   }
 

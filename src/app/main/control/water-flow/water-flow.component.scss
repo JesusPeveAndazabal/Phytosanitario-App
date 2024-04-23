@@ -22,3 +22,34 @@
   99%{top: 100%; opacity: 0;}
 }
 
+/* CSS para el mensaje desconectado */
+.disconnected-message {
+  position: relative;
+  animation: blink 1s infinite; /* Agregamos la animación de parpadeo */
+}
+
+.centered-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: rgba(255, 0, 0, 0.5); /* Cambia el color de fondo según tu preferencia */
+  padding: 20px; /* Aumenta el padding para hacer el contorno más grande */
+  border-radius: 10px; /* Aumenta el radio del borde para hacer el contorno más grande */
+  color: white;
+  font-weight: bold;
+  font-size: 24px; /* Aumenta el tamaño del texto */
+}
+
+/* Animación de parpadeo */
+@keyframes blink {
+  0% {
+    opacity: 0;
+  }
+  50% {
+    opacity: 1;
+  }
+  100% {
+    opacity: 0;
+  }
+}

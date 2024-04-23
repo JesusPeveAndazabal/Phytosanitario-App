@@ -32,6 +32,13 @@ export class AppComponent implements OnInit {
     private electronService: ElectronService,
     private apiService : ApiService) {
 
+/*     // Configurar la ruta del archivo de registro
+    log.transports.file.file = 'C:\\Users\\BETA\\3D Objects\\PROYECTO ACTUALIZADO\\migracion\\bd\\error.log';
+
+    // Configurar el nivel de registro (opcional)
+    log.transports.file.level = 'error'; // Solo registrar errores */
+
+
       this.databaseService.openConnection();
 
       if(this.electronService.isElectron){

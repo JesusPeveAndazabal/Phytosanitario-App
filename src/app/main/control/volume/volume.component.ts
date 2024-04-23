@@ -39,6 +39,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   public izquierdaActiva: boolean = false;
   public bothControlsActive: boolean = false;
   private container! : Wave;
+  public recargarTanque : boolean = false;
   public shouldBlink: boolean = false;
   localConfig! : LocalConf;
   minVolume: number = 0;
@@ -80,6 +81,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.localConfig = await this.dbService.getLocalConfig();
      
     this.minVolume = this.localConfig.vol_alert_on;
+    console.log("MINIMO VOLUMEN", this.minVolume);
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
 
     this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_HECTARE).subscribe((value: number) => {
@@ -102,14 +104,15 @@ export class VolumeComponent  implements OnInit,OnChanges {
       this.volume = this.arduinoService.currentRealVolume;
       this.volume = parseFloat(this.volume.toFixed(2));
       
-      //console.log("THIS.VOLUME", this.volume);
-
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
+        this.recargarTanque = true;
+        console.log("ENTRO A ESTA CONDICION");
         //this.shouldBlink = true;  
         this.apagarValvulas();
         this.arduinoService.isRunning = false;
       } else {
         this.shouldBlink = false;
+        this.recargarTanque = false;
       }
     });
 
@@ -167,9 +170,11 @@ export class VolumeComponent  implements OnInit,OnChanges {
     }
   }
 
+  /* Sirve para apagar las 2 valvulas */
   apagarValvulas():void{
     this.leftControlActive = false;
     this.rightControlActive = false;
+    this.bothControlsActive = false;
     console.log("ESTADO IZQUIERDA", this.rightControlActive);
     console.log("ESTADO DERECHA", this.leftControlActive);
     this.arduinoService.deactivateLeftValve();
@@ -188,7 +193,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
     }
   }
 
+  //Se utiliza para el apagado de valvulas y prendida del boton de enemedio
   toggleAmbasValvulas() {
+    console.log("AMBAS VALVULAS");
     // Alternar el estado de ambas válvulas
     this.bothControlsActive = !this.bothControlsActive;
   
@@ -201,6 +208,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     } else {
       this.leftControlActive = false;
       this.rightControlActive = false;
+      this.bothControlsActive = false;
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();
     }

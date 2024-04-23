@@ -221,7 +221,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   async onClickPower(){
     this.powerButtonOn = !this.powerButtonOn;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-    //console.log(this.lastWorkExecution, "dio click al boton verde");
+    console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
     if(!this.lastWorkExecution)
       this.loadPersonValues();
@@ -231,8 +231,8 @@ export class MainComponent implements OnInit,AfterViewInit{
         data : {id : this.lastWorkExecution!.id}
       };
       command.data.id = (await this.databaseService.getLastWorkExecution()).id;
-      //console.log(command, "array de socket data");
-      //console.log(command.data.id, "id");
+      console.log(command, "array de socket data");
+      console.log(command.data.id, "id");
 
       // Start/Pause
       command.type = this.workStatus == WorkStatusChange.STOP || WorkStatusChange.FINISH ? WorkStatusChange.START : WorkStatusChange.STOP;
@@ -324,7 +324,7 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.finished;
               this.arduinoService.resetVolumenInit();
               this.arduinoService.currentRealVolume = 0;
-              this.arduinoService.inicializarContenedor(0 ,this.localConfig.vol_alert_on );
+              //this.arduinoService.inicializarContenedor(0 ,this.localConfig.vol_alert_on );
               this.cerrarSesion();
               // console.log(finalizar, "finalizar");
             }

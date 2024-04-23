@@ -36,6 +36,39 @@
   aspect-ratio: 1;
 }
 
+.alerta {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #f00c;
+  color: #fff;
+  padding: 20px;
+  border-radius: 5px;
+  z-index: 9999;
+  width: 44%;
+  height: 20%;
+  font-size: 184%;
+  text-align: center;
+}
+
+.alerta-visible {
+  animation: parpadeo 1s infinite;
+}
+
+@keyframes parpadeo {
+  0% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 1;
+  }
+}
+
+
 @keyframes blink-animation {
   from {
     background-color: transparent;

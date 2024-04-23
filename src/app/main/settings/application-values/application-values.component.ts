@@ -107,7 +107,7 @@ export class ApplicationValuesComponent  implements OnInit {
         this.nozzleConfig = this.weConfiguration!.nozzles;
         this.formData.setValue({
           volume : await this.weConfiguration?.volume,
-          consumo : await this.weConfiguration?.consumo,
+          consumo : await this.weConfiguration?.consume,
           speed : await this.weConfiguration?.speed,
           pressure : await this.weConfiguration?.pressure,
           unit: await this.weConfiguration?.unit,
@@ -384,8 +384,6 @@ export class ApplicationValuesComponent  implements OnInit {
             // Actualizar el caudal objetivo total restando el caudal de la boquilla eliminada
             this.addNozzles();
             //Actualizar la suma
-      
-
           }
         },
         {

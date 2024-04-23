@@ -137,29 +137,6 @@ export class ControlComponent  implements OnInit {
       }
     });
 
-    //VOLUMEN
-    //sObservable que emite cada segundo
-/*     intervalObservable.pipe(
-      startWith(0), // Emite un valor inicial para que comience inmediatamente
-      switchMap(() => this.arduinoService.getSensorObservable(Sensor.VOLUME))
-    ).subscribe((valorDelSensor:number) => {
-      this.volume = this.arduinoService.currentRealVolume;
-      let valorVolumen = valorDelSensor;
-      let valorRealVolumen = 
-      console.log("Volumen" , this.volume);
-
-      if (this.volume < this.minVolume && this.arduinoService.isRunning) {
-        console.log("Debe rellenar el tanque - Valvulas cerradas" , this.volume , this.minVolume);
-        this.shouldBlink = true;
-        // this.toggleValvulaDerecha();
-        // this.toggleValvulaIzquierda();
-        //this.arduinoService.isRunning = false;
-      } else {
-        this.shouldBlink = false;
-      }
-    }); */
-
-    
     // PH
     this.arduinoService.getSensorObservable(Sensor.PH).subscribe((valorDelSensor:number) => {
       this.currentPh = valorDelSensor;
@@ -222,6 +199,7 @@ export class ControlComponent  implements OnInit {
 
   //Función para abrir y cerrar electrovalvulas
   toggleValvulaDerecha():void{
+    console.log("TOGGLEVALVULADERECHA CONTROL");
     this.rightControlActive = !this.rightControlActive;
     if(this.rightControlActive){
       this.arduinoService.activateRightValve();
@@ -230,7 +208,19 @@ export class ControlComponent  implements OnInit {
     }
   }
 
+  //Activar y desactivar la válvulas izquierda
+  toggleValvulaIzquierda():void{
+    console.log("TOGGLEVALVULA IZQUIERDA CONTROL");
+    this.leftControlActive = !this.leftControlActive;
+    if(this.leftControlActive){
+      this.arduinoService.activateLeftValve();
+    }else{
+      this.arduinoService.deactivateLeftValve();
+    }
+  }
+
   toggletwoValvulas():void{
+    console.log("TOGGLETWOVALVULAS CONTROL");
     this.rightControlActive = !this.rightControlActive;
     this.leftControlActive = !this.leftControlActive;
     if(this.rightControlActive && this.leftControlActive){
@@ -242,51 +232,5 @@ export class ControlComponent  implements OnInit {
     }
   }
 
-  //Activar y desactivar la válvulas izquierda
-  toggleValvulaIzquierda():void{
-    this.leftControlActive = !this.leftControlActive;
-    if(this.leftControlActive){
-      this.arduinoService.activateLeftValve();
-    }else{
-      this.arduinoService.deactivateLeftValve();
-    }
-  }
-
-
-
-
-  // toggleValvulaDerecha($event : any):void{
-  //   this.arduinoService.toggleValvulaDerecha();
-  // }
-
-  // toggleValvulaIzquierda($event : any):void{
-  //   this.arduinoService.toggleValvulaIzquierda();
-  // }
-
-  // changeLeftControl($event : any){
-  //   let command : SocketData = {
-  //     event: SocketEvent.COMMANDS,
-  //     type : 0,
-  //     data : {
-  //       device : Sensor.VALVE_LEFT,
-  //       command : `${Number($event)}`
-  //     }
-  //   };
-  // }
-
-  // changeRightControl($event : any){
-  //   let command : SocketData = {
-  //     event: SocketEvent.COMMANDS,
-  //     type : 0,
-  //     data : {
-  //       device : Sensor.VALVE_RIGHT,
-  //       command : `${Number($event)}`
-  //     }
-  //   };
-  // }
-
-  // regulatePressure(){
-  //   this.arduinoService.regulatePressureWithBars(+this.info);
-  // }
 
 }

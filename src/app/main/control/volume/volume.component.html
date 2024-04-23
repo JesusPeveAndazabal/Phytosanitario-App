@@ -82,6 +82,11 @@
 	</li>
 </ul> -->
 
+<div id="alerta-rellenar-tanque" *ngIf="recargarTanque" class="alerta alerta-visible">
+	El tanque ha llegado al minimo configurado 
+	Porfavor rellene el tanque
+</div>
+
 <div id="output-controls" class="w-full">
 
 <!--   <div class="row" style="margin-top: -180px;">
@@ -102,7 +107,8 @@
  
   <!-- <button class="btn-lg" style="margin-left: 66px;" (click)="apagarValvulas()" >OFF</button> -->
   <div class="button-group chevrons  style flex justify-content-center">
-    <button class="button left" (click)="toggleValvulaIzquierda()" [ngClass]="leftControlActive ? 'selected' : ''">
+    
+	<button class="button left" (click)="toggleValvulaIzquierda()" [ngClass]="leftControlActive ? 'selected' : ''">
       <i [ngClass]="leftControlActive ? 'bi bi-arrow-left' : 'bi bi-arrow-left'"></i>
 		  <!-- <ion-icon  [name]="leftControlActive ? 'lock-open-outline' : 'lock-closed-outline'"></ion-icon> -->
 	</button>
@@ -115,5 +121,6 @@
       <i [ngClass]="rightControlActive ? 'bi bi-arrow-right' : 'bi bi-arrow-right'" ></i>
 		  <!-- <ion-icon [name]="rightControlActive ? 'lock-open-outline' : 'lock-closed-outline'"></ion-icon> -->
 	</button>
+	
   </div>
 </div>

@@ -119,11 +119,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
-      console.log(workOrders);
-      console.log(products);
       
-      
-
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
       // await this.dbService.syncPersonData(people);
@@ -131,7 +127,6 @@ export class ConfigComponent implements OnInit {
         const existingPerson = await this.dbService.getRecordById('person', person.id);
         // console.log(existingPerson, "person");
         if (!existingPerson) {
-          console.log( "PERSONA" , await this.dbService.syncPersonData([person]));
           await this.dbService.syncPersonData([person]);
         }
       }
@@ -210,14 +205,12 @@ export class ConfigComponent implements OnInit {
             const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
             // Crear el objeto con el campo atomizer convertido a JSON
             const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
-            console.log("WORKORDERS" ,await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]) );
             await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
         }
       }
 
       for (const implement of implementss) {
         const existingImplement = await this.dbService.getRecordById('implement', implement.id);
-        console.log("existingImplement",existingImplement);
         if (!existingImplement) {
           await this.dbService.syncImplement([implement]);
         }
