@@ -180,29 +180,6 @@ export class MainComponent implements OnInit,AfterViewInit{
     return this.router.url;
   }
 
-  openNumericKeyboard() {
-    document.getElementById('numeric-keyboard')!.style.display = 'block';
-    this.volumenCompont.alertaRecarga;
-  }
-
-  appendToInput(value: number) {
-    this.numericInputValue += value.toString();
-  }
-
-  deleteLastCharacter() {
-    this.numericInputValue = this.numericInputValue.slice(0, -1);
-  }
-
-  confirmInput() {
-    // Aquí puedes realizar acciones adicionales con el valor ingresado
-    console.log('Valor ingresado:', this.numericInputValue);
-    // Luego puedes limpiar el campo de entrada si es necesario
-    //this.numericInputValue = '';
-    // Oculta el teclado numérico después de confirmar la entrada
-    document.getElementById('numeric-keyboard')!.style.display = 'none';
-  }
-
-
   changeStatusExecution(){
 
   }
@@ -260,7 +237,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             //console.log("GETLASTWORK" , this.lastWorkExecution);
             await this.openIfNotConnected();
             let volume : WaterVolumes = { id :0 ,volume: this.volumenTanque,work_exec_id : this.lastWorkExecution!.id };
-            console.log(volume, "volume");
+            //console.log(volume, "volume");
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
             //console.log("CONF.VOLUMEN" , conf.volume);
             //console.log("VAL" ,this.volumenTanque);

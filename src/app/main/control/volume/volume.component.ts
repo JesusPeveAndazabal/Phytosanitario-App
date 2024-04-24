@@ -5,6 +5,7 @@ import { Sensor, config } from './../../../core/utils/global';
 import { ChangeDetectorRef, Component, EventEmitter, Injectable, Input, OnChanges, OnInit, Output, SimpleChanges} from '@angular/core';
 import { DatabaseService } from '../../../core/services';
 import { LocalConf } from '../../../core/models/local_conf';
+import { ToastController } from '@ionic/angular';
 // import { WebSocketClientService } from 'src/app/core/services/services';
 // import { Sensor, SocketEvent,config } from 'src/app/core/utils/global';
 @Injectable({
@@ -50,6 +51,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   distanciaTramo = 0;
 
   public alertaRecarga : boolean = false;
+  toast: any; // Variable para almacenar el toast
 
 
   distance: number = 0;
@@ -61,7 +63,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   distance2: number = 0;
 
   //volumenInicial = 200; // Define tu volumen inicial aquí
-  constructor(public arduinoService :ArduinoService, private dbService: DatabaseService,private changeDetectorRef: ChangeDetectorRef) {
+  constructor(public arduinoService :ArduinoService, private dbService: DatabaseService,private changeDetectorRef: ChangeDetectorRef, public toastController : ToastController) {
 
    }
 
@@ -105,9 +107,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
       this.volume = parseFloat(this.volume.toFixed(2));
       
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
-        this.recargarTanque = true;
         console.log("ENTRO A ESTA CONDICION");
-        //this.shouldBlink = true;  
+        this.recargarTanque = true;
         this.apagarValvulas();
         this.arduinoService.isRunning = false;
       } else {

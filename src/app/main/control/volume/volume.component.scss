@@ -36,38 +36,6 @@
   aspect-ratio: 1;
 }
 
-.alerta {
-  position: fixed;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  background-color: #f00c;
-  color: #fff;
-  padding: 20px;
-  border-radius: 5px;
-  z-index: 9999;
-  width: 44%;
-  height: 20%;
-  font-size: 184%;
-  text-align: center;
-}
-
-.alerta-visible {
-  animation: parpadeo 1s infinite;
-}
-
-@keyframes parpadeo {
-  0% {
-    opacity: 1;
-  }
-  50% {
-    opacity: 0;
-  }
-  100% {
-    opacity: 1;
-  }
-}
-
 
 @keyframes blink-animation {
   from {
@@ -78,6 +46,12 @@
   }
 }
 
+.my-custom-toast {
+  --background: #4CAF50; /* Cambia el color de fondo */
+  --color: #FFFFFF; /* Cambia el color del texto */
+  --font-size: 16px; /* Cambia el tamaño de la letra */
+  /* Otros estilos personalizados */
+}
 
 
 #volume-info {
@@ -392,3 +366,40 @@ ion-icon {
   }
 }
  */
+ .alerta {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
+  padding: 8px;
+  background-color: #ff9;
+  color: #000;
+  border: 2px solid #ffff00;
+  border-radius: 10px;
+  text-align: center;
+  z-index: 50000000000;
+  opacity: 0;
+  animation: aparecer 2s forwards, desaparecer 2s forwards 5s; /* Controla la entrada y salida gradual */
+}
+
+.alerta h3 {
+  margin-bottom: 10px;
+}
+
+@keyframes aparecer {
+  from {
+      opacity: 0; /* Inicialmente invisible */
+  }
+  to {
+      opacity: 0.9; /* Aparece gradualmente */
+  }
+}
+
+@keyframes desaparecer {
+  from {
+      opacity: 0.9; /* Visible */
+  }
+  to {
+      opacity: 0; /* Desaparece gradualmente */
+  }
+}

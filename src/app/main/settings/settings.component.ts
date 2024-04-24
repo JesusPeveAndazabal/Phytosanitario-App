@@ -160,7 +160,7 @@ export class SettingsComponent  implements OnInit {
           await this.dbService.syncNozzlesData([nozzle]);
         }
       }
-
+ 
       // await this.dbService.syncProductData(products);
       for (const product of products) {
         const existingProduct = await this.dbService.getRecordById('product', product.id);

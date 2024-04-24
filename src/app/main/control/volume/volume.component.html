@@ -82,12 +82,15 @@
 	</li>
 </ul> -->
 
-<div id="alerta-rellenar-tanque" *ngIf="recargarTanque" class="alerta alerta-visible">
-	El tanque ha llegado al minimo configurado 
-	Porfavor rellene el tanque
+<div id="alerta-rellenar-tanque" *ngIf="recargarTanque" class="alerta alerta-parpadeante">
+	<h3><strong>¡Valvulas Apagadas!</strong><i class="bi bi-exclamation-circle"></i></h3>
+    El tanque ha llegado al mínimo configurado. Por favor, rellene el tanque.<br>
+	Ingrese la nueva cantidad del tanque despues de ser llenado.
 </div>
 
+
 <div id="output-controls" class="w-full">
+
 
 <!--   <div class="row" style="margin-top: -180px;">
     <div class="col-md-6 text-center">

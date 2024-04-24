@@ -55,9 +55,8 @@
                   <ion-toolbar color="primary">
                     <ion-title>Información de la aplicación</ion-title>
                     <ion-buttons slot="end">
-                      <ion-button *ngIf="!lastWorkExecution" color="light" (click)="modalInfo.dismiss()">Cerrar sesión</ion-button>
                       <ion-button color="light" (click)="modalInfo.dismiss()">Cerrar</ion-button>
-                      <ion-button color="light" (click)="cerrarSesion()">Cerrar Sesion</ion-button>
+                      <ion-button color="light" (click)="cerrarSesion(); modalInfo.dismiss()">Cerrar Sesion</ion-button>
                     </ion-buttons>
                   </ion-toolbar>
                   <ion-list>

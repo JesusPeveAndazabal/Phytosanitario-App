@@ -83,7 +83,7 @@ export class AppComponent implements OnInit {
       let sended = [];
       let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
-    /*   setInterval(()=>{
+/*        setInterval(()=>{
         if(!onExecution){
           onExecution = true;
 
@@ -135,7 +135,7 @@ export class AppComponent implements OnInit {
                           paquete.forEach(async (wDetail : WorkExecutionDetail) => {
                             wDetail.data = JSON.parse(wDetail.data);
                             try {
-                                if (wDetail.gps.trim() !== '') {
+                                if (wDetail.gps && wDetail.gps.trim() !== '') {
                                     wDetail.gps = JSON.parse(wDetail.gps);
                                     console.log(wDetail.gps);
                                     console.log("Detalle gps JSON" ,JSON.parse(wDetail.gps));
@@ -184,6 +184,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000);   */
+      },9000);  */ 
   }
 }
