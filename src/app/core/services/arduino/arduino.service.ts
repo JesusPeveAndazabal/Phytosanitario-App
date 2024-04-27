@@ -46,10 +46,6 @@ export class ArduinoService {
   DEBUG = true;
   devicesCant : string[] = [];
 
-  private messageInterval:any;
-
-  private last_date = new Date();
-
   izquierdaActivada = false;
   derechaActivada = false;
 
@@ -96,6 +92,7 @@ export class ArduinoService {
   volumenAcumul = 0;
   ultimoTiempoNotificacion: number = 0;
   public dataGps = false; // Variable para verificar si hay datos del GPS
+  public consumoTotal = 0;
   public conectInternet = false; // Variable para verificar si hay internet o no
   datosCaudal = 0;
 
@@ -114,8 +111,6 @@ export class ArduinoService {
   previousAccumulatedVolume = 0;
 
   
-  
-  
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
@@ -126,7 +121,6 @@ export class ArduinoService {
 
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
       if(workExecution){
-        //console.log("workExecution",workExecution);
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       }
@@ -136,7 +130,6 @@ export class ArduinoService {
       this.listArduinos.push(
         new ArduinoDevice(Configuration[`device${i}`],115200,true,electronService)
       );
-      //console.log("listArduinos",this.listArduinos);
     }
 
     //Iteracion para recorre los valores de los sensores y guardarlos localmente
@@ -144,7 +137,6 @@ export class ArduinoService {
 
       // Declarar una variable para almacenar el volumen anterior
     let volumenAnterior = 0;
-    let data2;
 
     // Almacena el estado anterior de conexión de los sensores
     let previousSensorConnections = {
@@ -153,21 +145,12 @@ export class ArduinoService {
       sensorGps: false
     };
 
-    // Variables para controlar el estado de conexión del Arduino del sensor de volumen
-    let wasConnectedCaudal: boolean = false;
-
-    // Variable para guardar el último valor del sensor de volumen antes de la desconexión
-    let lastVolumeValue: number = 0;
-
-
-    let lastValidAccumulatedVolume = 0;
-    let previousSensorConnectedState = false; // Variable para almacenar
-
     setInterval(async () => {
-      //await this.checkInternetConnection();
       let onExecution = false;
-        // Define una bandera para controlar si el restablecimiento de currentRealVolume ya ha ocurrido
+
+      // Define una bandera para controlar si el restablecimiento de currentRealVolume ya ha ocurrido
       let isCurrentRealVolumeReset = false;
+
       // Agregar sensores para futuros cambios
       instance.data = {
         ...instance.data,
@@ -180,10 +163,9 @@ export class ArduinoService {
         [Sensor.ACCUMULATED_VOLUME] : 0,
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
       }
-      let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
-      //console.log("CURRENT", currentWork); 
 
-    
+      let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
+
       instance.listArduinos.forEach(arduino => {
         arduino.message_from_device.forEach((sensor) => {
         });
@@ -223,7 +205,6 @@ export class ArduinoService {
       if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
         console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectó' : 'desconectó'}`);
         previousSensorConnections.sensorVolume = this.coneectedCaudal;
-        console.log(previousSensorConnections.sensorVolume);
 
         // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
         if (!this.coneectedCaudal) {
@@ -238,25 +219,26 @@ export class ArduinoService {
       }
 
       this.hasGPSData = this.data[Sensor.GPS] !== undefined && instance.data[Sensor.GPS] !== null && instance.data[Sensor.GPS] != this.gpsVar;
+      
       if (instance.hasGPSData) {
         instance.dataGps = true;
-        //console.log("Si hay datos del gps.");
       } else {
         instance.dataGps = false;
-        //console.log("¡Alerta! No hay datos del GPS.", this.dataGps);
-        // Aquí puedes agregar cualquier lógica de alerta que necesites
       }
 
       this.gpsVar = instance.data[Sensor.GPS];
 
-      instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
-
+      if(instance.data[Sensor.ACCUMULATED_VOLUME] > 0 || instance.data[Sensor.ACCUMULATED_VOLUME] != undefined){
+        instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
+      }
+    
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
           let sensor = parseInt(value[0]) as Sensor;
           instance.notifySensorValue(sensor, sensor == Sensor.GPS ? value[1] as number[] : value[1] as number);
           //console.log(sensor);
         }); 
+
         //console.log(onExecution);
         if (!onExecution) {
           onExecution = true;
@@ -295,7 +277,10 @@ export class ArduinoService {
     
               await this.databaseService.updateTimeExecution(currentWork);
             }
+
+            instance.reealNow = instance.reealNow.startOf('seconds');
     
+            //Is running en true para guardar datos
             if (currentWork && instance.isRunning) {
               let gps = instance.data[Sensor.GPS];
 
@@ -303,8 +288,6 @@ export class ArduinoService {
               let events: string[] = [];
               let has_events = false;
     
-              //console.log("Trabajo" , currentWork);
-
               instance.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
               instance.info = JSON.parse(currentWork.configuration).pressure;
               instance.speedalert = JSON.parse(currentWork.configuration).speed;
@@ -355,10 +338,6 @@ export class ArduinoService {
                 has_events = true;
                 events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
               }
-    
-              // if (!has_events) {
-              //   events.push("NO HAY EVENTOS REGISTRADOS");
-              // }
                   
               let wExecutionDetail: WorkExecutionDetail = {
                 id_work_execution: currentWork.id,
@@ -378,14 +357,13 @@ export class ArduinoService {
               await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
               instance.reealNow = instance.reealNow.startOf('seconds');
 
+              //Reiniciar el volumen
               instance.data[Sensor.VOLUME] = 0;
-              /* if (this.dataGps) {
-                
-              } else {
-                console.log("No se guardo en la DB");
-              } */
+
+              //Guardar en una variable el total acumulado
+              instance.consumoTotal = instance.data[Sensor.ACCUMULATED_VOLUME].toFixed(2);
+
             } 
-    
             onExecution = false;
           }
           //let currentTime = moment();
@@ -410,162 +388,130 @@ export class ArduinoService {
   }
 
 
-    public mapToObject(map: Map<any, any>): { [key: string]: any } {
-      const obj: { [key: string]: any } = {};
-      map.forEach((value, key) => {
-        if (key !== undefined) {
-          obj[key.toString()] = value;
+  public mapToObject(map: Map<any, any>): { [key: string]: any } {
+    const obj: { [key: string]: any } = {};
+    map.forEach((value, key) => {
+      if (key !== undefined) {
+        obj[key.toString()] = value;
+      }
+    });
+    return obj;
+  }
+
+  //Metodo para enviar el valor de presion que se le asignara
+  public regulatePressureWithBars(bars: number): void {
+    const regulatorId = Sensor.PRESSURE_REGULATOR;
+
+    // Convertir el valor de bares según sea necesario, por ejemplo, asumamos que está en la misma unidad que se usó en el script original
+    const barPressure = bars;
+
+    //console.log('Enviando comando de regulación de presión...', barPressure);
+
+    // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
+    this.findBySensor(regulatorId).sendCommand(`${regulatorId}|${barPressure}`);
+    //console.log("Comando" , `${regulatorId}|${barPressure}`);
+  }
+
+  //Metodo para resetear el volumen inicial y minimo
+  public resetVolumenInit(): void {
+    const command = 'B';
+    this.findBySensor(Sensor.VOLUME).sendCommand(command);
+  }
+
+  //Metodo para poder saber si un Arduino/Sensor esta conectado o no
+  public isSensorConnected(sensor: Sensor): boolean {
+    // Encuentra el Arduino que contiene el sensor
+    const arduino = this.listArduinos.find(a => a.sensors.includes(sensor));
+    // Si se encuentra el Arduino y está conectado, el sensor también está conectado
+    return !!arduino && arduino.isConnected;
+  }
+
+  inicializarContenedor(inicial: number, minimo: number): void {
+    this.initialVolume = inicial;
+    this.currentRealVolume = inicial;
+    this.minVolume = minimo;
+    this.isRunning = true;
+  }
+
+  //Metodo para resetear la pression inicial y minimo
+  public resetPressure(): void {
+    const command = 'B';
+    this.findBySensor(Sensor.PRESSURE).sendCommand(command);
+  }
+
+  //
+  public conteoPressure(): void {
+    const command = 'E';
+    this.findBySensor(Sensor.PRESSURE).sendCommand(command);
+  }
+
+  // Método para activar la válvula izquierda
+  public activateLeftValve(): void {
+    this.izquierdaActivada = true;
+    const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
+    console.log("Comand" , command);
+    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
+  }
+
+  // Método para desactivar la válvula izquierda
+  public deactivateLeftValve(): void {
+    this.izquierdaActivada = false;
+    const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
+    console.log("Comand" , command);
+    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
+    //console.log("Comando desactivar valvula izquierda", command);
+  }
+
+  // Método para activar la válvula derecha
+  public activateRightValve(): void {
+    this.derechaActivada = true;
+    const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
+    console.log("Comand" , command);
+    //console.log(command, "comand");
+    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
+  }
+
+  // Método para desactivar la válvula derecha
+  public deactivateRightValve(): void {
+    this.derechaActivada = false;
+    const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
+    console.log("Comand" , command);
+    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
+    //console.log("Comando desactivar valvula derecha", command);
+  }
+
+  getDistance(coord1, coord2) {
+    const R = 6371; // Radio de la Tierra en kilómetros
+    const dLat = this.deg2rad(coord2.latitude - coord1.latitude);
+    const dLon = this.deg2rad(coord2.longitude - coord1.longitude);
+    const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(this.deg2rad(coord1.latitude)) * Math.cos(this.deg2rad(coord2.latitude)) *
+        Math.sin(dLon / 2) * Math.sin(dLon / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    const distanceInKm = R * c; // Distancia en kilómetros
+    const distanceInMeters = distanceInKm * 1000; // Convertir a metros
+    return distanceInMeters;
+  }
+
+  deg2rad(deg) {
+      return deg * (Math.PI / 180);
+  }
+
+  async checkInternetConnection() {
+    try {
+        const online = await isOnline();
+        if (online) {
+            this.conectInternet = true;
+            //console.log('El procesador tiene conexión a Internet.');
+        } else {
+            this.conectInternet = false;
+            //console.log('El procesador no tiene conexión a Internet.');
         }
-      });
-      return obj;
+    } catch (error) {
+        console.error('Error al verificar la conexión a Internet:', error);
     }
-
-    //Metodo para enviar el valor de presion que se le asignara
-    public regulatePressureWithBars(bars: number): void {
-      const regulatorId = Sensor.PRESSURE_REGULATOR;
-
-      // Convertir el valor de bares según sea necesario, por ejemplo, asumamos que está en la misma unidad que se usó en el script original
-      const barPressure = bars;
-
-      //console.log('Enviando comando de regulación de presión...', barPressure);
-
-      // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
-      this.findBySensor(regulatorId).sendCommand(`${regulatorId}|${barPressure}`);
-      //console.log("Comando" , `${regulatorId}|${barPressure}`);
-    }
-
-    //Metodo para resetear el volumen inicial y minimo
-    public resetVolumenInit(): void {
-      const command = 'B';
-      this.findBySensor(Sensor.VOLUME).sendCommand(command);
-    }
-
-    //Metodo para poder saber si un Arduino/Sensor esta conectado o no
-    public isSensorConnected(sensor: Sensor): boolean {
-      // Encuentra el Arduino que contiene el sensor
-      const arduino = this.listArduinos.find(a => a.sensors.includes(sensor));
-      // Si se encuentra el Arduino y está conectado, el sensor también está conectado
-      return !!arduino && arduino.isConnected;
-    }
-
-    inicializarContenedor(inicial: number, minimo: number): void {
-      this.initialVolume = inicial;
-      this.currentRealVolume = inicial;
-      this.minVolume = minimo;
-      this.isRunning = true;
-    }
-
-    //Metodo para resetear la pression inicial y minimo
-    public resetPressure(): void {
-      const command = 'B';
-      this.findBySensor(Sensor.PRESSURE).sendCommand(command);
-    }
-
-    //
-    public conteoPressure(): void {
-      const command = 'E';
-      this.findBySensor(Sensor.PRESSURE).sendCommand(command);
-    }
-
-    // Método para activar la válvula izquierda
-    public activateLeftValve(): void {
-      this.izquierdaActivada = true;
-      const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
-      console.log("Comand" , command);
-      this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
-    }
-
-    // Método para desactivar la válvula izquierda
-    public deactivateLeftValve(): void {
-      this.izquierdaActivada = false;
-      const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
-      console.log("Comand" , command);
-      this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
-      //console.log("Comando desactivar valvula izquierda", command);
-    }
-
-    // Método para activar la válvula derecha
-    public activateRightValve(): void {
-      this.derechaActivada = true;
-      const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
-      console.log("Comand" , command);
-      //console.log(command, "comand");
-      this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
-    }
-
-    // Método para desactivar la válvula derecha
-    public deactivateRightValve(): void {
-      this.derechaActivada = false;
-      const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
-      console.log("Comand" , command);
-      this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
-      //console.log("Comando desactivar valvula derecha", command);
-    }
-
-    //Regular la presion
-    regulatePressure(): void {
-      if (this.inputPressureValue !== undefined) {
-        //console.log(this.inputPressureValue);
-      this.regulatePressureWithBars(this.inputPressureValue);
-      }
-    }
-
-    //Limpiar datos el arduino mediante el comando
-/*     resetVolumen(): void {
-      this.resetVolumenInit();
-      this.minVolume = 0;
-      this.currentRealVolume = 0;
-      // this.maxVolume = 0;
-    } */
-
-    getDistance(coord1, coord2) {
-      const R = 6371; // Radio de la Tierra en kilómetros
-      const dLat = this.deg2rad(coord2.latitude - coord1.latitude);
-      const dLon = this.deg2rad(coord2.longitude - coord1.longitude);
-      const a =
-          Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-          Math.cos(this.deg2rad(coord1.latitude)) * Math.cos(this.deg2rad(coord2.latitude)) *
-          Math.sin(dLon / 2) * Math.sin(dLon / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      const distanceInKm = R * c; // Distancia en kilómetros
-      const distanceInMeters = distanceInKm * 1000; // Convertir a metros
-      return distanceInMeters;
-    }
-  
-    deg2rad(deg) {
-        return deg * (Math.PI / 180);
-    }
-
-    async checkInternetConnection() {
-      try {
-          const online = await isOnline();
-          if (online) {
-              this.conectInternet = true;
-              //console.log('El procesador tiene conexión a Internet.');
-          } else {
-              this.conectInternet = false;
-              //console.log('El procesador no tiene conexión a Internet.');
-          }
-      } catch (error) {
-          console.error('Error al verificar la conexión a Internet:', error);
-      }
-    } 
-
-    /* Algoritmo para el tiempo productivo */
-    /* IniciarApp(valorWatterflow : number): void {
-      console.log("Ingreso a la funcion iniciarApp")
-      if (this.isRunning && valorWatterflow > 0) {
-        //console.log("Ingreso a la condicion si es true la varibale isRunning")
-        this.resumeTimerProductive();
-        this.pauseTimerImproductive();
-        //console.log("valor del caudal", valorWatterflow);
-      } else if(valorWatterflow <= 0){
-        //console.log("Ingreso al else if si es false la variable y esta menos dee 0")
-        //this.isRunning = false;
-        this.resumeTimerImproductive();
-        this.pauseTimerProductive();
-      }
-    } */
+  } 
 
 
   //Este es el encargado de generar y emitir eventos de actualización
@@ -590,46 +536,6 @@ export class ArduinoService {
     //console.log(`Nuevo valor para ${sensorType}: ${value}`)
     if (this.sensorSubjectMap.has(sensorType)) {
         this.sensorSubjectMap.get(sensorType)!.next(value);
-        /* if (sensorType === Sensor.VOLUME  && tiempoActual - this.ultimoTiempoNotificacion >= 1000 ) {
-            this.ultimoTiempoNotificacion = tiempoActual;
-            //console.log("Volumen inicial" , this.initialVolume);
-            // Resta la diferencia del valor anteriormente descontado
-            let valor = value as number;
-            //console.log("Valor sensor", valor);
-            
-            this.currentRealVolume = this.initialVolume - this.datosCaudal;
-            //console.log("datosdel this.caudal" , this.datosCaudal);
-            //console.log("this.cuurent",this.currentRealVolume);
-          
-            //console.log("Current Volumen" , this.currentRealVolume);
-        } */
     }
   }
-
-
-  //Notifica eventos del sensor de watterflow
- /*  public notifySensorWatterflow(sensor: Sensor, val: number) {
-    if (sensor === Sensor.WATER_FLOW && val > 0) {
-      // Calcula la reducción de volumen en función del caudal
-      const volumeReduction = val * 60.0 / 1000.0; // Convierte el caudal de mL/s a litros/minuto
-
-      // Actualiza el volumen actual
-      this.currentVolume -= volumeReduction;
-
-      if (this.currentVolume < this.minVolume) {
-        // Realiza acciones adicionales cuando el volumen alcanza el mínimo
-        console.log('Volumen mínimo alcanzado');
-        // Puedes realizar otras acciones o detener el flujo según tus necesidades
-      }
-
-      // También puedes emitir eventos o notificar sobre cambios en el volumen
-      this.notifyVolumeChange(this.currentVolume);
-    }
-  } */
-
- /*  private notifyVolumeChange(volume: number): void {
-    // Emite un evento o realiza acciones cuando cambia el volumen
-    console.log(`Volumen actual: ${volume} litros`);
-  } */
-
 }

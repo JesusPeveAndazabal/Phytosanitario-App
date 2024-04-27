@@ -110,9 +110,10 @@ export class DatabaseService extends ElectronService {
                 + " type_implement_name TEXT , \n"
                 + " configuration TEXT, \n"
                 + " configuration_consume TEXT, \n"
-                + " pre_configuration TEXT, \n"
+                + " preconfiguration TEXT, \n"
                 + " hectare REAL, \n"
                 + " product INTEGER, \n"
+                + " cultivation INTEGER, \n"
                 + " atomizer TEXT \n"
                 + "	); \n"
 
@@ -1196,11 +1197,11 @@ export class DatabaseService extends ElectronService {
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, pre_configuration, hectare, product , atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
+      let sql = "INSERT INTO work_execution_order (id, work, work_name , lot , supervisor , date_start, date_final, type_implement , type_implement_name , configuration, configuration_consume, preconfiguration, hectare, product , cultivation, atomizer) VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.work , o.work_name, o.lot,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration, o.hectare, o.product, o.atomizer], (err: Error | null) => {
+        db.run(sql, [o.id, o.work , o.work_name, o.lot,o.supervisor,o.date_start,o.date_final,o.type_implement , o.type_implement_name , o.configuration, o.configuration_consume , o.preconfiguration, o.hectare, o.product, o.cultivation,  o.atomizer], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {

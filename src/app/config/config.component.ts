@@ -119,6 +119,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
+      console.log("ORDERWORK", workOrders);
       
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 

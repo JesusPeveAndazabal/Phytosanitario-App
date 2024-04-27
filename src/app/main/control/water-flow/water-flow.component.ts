@@ -32,8 +32,7 @@ export class WaterFlowComponent  implements OnInit {
 
   async ngOnInit() {
     //this.drawDonutChart("#efficiency-water-flow",0,".35em");
-// Asigna el valor de connectedCaudal según la lógica de tu aplicación
-    console.log("CONEXION ARDUINO" , this.arduinoService.coneectedCaudal);
+// Asigna el valor de connectedCaudal según la lógica de tu aplicaciónMINIMO VOLUMEN
     this.setRealWaterflow(0);
   }
 

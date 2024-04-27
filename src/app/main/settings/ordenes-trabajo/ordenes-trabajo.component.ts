@@ -76,6 +76,7 @@ export class OrdenesTrabajoComponent implements OnInit {
   }
 
   async confirm(){
+    console.log("Seleccionado" , this.selectedWorkOrder);
     if (this.selectedWorkOrder) {
       let workExecution: WorkExecution = {
         id :1,
@@ -99,6 +100,7 @@ export class OrdenesTrabajoComponent implements OnInit {
         farm : 0,
         min_volume : 100,
       }
+      console.log("Trabajo a guardar",workExecution);
       //Guardamos la ejecucion de Trabajo
       await this.dbService.saveWorkExecutionData(workExecution);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();

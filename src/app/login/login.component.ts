@@ -30,13 +30,16 @@ import * as moment from 'moment';
 })
 export class LoginComponent implements OnInit {
   // @ViewChild('loader') loader!: IonLoading;
-  loading_message: string = "Sincronizando...";
+  loading_message:string;
+  showLoader: boolean = false; // Variable para controlar la visibilidad del loader
   formData!: FormGroup;
   personData: Array<Person> = [];
   implementData : Array<Implement> = [];
   workExecution : WorkExecution;
   workExecutionOrder : WorkExecutionOrder[];
   wExecutionOrder : WorkExecutionOrder | undefined = undefined;
+
+
   public implemento;
     // currentWorkExecution : WorkExecution | undefined = undefined;
   constructor(private fb:FormBuilder,
@@ -101,6 +104,8 @@ export class LoginComponent implements OnInit {
   }
 
   async syncPrimaryTables() : Promise<boolean>{
+    this.showLoader = true;
+    this.loading_message = "Sincronizando Ordenes...Espere";
     console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
@@ -115,13 +120,10 @@ export class LoginComponent implements OnInit {
       const nozzles = await firstValueFrom(this.apiService.getNozzles());
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
-      const implementss = await firstValueFrom(this.apiService.getImplement());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
-      console.log("WORKS LOGI N" , workOrders);
+      const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
       
-
-
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
       // await this.dbService.syncPersonData(people);
@@ -197,14 +199,8 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      for (const implement of implementss) {
-        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
-        if (!existingImplement) {
-          await this.dbService.syncImplement([implement]);
-        }
-      }
-      // await this.dbService.syncWorkData(works);
-      for (const workOrder of workOrders) {
+       // await this.dbService.syncWorkData(works);
+       for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
             // Convertir el objeto configuration a JSON
@@ -213,8 +209,14 @@ export class LoginComponent implements OnInit {
             const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
             // Crear el objeto con el campo atomizer convertido a JSON
             const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
-            console.log("SINCRONIZACION" , await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]))
             await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
+        }
+      }
+
+      for (const implement of implementss) {
+        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
+        if (!existingImplement) {
+          await this.dbService.syncImplement([implement]);
         }
       }
 
@@ -224,6 +226,7 @@ export class LoginComponent implements OnInit {
       return false;
     }
     finally{
+      this.showLoader = false;
       //console.log("aquí debería cerrarse la base de datos");
       // await this.dbService.closeDB();
     }

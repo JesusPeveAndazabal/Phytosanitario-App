@@ -56,3 +56,8 @@
 		</div>
 	</div>
 
+  <div class="loader-overlay" *ngIf="showLoader">
+    <div class="loader"></div>
+    <p>{{ loading_message }}</p>
+  </div>
+

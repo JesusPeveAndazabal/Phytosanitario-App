@@ -76,7 +76,7 @@ export class ArduinoDevice {
 
       //Metodo suplente del while
       this.messageInterval = setInterval(function(){
-        console.log("isConnected" , instance.isConnected);
+        //console.log("isConnected" , instance.isConnected);
         //Obtener en la variable message los datos de bufffer mediante read()
         let message: Uint8Array | null = instance.port.read();
         if(message != null){

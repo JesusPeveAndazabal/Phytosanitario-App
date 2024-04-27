@@ -41,6 +41,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
   public bothControlsActive: boolean = false;
   private container! : Wave;
   public recargarTanque : boolean = false;
+  // En tu componente de Angular
+  hidden: boolean = false;
   public shouldBlink: boolean = false;
   localConfig! : LocalConf;
   minVolume: number = 0;
@@ -71,7 +73,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
     if(this.wExecution){
 
       this.setVolume(this.volume);
-
     }
     // this.shouldBlink= true;
   }
@@ -83,7 +84,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.localConfig = await this.dbService.getLocalConfig();
      
     this.minVolume = this.localConfig.vol_alert_on;
-    console.log("MINIMO VOLUMEN", this.minVolume);
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
 
     this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_HECTARE).subscribe((value: number) => {
@@ -107,13 +107,15 @@ export class VolumeComponent  implements OnInit,OnChanges {
       this.volume = parseFloat(this.volume.toFixed(2));
       
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
-        console.log("ENTRO A ESTA CONDICION");
         this.recargarTanque = true;
         this.apagarValvulas();
         this.arduinoService.isRunning = false;
+        console.log("NTRO ALA CONDICION");
+        console.log("RECARGAR TANQUE", this.recargarTanque);
+        console.log("RECARGAR TANQUE", this.arduinoService.isRunning);
       } else {
-        this.shouldBlink = false;
-        this.recargarTanque = false;
+          this.shouldBlink = false;
+          this.recargarTanque = false;
       }
     });
 
@@ -126,6 +128,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
       animationFrame: .014,
       timeoutSecond: 35,
       el: '#animation-frame',
+      canvas: document.getElementById('animation-frame'),
       colorList: ['#0ff'] ,
       opacity: [0.8] ,
       zoom: [3],

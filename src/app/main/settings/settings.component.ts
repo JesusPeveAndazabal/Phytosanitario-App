@@ -66,7 +66,8 @@ export class SettingsComponent  implements OnInit {
   async openAplicationData() {
     const modal = await this.modalCtrl.create({
       component: ApplicationDataComponent,
-      id : 'application-data-modal'
+      id : 'application-data-modal',
+      cssClass: 'application-data'
     });
     modal.present();
 
