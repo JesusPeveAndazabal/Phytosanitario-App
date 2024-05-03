@@ -8,6 +8,10 @@ import * as moment from 'moment';
 import { Login } from '../../../core/models/login';
 import { config } from '../../../core/utils/global';
 import { WorkExecutionConfiguration } from '../../../core/models/we-configuration';
+import { ArduinoService } from '../../../core/services/arduino/arduino.service';
+import { Router } from '@angular/router';
+import { NozzleColor } from '../../../core/models/nozzle-color';
+import { NozzleType } from '../../../core/models/nozzle-type';
 
 @Component({
   selector: 'app-ordenes-trabajo',
@@ -24,8 +28,19 @@ export class OrdenesTrabajoComponent implements OnInit {
   ejecucionesTrabajo : WorkExecution | null = null;
   ordenesTrabajoPorTipoImplemento: WorkExecutionOrder[] = [];
   login : Login;
+  implementOrder : WorkExecutionOrder[] = [];
+  configExecution:any;
+  nozzleColor : Array<NozzleColor> = [];
+  nozzleType : Array<NozzleType> = [];
+  obtenerEjecuciones : WorkExecution[];
+  tipoImplementoLogin:any;
+  // Nueva variable para almacenar las IDs de las ejecuciones de trabajo finalizadas
+  finishedWorkExecutionIds: number[] = [];
 
-  constructor(private modalCtrl:ModalController , private dbService : DatabaseService){}
+  constructor(private modalCtrl:ModalController , 
+    private dbService : DatabaseService , 
+    private arduinoService : ArduinoService,
+    private router : Router){}
 
   async ngOnInit(){
     this.login = await this.dbService.getLogin();
@@ -33,31 +48,57 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
     //Obtiene las ejecuciones de trabajo 
     this.ejecucionesTrabajo = await this.dbService.getLastWorkExecutionOrder();
+    this.obtenerEjecuciones = await this.dbService.getWorkExecution();
+    this.implementOrder = await this.dbService.getWorkExecutionOrder();
+    this.nozzleColor = await this.dbService.getNozzleColorData();
+    this.nozzleType = await this.dbService.getNozzleTypeData();
+    let finishedWorkExecutions = await this.dbService.getWorkExecutionFinished();
 
     // Identificar el tipo de implemento del usuario que ha iniciado sesión
-    const tipoImplementoLogin = this.implementData.find(implemento => implemento.id === this.login.implement)?.typeImplement;
-
+    this.tipoImplementoLogin = this.implementOrder.find(implemento => implemento.id === this.login.implement)?.type_implement;
+  
     // Filtrar las órdenes de trabajo según el tipo de implemento del usuario
-    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => order.type_implement === tipoImplementoLogin);
-    
+    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => order.type_implement === this.tipoImplementoLogin);
+
+
+     // Filtrar las órdenes de trabajo para mostrar solo las de la fecha actual
+    /* const fechaActual = moment().format('YYYY-MM-DD');
+    this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaActual);
+
+ */
     //Ordena por fecha 
     this.ordenesTrabajoPorTipoImplemento.sort((a, b) => {
       return moment(a.date_start).valueOf() - moment(b.date_start).valueOf();
     });
 
-    // Filtrar las órdenes de trabajo que ya se han ejecutado
-    if (this.ejecucionesTrabajo) {
-      const idEjecutada = this.ejecucionesTrabajo.weorder;
-      this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => order.id !== idEjecutada);
-    }
+    // Almacenar las IDs de las ejecuciones de trabajo finalizadas
+    this.finishedWorkExecutionIds = finishedWorkExecutions.map(execution => execution.weorder);
 
+    // Filtrar las órdenes de trabajo para mostrar solo las que no han sido finalizadas
+    this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => !this.finishedWorkExecutionIds.includes(order.id));
   }
+
+
   cancel() {
     return this.modalCtrl.dismiss(null, 'cancel','ordenes-trabajo');
   }
 
   selectOrder(order: WorkExecutionOrder) {
     this.selectedWorkOrder = order;
+
+    this.configExecution = JSON.parse(this.selectedWorkOrder.configuration);
+    console.log("CONFIGURARIONORDER" , this.configExecution);
+
+  }
+
+  getNozzleType(id: number): NozzleType | undefined {
+    //console.log("GETNOZZLETYPE" , this.nozzleType.find(type => type.id === id));
+    return this.nozzleType.find(type => type.id === id);
+  }
+
+  getNozzleColor(id: number): NozzleColor | undefined {
+    //console.log("NOZZLECOLOR", this.nozzleColor.find(color => color.id === id));
+    return this.nozzleColor.find(color => color.id === id);
   }
 
   /* Funcion para formatear la fecha y la hora de la interfaza */
@@ -96,17 +137,21 @@ export class OrdenesTrabajoComponent implements OnInit {
         id_from_server : 0,
         sended : 0,
         execution_from : 1,
-        cultivation : 1,
+        cultivation : this.selectedWorkOrder ? this.selectedWorkOrder.cultivation : 0,
         farm : 0,
         min_volume : 100,
       }
       console.log("Trabajo a guardar",workExecution);
       //Guardamos la ejecucion de Trabajo
       await this.dbService.saveWorkExecutionData(workExecution);
+
+      /* Descomentar en prubeas para regular la presion */
+      //this.arduinoService.regulatePressureWithBars(configExecution.pressure);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;
       // Por ejemplo, cerrar el modal
       await this.modalCtrl.dismiss(this.selectedWorkOrder, 'confirm', 'ordenes-trabajo');
+      this.router.navigateByUrl('/main');
     }
   }
 
@@ -114,6 +159,7 @@ export class OrdenesTrabajoComponent implements OnInit {
     if(config.lastWorkExecution){
       return config.lastWorkExecution.configuration != "";
     }
+    return 
     return false;
   }
 }

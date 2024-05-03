@@ -46,6 +46,15 @@ export class PressureComponent  implements OnChanges,AfterViewInit {
     this.arduinoService.regulatePressureWithBars(0);
   }
 
+  calcularAnchoPresion(presion: number): number {
+    // Aquí debes implementar la lógica para calcular el ancho del medidor de presión
+    // Por ejemplo, podrías escalar la presión dentro de un rango específico y convertirla a porcentaje
+    // Esta es solo una implementación de ejemplo, debes adaptarla según tus necesidades
+    const anchoMaximo = 100; // Ancho máximo del medidor
+    const presionMaxima = 1000; // Supongamos que la presión máxima es 1000 Pa
+    return (presion / presionMaxima) * anchoMaximo; // Convertimos la presión a porcentaje del ancho máximo
+  }
+
   ngOnChanges(changes: SimpleChanges) {
     if(this.wExecution && changes['wExecution']){
       this.wConfig = JSON.parse(this.wExecution.configuration);

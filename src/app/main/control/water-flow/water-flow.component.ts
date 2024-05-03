@@ -17,6 +17,7 @@ export class WaterFlowComponent  implements OnInit {
   private duration = 500;
   private animationDuration = 1500;
   private transition = 200;
+  waterDrops: number[] = [];
   private _current = 0;
   teoric_water_flow : number = 0;
   efficiency : string = '0';
@@ -129,5 +130,14 @@ export class WaterFlowComponent  implements OnInit {
     return [percent, 100-percent];
   }
 
+  calcularAlturaCaudal(caudal: number): number {
+    // Aquí debes implementar la lógica para calcular la altura del caudal
+    // Por ejemplo, podrías escalar el caudal dentro de un rango específico y convertirlo a porcentaje
+    // Esta es solo una implementación de ejemplo, debes adaptarla según tus necesidades
+    const alturaMaxima = 100; // Altura máxima del contenedor
+    const caudalMaximo = 100; // Supongamos que el caudal máximo es 100 L/min
+    // Actualizar el arreglo de gotas basado en el cambio de caudal
+    return (caudal / caudalMaximo) * alturaMaxima; // Convertimos el caudal a porcentaje de la altura máxima
+  }
 
 }

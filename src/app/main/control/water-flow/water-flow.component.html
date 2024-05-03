@@ -1,19 +1,12 @@
+<div class="water-flow-container">
+  <h2 class="titulo"><strong>CAUDAL</strong></h2>
+  <div class="water-level-meter">
+    <div class="water-level" [style.height.%]="calcularAlturaCaudal(realWaterflow)"></div>
+    <p class="caudal-value"><strong>{{ realWaterflow }}</strong></p>
+    <p class="caudal-text">L/m</p>
+  </div>
+</div>
 
-  <h5 class="text-center" style="color: aliceblue; margin-top: -1px; margin-bottom:-10px;">CAUDAL</h5>
-
-  <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-    <linearGradient id="gradient" gradientUnits="userSpaceOnUse" x1="0" x2="100" y1="50" y2="50">
-      <stop offset=".0" stop-color="#0ff" />
-      <stop offset=".3" stop-color="#0ff" />
-      <stop offset=".6" stop-color="#0ff" />
-      <stop offset=".9" stop-color="#0ff" />
-    </linearGradient>
-    <g fill="none" stroke-miterlimit="10">
-      <circle cx="50" cy="50" r="36" stroke="url(#gradient)" stroke-linecap="round" stroke-width="5" />
-      <text dx="50%" dy="50%" style="white-space: pre; fill: rgb(255, 252, 252);" text-anchor="middle" font-size="15pt">{{ realWaterflow }}</text>
-      <text dx="50%" dy="62.5%" style="white-space: pre; fill: rgb(255, 252, 252);" text-anchor="middle" font-size="8pt">Litros</text>
-    </g>
-  </svg>
-  <div *ngIf="!arduinoService.connectedPresion" class="disconnected-message">
-    <div class="centered-text">Desconectado</div>
-  </div>  
+<div *ngIf="!arduinoService.coneectedCaudal" class="disconnected-message">
+  <div class="centered-text">Desconectado</div>
+</div>

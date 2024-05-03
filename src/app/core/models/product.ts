@@ -4,4 +4,5 @@ export interface Product{
     manufacturer: number;
     formula : string;
     register : string;
+    risk : number;
 }

@@ -36,8 +36,8 @@ export class ConfigComponent implements OnInit {
 
     this.formData = this.fb.group({
       // ws_server: ['',[Validators.required,Validators.pattern('(?:(?:(?:ht|f)tp)s?://)|(ws?s)?[\\w_-]+(?:\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?')]],
-      api_server: 'http://192.168.234.209:8000',
-      vol_alert_on: [0,[Validators.required,Validators.min(1)]],
+      api_server: 'http://192.168.132.209:8000',
+      vol_alert_on: '70',
     });
    }
 
@@ -55,6 +55,8 @@ export class ConfigComponent implements OnInit {
         vol_alert_on : config.vol_alert_on,
       });
     }
+
+    this.save();
 
   }
 
@@ -119,7 +121,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
-      console.log("ORDERWORK", workOrders);
+      console.log("PRODUCT", products);
       
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 

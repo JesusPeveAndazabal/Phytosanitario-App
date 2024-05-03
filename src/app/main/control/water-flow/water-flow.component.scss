@@ -32,7 +32,7 @@
   position: absolute;
   top: 50%;
   left: 50%;
-  transform: translate(-129%, -50%);
+  transform: translate(-157%, -50%);
   background-color: rgba(255, 0, 0, 0.5); /* Cambia el color de fondo según tu preferencia */
   padding: 20px; /* Aumenta el padding para hacer el contorno más grande */
   border-radius: 10px; /* Aumenta el radio del borde para hacer el contorno más grande */
@@ -54,7 +54,7 @@
   }
 }
 
-.circles-container {
+/* .circles-container {
   position: relative;
   width: 200px; // Tamaño ajustable según necesidades
   height: 200px; // Tamaño ajustable según necesidades
@@ -101,4 +101,55 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-}
+} */
+
+  .water-flow-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+
+  .titulo {
+    font-size: 23px;
+    margin-bottom: 10px;
+    color: white;
+  }
+
+  .water-level-meter {
+    position: relative;
+    width: 250px;
+    height: 250px;
+    border-radius: 50%;
+    border: 5px solid #ccc;
+    overflow: hidden;
+  }
+
+  .water-level {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    background-color: #3498db; /* Color del agua */
+    transition: height 0.5s ease; /* Transición suave al cambiar la altura */
+  }
+
+  .caudal-value {
+    position: absolute;
+    bottom: 86px;
+    left: 50%;
+    transform: translate(-50%);
+    font-size: 63px;
+    color: white;
+    text-align: center;
+  }
+
+  .caudal-text {
+    position: absolute;
+    bottom: 27px;
+    left: 50%;
+    transform: translate(-50%);
+    font-size: 39px;
+    color: white;
+    text-align: center;
+  }

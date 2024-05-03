@@ -20,6 +20,8 @@ import { VolumeComponent } from './control/volume/volume.component';
 
 
 
+
+
 @Component({
   selector: 'app-main',
   templateUrl: './main.component.html',
@@ -80,7 +82,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     public alerta: SettingsComponent,
     private modalController: ModalController,
     public arduinoService : ArduinoService,
-    public volumenCompont : VolumeComponent
+    public volumenCompont : VolumeComponent,
     ) {
       // console.log(this.login, "main.component... constructor");
 
@@ -197,8 +199,10 @@ export class MainComponent implements OnInit,AfterViewInit{
   
   async onClickPower(){
     this.powerButtonOn = !this.powerButtonOn;
+    this.arduinoService.resetVolumenInit();
+    this.arduinoService.datosCaudal = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-    console.log(this.lastWorkExecution, "dio click al boton verde");
+    //console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
     if(!this.lastWorkExecution)
       this.loadPersonValues();
@@ -208,12 +212,12 @@ export class MainComponent implements OnInit,AfterViewInit{
         data : {id : this.lastWorkExecution!.id}
       };
       command.data.id = (await this.databaseService.getLastWorkExecution()).id;
-      console.log(command, "array de socket data");
-      console.log(command.data.id, "id");
+      //console.log(command, "array de socket data");
+      //console.log(command.data.id, "id");
 
       // Start/Pause
       command.type = this.workStatus == WorkStatusChange.STOP || WorkStatusChange.FINISH ? WorkStatusChange.START : WorkStatusChange.STOP;
-      console.log(command.type, "command type");
+      //console.log(command.type, "command type");
 
     /*In this case the pause option will not be enabled, it will pause only when the volume of water in the tank is close to empty,
     then it will be the moment when the operator finishes the work application or fills the tank again, if so, once the tank is filled,
@@ -241,7 +245,8 @@ export class MainComponent implements OnInit,AfterViewInit{
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
             //console.log("CONF.VOLUMEN" , conf.volume);
             //console.log("VAL" ,this.volumenTanque);
-            conf.volume = conf.volume + this.volumenTanque;
+            console.log("CURRENTREAL" , this.arduinoService.currentRealVolume);
+            conf.volume = this.volumenTanque - this.arduinoService.currentRealVolume;
             //console.log(volume, this.lastWorkExecution!, "info a guardar");
             // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
             this.lastWorkExecution!.configuration = JSON.stringify(conf);
@@ -301,7 +306,8 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.finished;
               this.arduinoService.resetVolumenInit();
               this.arduinoService.currentRealVolume = 0;
-              //this.arduinoService.inicializarContenedor(0 ,this.localConfig.vol_alert_on );
+              this.arduinoService.initialVolume = 0;
+              this.arduinoService.datosCaudal = 0;
               this.cerrarSesion();
               // console.log(finalizar, "finalizar");
             }

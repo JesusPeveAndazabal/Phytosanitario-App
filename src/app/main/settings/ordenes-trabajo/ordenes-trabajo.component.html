@@ -1,26 +1,67 @@
-<ion-header>
-    <ion-toolbar>
-      <ion-buttons slot="start">
-        <ion-button color="medium" (click)="cancel()">Cancelar</ion-button>
-      </ion-buttons>
-      <ion-title class="text-center">Lista de Ordenes de Trabajo</ion-title>
-      <ion-buttons slot="end">
-        <ion-button (click)="confirm()" [disabled]="!selectedWorkOrder" [strong]="true">Confirmar</ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header>
-  <ion-content class="ion-padding">
-    <ion-accordion-group>
-      <ion-accordion *ngFor="let order of ordenesTrabajoPorTipoImplemento; let i = index" [value]="i" [class.selected]="order === selectedWorkOrder">
-        <ion-item slot="header" (click)="selectOrder(order)">
-          <ion-label>Orden de Trabajo N° {{ i + 1 }}</ion-label>
-        </ion-item>
-        <div class="ion-padding" slot="content" *ngIf="selectedWorkOrder === order">
-          <ion-label><strong>Labor: </strong>{{ selectedWorkOrder.work_name }}</ion-label>
-          <ion-label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</ion-label> <!-- Agregamos espacio en blanco -->
-          <ion-label><strong>Fecha: </strong>{{ formatDate(selectedWorkOrder.date_start) }}</ion-label>
+  <ion-header>
+      <ion-toolbar>
+        <ion-buttons slot="start">
+          <ion-button color="medium" (click)="cancel()">Cancelar</ion-button>
+        </ion-buttons>
+        <ion-title class="text-center">Lista de Ordenes de Trabajo</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="confirm()" [disabled]="!selectedWorkOrder" [strong]="true">Confirmar</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding">
+      <ion-accordion-group>
+        <ion-accordion *ngFor="let order of ordenesTrabajoPorTipoImplemento; let i = index" [value]="i" [class.selected]="order === selectedWorkOrder">
+          <ion-item slot="header" (click)="selectOrder(order)">
+            <ion-label>Orden de Trabajo N° {{ i + 1}}</ion-label>
+          </ion-item>
+          <div class="ion-padding" slot="content" *ngIf="selectedWorkOrder === order">
+
+            <ion-label><strong>Labor: </strong>{{ selectedWorkOrder.work_name }}</ion-label>
+            <ion-label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;</ion-label> <!-- Agregamos espacio en blanco -->
+            <ion-label><strong>Fecha: </strong>{{ formatDate(selectedWorkOrder.date_start) }}</ion-label>
+            <ion-label>&nbsp;&nbsp;</ion-label> <!-- Agregamos espacio en blanco -->
+
+            <!-- Button trigger modal -->
+            <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#exampleModal">
+              Ver detalle<i class="bi bi-eye ml-2"></i>
+            </button>
+          </div>
+        </ion-accordion>
+      </ion-accordion-group>
+    </ion-content>
+    <!-- Modal -->
+    <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+      <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+        <div class="modal-content">
+          <!-- <div class="modal-header">
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div> -->
+          <div class="modal-body">
+            <ng-container *ngIf="configExecution"> <!-- Verifica si configExecution está definido -->
+              <h6>Cantidad total de boquillas: {{ configExecution.nozzles.length }}</h6> <!-- Accede a nozzles.length si configExecution está definido -->
+              <table class="table table-bordered border-success">
+                <thead>
+                  <tr>
+                    <th scope="col"> Numero</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Color</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let nozzle of configExecution.nozzles">
+                    <td>{{ nozzle.number }}</td>
+                    <td>{{ getNozzleType(nozzle.type)?.name }}</td>
+                    <td [style.background-color]="getNozzleColor(nozzle.color)?.code" class="color-cell"></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-container>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          </div>
         </div>
-      </ion-accordion>
-    </ion-accordion-group>
-  </ion-content>
-  
+      </div>
+    </div>
+

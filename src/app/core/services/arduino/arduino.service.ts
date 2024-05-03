@@ -92,9 +92,9 @@ export class ArduinoService {
   volumenAcumul = 0;
   ultimoTiempoNotificacion: number = 0;
   public dataGps = false; // Variable para verificar si hay datos del GPS
-  public consumoTotal = 0;
+  public consumoTotal;
   public conectInternet = false; // Variable para verificar si hay internet o no
-  datosCaudal = 0;
+  public datosCaudal = 0;
 
 
   /* Parametros para conexion */
@@ -165,7 +165,6 @@ export class ArduinoService {
       }
 
       let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
-
       instance.listArduinos.forEach(arduino => {
         arduino.message_from_device.forEach((sensor) => {
         });
@@ -175,7 +174,6 @@ export class ArduinoService {
 
       if(instance.data[Sensor.VOLUME] > 0){
         instance.datosCaudal = instance.data[Sensor.VOLUME];
-        //console.log("datosCaudal: " , instance.datosCaudal);
       }
 
        // Aquí puedes colocar la parte relacionada con el sensor
@@ -228,8 +226,8 @@ export class ArduinoService {
 
       this.gpsVar = instance.data[Sensor.GPS];
 
-      if(instance.data[Sensor.ACCUMULATED_VOLUME] > 0 || instance.data[Sensor.ACCUMULATED_VOLUME] != undefined){
-        instance.data[Sensor.ACCUMULATED_VOLUME] = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
+      if(instance.datosCaudal > 0 && instance.datosCaudal != undefined){
+        instance.data[Sensor.ACCUMULATED_VOLUME] = instance.datosCaudal + instance.previousAccumulatedVolume;
       }
     
       // Continuar solo si hay datos del GPS
@@ -248,6 +246,8 @@ export class ArduinoService {
             
             //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
             instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
+           
+
                 
           }else {
             instance.tiempocondicion = 4;
@@ -263,7 +263,7 @@ export class ArduinoService {
                 instance.tiempoImproductivo.stop();
   
                 instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
-                instance.data[Sensor.VOLUME] = Math.round((instance.data[Sensor.ACCUMULATED_VOLUME] - volumenAnterior) * 100) / 100;
+                instance.data[Sensor.VOLUME] = parseFloat((instance.data[Sensor.ACCUMULATED_VOLUME] - volumenAnterior).toFixed(2));
                 volumenAnterior = instance.data[Sensor.ACCUMULATED_VOLUME];
                 
               } else {
@@ -360,9 +360,7 @@ export class ArduinoService {
               //Reiniciar el volumen
               instance.data[Sensor.VOLUME] = 0;
 
-              //Guardar en una variable el total acumulado
-              instance.consumoTotal = instance.data[Sensor.ACCUMULATED_VOLUME].toFixed(2);
-
+             
             } 
             onExecution = false;
           }
@@ -409,7 +407,7 @@ export class ArduinoService {
 
     // Aquí deberías incluir la lógica para enviar el comando al dispositivo, por ejemplo:
     this.findBySensor(regulatorId).sendCommand(`${regulatorId}|${barPressure}`);
-    //console.log("Comando" , `${regulatorId}|${barPressure}`);
+    console.log("Comando Regulador" , `${regulatorId}|${barPressure}`);
   }
 
   //Metodo para resetear el volumen inicial y minimo

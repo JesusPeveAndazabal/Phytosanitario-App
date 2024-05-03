@@ -38,7 +38,7 @@ export class LoginComponent implements OnInit {
   workExecution : WorkExecution;
   workExecutionOrder : WorkExecutionOrder[];
   wExecutionOrder : WorkExecutionOrder | undefined = undefined;
-
+  implementOrder : Array<WorkExecutionOrder> = [];
 
   public implemento;
     // currentWorkExecution : WorkExecution | undefined = undefined;
@@ -64,9 +64,9 @@ export class LoginComponent implements OnInit {
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
     this.workExecution = await this.dbService.getLastWorkExecution();
     this.implementData = await this.dbService.getImplemenData();
+    this.implementOrder = await this.dbService.getWorkExecutionOrder();
    
-
-    console.log(this.implementData, "data");
+    console.log(this.implementOrder, "Ordenes-Implementos");
 
   }
 
@@ -91,8 +91,9 @@ export class LoginComponent implements OnInit {
       if(this.personData.find(person => (person.code == this.formData.value.code
         || person.document == this.formData.value.code) && person.type == PersonType.OPERADOR))
       {
-         
         this.implemento = this.formData.value.implement;
+        console.log("TIPOIMPLEMENTOLOGIN" , this.implemento);
+        this.syncPrimaryTables();
         await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
         this.router.navigateByUrl('/main');
         

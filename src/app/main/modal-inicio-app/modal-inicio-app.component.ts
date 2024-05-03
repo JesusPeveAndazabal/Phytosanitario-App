@@ -14,8 +14,6 @@ export class ModalInicioAppComponent implements OnInit {
   ngOnInit() { }
 
   saveVolume() {
-    console.log("Guardado");
-    console.log(this.volume);
     if (this.volume !== undefined && this.volume !== null && !isNaN(this.volume)) {
       console.log(this.volume);
       this.modalController.dismiss(this.volume.toString());

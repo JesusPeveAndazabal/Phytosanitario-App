@@ -74,6 +74,17 @@ export class DatabaseService extends ElectronService {
                 + "	is_deleted integer\n"
                 + "	);\n"
 
+                + "	CREATE TABLE IF NOT EXISTS local_conf( \n"
+                + "	api_server TEXT, \n"
+                + "	vol_alert_on REAL, \n"
+                + "	min_wflow REAL, \n"
+                + "	max_wflow REAL, \n"
+                + "	unit_pressure INTEGER, \n"
+                + "	min_pressure REAL, \n"
+                + "	max_pressure REAL, \n"
+                + "	fecha TEXT \n"
+                + " ); \n"
+
                 + "	CREATE TABLE IF NOT EXISTS login( \n"
                 + "	operador INTEGER, \n"
                 + " implement INTEGER, \n"
@@ -172,12 +183,6 @@ export class DatabaseService extends ElectronService {
                 + "	volume REAL \n"
                 + "	); \n"
 
-                /* TABALA AÑADIDA */
-                + " CREATE TABLE IF NOT EXISTS manufaturer( \n"
-                + " id INTEGER PRIMARY KEY, \n"
-                + " document TEXT, \n"
-                + " name TEXT \n"
-                + "	); \n"
 
                 /* TABLA AÑADIDA */
                 + " CREATE TABLE IF NOT EXISTS recharge_point( \n"
@@ -199,6 +204,16 @@ export class DatabaseService extends ElectronService {
                 + "	owner INTEGER, \n"
                 + "	farm INTEGER, \n"
                 + "	farm_name TEXT \n"
+                + "	); \n"
+
+                /* TABLA MODIFICADA */
+                + "	CREATE TABLE IF NOT EXISTS product( \n"
+                + "	id INTEGER PRIMARY KEY, \n"
+                + "	name TEXT, \n"
+                + " manufacturer INTEGER, \n"
+                + " formula TEXT, \n"
+                + " register TEXT, \n"
+                + " risk INTEGER \n"
                 + "	); \n"
 
                 + "	CREATE TABLE IF NOT EXISTS nozzle_type ( \n"
@@ -230,27 +245,8 @@ export class DatabaseService extends ElectronService {
                 + "	CREATE TABLE IF NOT EXISTS farm( \n"
                 + "	id INTEGER PRIMARY KEY, \n"
                 + "	name TEXT \n"
-                + "	); \n"
+                + "	); ";
 
-                /* TABLA MODIFICADA */
-                + "	CREATE TABLE IF NOT EXISTS product( \n"
-                + "	id INTEGER PRIMARY KEY, \n"
-                + "	name TEXT \n"
-                + " manufacturer INTEGER, \n"
-                + " formula TEXT, \n"
-                + " register TEXT \n"
-                + "	); \n"
-
-                + "	CREATE TABLE IF NOT EXISTS local_conf( \n"
-                + "	api_server TEXT, \n"
-                + "	vol_alert_on REAL, \n"
-                + "	min_wflow REAL, \n"
-                + "	max_wflow REAL, \n"
-                + "	unit_pressure INTEGER, \n"
-                + "	min_pressure REAL, \n"
-                + "	max_pressure REAL, \n"
-                + "	fecha TEXT \n"
-                + " ); ";
 
           db = db.exec(sql);
           db.close();
@@ -600,6 +596,21 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  
+  async getWorkExecutionFinished(): Promise<WorkExecution[]> {
+    return new Promise<WorkExecution[]>((resolve, reject) =>{
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * from work_execution WHERE is_finished = 1";
+      db.all(sql,[ ],(err,rows : WorkExecution[])=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        process.nextTick(() => resolve(rows));
+      });
+      db.close();
+    });
+  }
+
   async getWorkExecutionOrder(): Promise<WorkExecutionOrder[]> {
     return new Promise<WorkExecutionOrder[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
@@ -613,6 +624,7 @@ export class DatabaseService extends ElectronService {
       db.close();
     });
   }
+  
 
   /**
    * Get the WorkExecution's data from the database
@@ -643,8 +655,8 @@ export class DatabaseService extends ElectronService {
   async getLastWorkExecutionOrder(): Promise<WorkExecution> {
     return new Promise<WorkExecution>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "SELECT * from work_execution ORDER BY id DESC LIMIT 1";
-      db.get(sql,[ ],(err,rows : any)=>{
+      let sql = "SELECT * from work_execution";
+      db.get(sql,[ ],(err,rows : any)=>{  
         if(err){
           process.nextTick(() => reject(err));
         }
@@ -1326,11 +1338,11 @@ export class DatabaseService extends ElectronService {
   async syncProductData(data: Array<Product>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "INSERT INTO product (id, name) VALUES (?, ?);";
+      let sql = "INSERT INTO product (id, name , manufacturer,formula,register,risk) VALUES (?,?,?,?,?,?);";
 
       // Iterar sobre los datos y realizar la inserción por cada uno
       data.forEach((o) => {
-        db.run(sql, [o.id, o.name], (err: Error | null) => {
+        db.run(sql, [o.id, o.name , o.manufacturer , o.formula , o.register, o.risk], (err: Error | null) => {
           if (err && err.message.includes('UNIQUE constraint failed')) {
             console.warn(`Registro duplicado para el id: ${o.id}. Ignorando.`);
           } else if (err) {
