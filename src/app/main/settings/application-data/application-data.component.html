@@ -37,10 +37,10 @@
       </ion-select>
     </ion-item>
     <ion-item>
-      <ion-select #select_product formControlName="product" label="Producto" aria-label="Producto" interface="popover" placeholder="Elegir producto...">
-        <ion-select-option *ngFor="let product of products" value="{{product.id}}">{{product.name}}</ion-select-option>
+      <ion-select #select_product formControlName="product" label="Producto" aria-label="Producto" interface="popover" placeholder="Elegir producto..." multiple="true">
+        <ion-select-option *ngFor="let product of products" [value]="product.id">{{product.name}}</ion-select-option>
       </ion-select>
-    </ion-item>
+    </ion-item>    
     <span class="error-message" *ngIf="isSubmitted && formData.controls['product'].errors?['required'] : null">
       Debe elegir el producto de la aplicación.
     </span>

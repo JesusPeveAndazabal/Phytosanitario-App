@@ -65,7 +65,14 @@ export class DatabaseService extends ElectronService {
           let db = new instance.sqlite.Database(instance.file);
           db.run('PRAGMA foreign_keys = ON;');
           //Creating schema
-          let sql = "CREATE TABLE IF NOT EXISTS person (\n"
+          let sql = "	CREATE TABLE IF NOT EXISTS login( \n"
+                + "	operador INTEGER, \n"
+                + " implement INTEGER, \n"
+                + "	fechahora TEXT, \n"
+                + " FOREIGN KEY (operador) REFERENCES person(id) \n"
+                + "	); \n"
+          
+                + " CREATE TABLE IF NOT EXISTS person (\n"
                 + "	id integer PRIMARY KEY NOT NULL,\n"
                 + "	code TEXT NOT NULL,\n"
                 + "	fullname TEXT,\n"
@@ -84,13 +91,6 @@ export class DatabaseService extends ElectronService {
                 + "	max_pressure REAL, \n"
                 + "	fecha TEXT \n"
                 + " ); \n"
-
-                + "	CREATE TABLE IF NOT EXISTS login( \n"
-                + "	operador INTEGER, \n"
-                + " implement INTEGER, \n"
-                + "	fechahora TEXT, \n"
-                + " FOREIGN KEY (operador) REFERENCES person(id) \n"
-                + "	); \n"
 
                 + "	CREATE INDEX IF NOT EXISTS person_index_code ON person (code);\n"
 
@@ -123,7 +123,7 @@ export class DatabaseService extends ElectronService {
                 + " configuration_consume TEXT, \n"
                 + " preconfiguration TEXT, \n"
                 + " hectare REAL, \n"
-                + " product INTEGER, \n"
+                + " product TEXT, \n"
                 + " cultivation INTEGER, \n"
                 + " atomizer TEXT \n"
                 + "	); \n"
@@ -142,7 +142,7 @@ export class DatabaseService extends ElectronService {
                 + "	downtime TEXT, \n"
                 + "	hectare REAL, \n"
                 + "	cultivation INTEGER, \n"
-                + "	product INTEGER, \n"
+                + "	product TEXT, \n"
                 + "	supervisor INTEGER, \n"
                 + "	is_finished INTEGER, \n"
                 + " id_from_server INTEGER, \n"

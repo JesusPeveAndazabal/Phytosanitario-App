@@ -1,7 +1,11 @@
 <div class="panel-water-flow">
-  <h2 class="titulo"><strong>PRESION</strong></h2>
+  <h2 class="titulo"><strong>PRESION</strong>&nbsp;&nbsp;&nbsp;&nbsp;{{teoric_pressure.value}} {{teoric_pressure.unit}}</h2>
   <svg class="svg-components svg-pressure" preserveAspectRatio="xMinYMin meet" viewBox="0 0 300 275" xmlns="http://www.w3.org/2000/svg">
     <polygon fill="none" points="276.1128234863281,134 213.05642700195312,243.2169189453125 86.94358825683594,243.2169189453125 23.887176513671875,134 86.94358825683594,24.78308868408203 213.05642700195312,24.78308868408203 276.1128234863281,134 " stroke="#fff" stroke-width="7" />
     <text text-anchor="middle" style="white-space: pre; fill: #0ff" dy="55%" dx="50%" font-size="30pt">{{pressure.value}} {{pressure.unit}}</text>
   </svg>
+</div>
+
+<div *ngIf="!arduinoService.connectedPresion" class="disconnected-message">
+  <div class="centered-text">Desconectado</div>
 </div>

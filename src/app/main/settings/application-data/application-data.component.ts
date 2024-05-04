@@ -37,45 +37,49 @@ export class ApplicationDataComponent  implements OnInit {
         farm: ['',[Validators.required]],
         lot: ['',[Validators.required]],
         cultivation: ['',[Validators.required]],
-        product: ['',[Validators.required]],
+        product: [[]], // Inicializar product como un array vacío
         hectare: ['',[Validators.required,Validators.min(0.0001)]],
         work: ['',[Validators.required]],
-      });
+      });      
     }
 
-  async ngOnInit() {
-    await this.dbService.openConnection();
-
-    this.farms = await this.dbService.getFarmData();
-    this.lots = await this.dbService.getLotData();
-    this.cultivations = await this.dbService.getCultivationData();
-    this.products = await this.dbService.getProductData();
-    this.works = await this.dbService.getWorkData();
-
-    this.currentWorkExecution = await this.dbService.getLastWorkExecution();
-    if(this.currentWorkExecution){
-      this.fLots =  this.lots.filter(p => p.farm === this.lots.find(l => l.id === this.currentWorkExecution?.lot)?.farm!);
-
-      /**
-       * Arbitrary fixing selected text for select components
-       * This is a bug of Ionic Framework
-       */
-      setTimeout(() => {
-        this.formData.setValue({
-          farm : this.lots.find(l => l.id === this.currentWorkExecution?.lot)?.farm,
-          lot : this.currentWorkExecution!.lot,
-          cultivation : this.currentWorkExecution!.cultivation,
-          product: this.currentWorkExecution!.product,
-          hectare : this.currentWorkExecution!.hectare,
-          work :this.currentWorkExecution!.work
-        });
-
-        this.sFarm.selectedText = this.farms.find(f => f.id === this.formData.value.farm)?.name;
-        this.sCultivation.selectedText = this.cultivations.find(c => c.id === this.formData.value.cultivation)?.name;
-        this.sProduct.selectedText = this.products.find(p => p.id === this.formData.value.product)?.name;
-        this.sWork.selectedText = this.works.find(w => w.id === this.formData.value.work)?.name;
-      }, 50);
-    }
+    async ngOnInit() {
+      await this.dbService.openConnection();
+  
+      this.farms = await this.dbService.getFarmData();
+      this.lots = await this.dbService.getLotData();
+      this.cultivations = await this.dbService.getCultivationData();
+      this.products = await this.dbService.getProductData();
+      this.works = await this.dbService.getWorkData();
+  
+      this.currentWorkExecution = await this.dbService.getLastWorkExecution();
+      console.log("CURRENTWORK", this.currentWorkExecution);
+      if (this.currentWorkExecution) {
+          this.fLots = this.lots.filter(p => p.farm === this.lots.find(l => l.id === this.currentWorkExecution?.lot)?.farm!);
+  
+          // No es necesario convertir product a JSON, ya que es un array
+          const productArray = JSON.parse(this.currentWorkExecution.product);
+  
+          /**
+           * Arbitrary fixing selected text for select components
+           * This is a bug of Ionic Framework
+           */
+          setTimeout(() => {
+              this.formData.setValue({
+                  farm: this.lots.find(l => l.id === this.currentWorkExecution?.lot)?.farm,
+                  lot: this.currentWorkExecution!.lot,
+                  cultivation: this.currentWorkExecution!.cultivation,
+                  product: productArray, // Asignar directamente el array product
+                  hectare: this.currentWorkExecution!.hectare,
+                  work: this.currentWorkExecution!.work
+              });
+  
+              this.sFarm.selectedText = this.farms.find(f => f.id === this.formData.value.farm)?.name;
+              this.sCultivation.selectedText = this.cultivations.find(c => c.id === this.formData.value.cultivation)?.name;
+              this.sProduct.selectedText = this.products.find(p => p.id === this.formData.value.product)?.name;
+              this.sWork.selectedText = this.works.find(w => w.id === this.formData.value.work)?.name;
+          }, 50);
+      }
   }
 
   farmSelected($event : any){

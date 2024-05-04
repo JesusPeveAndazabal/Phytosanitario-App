@@ -36,7 +36,7 @@ export class ConfigComponent implements OnInit {
 
     this.formData = this.fb.group({
       // ws_server: ['',[Validators.required,Validators.pattern('(?:(?:(?:ht|f)tp)s?://)|(ws?s)?[\\w_-]+(?:\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?')]],
-      api_server: 'http://192.168.132.209:8000',
+      api_server: 'https://ps-test.fitosatbeta.com',
       vol_alert_on: '70',
     });
    }
@@ -121,8 +121,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
-      console.log("PRODUCT", products);
-      
+
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
       // await this.dbService.syncPersonData(people);
@@ -198,17 +197,18 @@ export class ConfigComponent implements OnInit {
         }
       }
 
-       // await this.dbService.syncWorkData(works);
-       for (const workOrder of workOrders) {
+      for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
             // Convertir el objeto configuration a JSON
             const workOrderWithJSONConfiguration = { ...workOrder, configuration: JSON.stringify(workOrder.configuration) };
             // Convertir el campo atomizer a un array
             const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
-            // Crear el objeto con el campo atomizer convertido a JSON
-            const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
-            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
+            // Convertir el campo product a un array si no está vacío
+            const productArray = workOrder.product.length > 0 ? workOrder.product : [];
+            // Crear el objeto con el campo atomizer y product convertidos a JSON
+            const workOrderWithJSONAtomizerAndProduct = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray), product: JSON.stringify(productArray) };
+            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizerAndProduct]);
         }
       }
 

@@ -62,10 +62,10 @@ export class OrdenesTrabajoComponent implements OnInit {
 
 
      // Filtrar las órdenes de trabajo para mostrar solo las de la fecha actual
-    /* const fechaActual = moment().format('YYYY-MM-DD');
+    const fechaActual = moment().format('YYYY-MM-DD');
     this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaActual);
 
- */
+
     //Ordena por fecha 
     this.ordenesTrabajoPorTipoImplemento.sort((a, b) => {
       return moment(a.date_start).valueOf() - moment(b.date_start).valueOf();
@@ -118,6 +118,7 @@ export class OrdenesTrabajoComponent implements OnInit {
 
   async confirm(){
     console.log("Seleccionado" , this.selectedWorkOrder);
+    let configExecution = JSON.parse(this.selectedWorkOrder.configuration);
     if (this.selectedWorkOrder) {
       let workExecution: WorkExecution = {
         id :1,
@@ -132,7 +133,7 @@ export class OrdenesTrabajoComponent implements OnInit {
         working_time : moment('0:00:00', 'H:mm:ss'),
         downtime : moment('0:00:00', 'H:mm:ss'),
         hectare : this.selectedWorkOrder ? this.selectedWorkOrder.hectare : 0,
-        product : this.selectedWorkOrder ? this.selectedWorkOrder.product : 0,
+        product : this.selectedWorkOrder ? this.selectedWorkOrder.product : '',
         is_finished : 0,
         id_from_server : 0,
         sended : 0,
@@ -146,7 +147,7 @@ export class OrdenesTrabajoComponent implements OnInit {
       await this.dbService.saveWorkExecutionData(workExecution);
 
       /* Descomentar en prubeas para regular la presion */
-      //this.arduinoService.regulatePressureWithBars(configExecution.pressure);
+      this.arduinoService.regulatePressureWithBars(configExecution.pressure);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;
       // Por ejemplo, cerrar el modal
@@ -159,7 +160,6 @@ export class OrdenesTrabajoComponent implements OnInit {
     if(config.lastWorkExecution){
       return config.lastWorkExecution.configuration != "";
     }
-    return 
     return false;
   }
 }

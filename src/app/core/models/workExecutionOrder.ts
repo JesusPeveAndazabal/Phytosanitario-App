@@ -12,7 +12,7 @@ export interface WorkExecutionOrder{
     configuration_consume : string;
     preconfiguration: string;
     hectare : number;
-    product : number;
+    product : string;
     cultivation : number;
     atomizer : string;
 }

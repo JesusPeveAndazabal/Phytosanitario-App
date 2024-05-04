@@ -12,7 +12,7 @@ export interface WorkExecution{
   downtime : moment.Moment;
   hectare : number;
   cultivation : number;
-  product : number;
+  product : string;
   is_finished : number;
   farm : number;
   sended: number;

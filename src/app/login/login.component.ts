@@ -105,8 +105,6 @@ export class LoginComponent implements OnInit {
   }
 
   async syncPrimaryTables() : Promise<boolean>{
-    this.showLoader = true;
-    this.loading_message = "Sincronizando Ordenes...Espere";
     console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
@@ -124,7 +122,7 @@ export class LoginComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
-      
+
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
       // await this.dbService.syncPersonData(people);
@@ -200,17 +198,18 @@ export class LoginComponent implements OnInit {
         }
       }
 
-       // await this.dbService.syncWorkData(works);
-       for (const workOrder of workOrders) {
+      for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
             // Convertir el objeto configuration a JSON
             const workOrderWithJSONConfiguration = { ...workOrder, configuration: JSON.stringify(workOrder.configuration) };
             // Convertir el campo atomizer a un array
             const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
-            // Crear el objeto con el campo atomizer convertido a JSON
-            const workOrderWithJSONAtomizer = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray) };
-            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizer]);
+            // Convertir el campo product a un array si no está vacío
+            const productArray = workOrder.product.length > 0 ? workOrder.product : [];
+            // Crear el objeto con el campo atomizer y product convertidos a JSON
+            const workOrderWithJSONAtomizerAndProduct = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray), product: JSON.stringify(productArray) };
+            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizerAndProduct]);
         }
       }
 
@@ -227,7 +226,6 @@ export class LoginComponent implements OnInit {
       return false;
     }
     finally{
-      this.showLoader = false;
       //console.log("aquí debería cerrarse la base de datos");
       // await this.dbService.closeDB();
     }

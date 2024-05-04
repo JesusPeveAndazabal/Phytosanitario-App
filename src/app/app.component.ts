@@ -83,7 +83,7 @@ export class AppComponent implements OnInit {
       let sended = [];
       let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
-     /*    setInterval(()=>{
+      setInterval(()=>{
         if(!onExecution){
           onExecution = true;
 
@@ -97,6 +97,7 @@ export class AppComponent implements OnInit {
                     try {
                       if (wExecution.configuration.trim() !== '') {
                           wExecution.configuration = await JSON.parse(wExecution.configuration);
+                          wExecution.product = await JSON.parse(wExecution.product);
                           console.log("La cadena esta llena");
                       } else {
                           console.log("La cadena JSON está vacía");
@@ -115,6 +116,7 @@ export class AppComponent implements OnInit {
                     //Actualizar
                     // Lógica para actualizar los registros en el servidor si es necesario
                     wExecution.configuration = JSON.parse(wExecution.configuration);
+                    wExecution.product = JSON.parse(wExecution.product);
                     let workExecutionActualizado = await firstValueFrom(this.apiService.sendUpdateExecution(wExecution));
                   }
 
@@ -184,6 +186,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000);   */
+      },9000);  
   }
 }

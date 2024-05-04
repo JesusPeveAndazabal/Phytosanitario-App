@@ -208,7 +208,7 @@ export class ApplicationValuesComponent  implements OnInit {
         farm: this.currentWorkExecution ? this.currentWorkExecution.farm : 0,
         hectare: this.currentWorkExecution ? this.currentWorkExecution.hectare : 0,
         lot: this.currentWorkExecution ? this.currentWorkExecution.lot : 0,
-        product: this.currentWorkExecution ? this.currentWorkExecution.product : 0,
+        product: this.currentWorkExecution ? this.currentWorkExecution.product : '',
         work: this.currentWorkExecution ? this.currentWorkExecution.work : 0,
         id_from_server: this.currentWorkExecution ? this.currentWorkExecution.id_from_server : 0,
         execution_from: this.currentWorkExecution ? this.currentWorkExecution.execution_from : 1,
