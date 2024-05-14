@@ -83,7 +83,7 @@ export class AppComponent implements OnInit {
       let sended = [];
       let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
-      setInterval(()=>{
+/*        setInterval(()=>{
         if(!onExecution){
           onExecution = true;
 
@@ -93,6 +93,7 @@ export class AppComponent implements OnInit {
               records.forEach(async (wExecution : WorkExecution) => {
                 try{
                   let response : WorkExecution = wExecution;
+                  console.log("RESPONSE" , response);
                   if(!wExecution.id_from_server){
                     try {
                       if (wExecution.configuration.trim() !== '') {
@@ -106,7 +107,9 @@ export class AppComponent implements OnInit {
                     } catch (error) {
                         console.log("Error al analizar JSON:", error);
                     }
+                    console.log("Antes de enviar al server " , wExecution);
                     response = await firstValueFrom(this.apiService.sendRegistroAsyncExecution(wExecution));
+                    console.log("ENVIADO AL SERVER" , response);
                     if(response.id){
                       wExecution.id_from_server = response.id;
                       let workExecutionEnviado = await this.databaseService.updateExecutionSended(wExecution);
@@ -186,6 +189,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000);  
+      },9000);   */
   }
 }

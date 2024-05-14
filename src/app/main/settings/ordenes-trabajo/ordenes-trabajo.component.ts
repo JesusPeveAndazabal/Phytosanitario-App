@@ -36,6 +36,7 @@ export class OrdenesTrabajoComponent implements OnInit {
   tipoImplementoLogin:any;
   // Nueva variable para almacenar las IDs de las ejecuciones de trabajo finalizadas
   finishedWorkExecutionIds: number[] = [];
+  selectedDate: string = '';
 
   constructor(private modalCtrl:ModalController , 
     private dbService : DatabaseService , 
@@ -54,12 +55,17 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.nozzleType = await this.dbService.getNozzleTypeData();
     let finishedWorkExecutions = await this.dbService.getWorkExecutionFinished();
 
-    // Identificar el tipo de implemento del usuario que ha iniciado sesión
-    this.tipoImplementoLogin = this.implementOrder.find(implemento => implemento.id === this.login.implement)?.type_implement;
-  
-    // Filtrar las órdenes de trabajo según el tipo de implemento del usuario
-    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => order.type_implement === this.tipoImplementoLogin);
+    console.log("ORDENES DE TRABAJO" , this.implementOrder);
+    console.log("LOGIN" , this.login.implement);
 
+    // Identificar el tipo de implemento del usuario que ha iniciado sesión
+/*     this.tipoImplementoLogin = this.implementOrder.find(implemento => implemento.id === this.login.implement)?.type_implement;
+    console.log("IMPLEMENT LOGIN" , this.tipoImplementoLogin);
+ */
+
+    // Filtrar las órdenes de trabajo según el tipo de implemento del usuario
+    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => order.type_implement === this.login.implement);
+    console.log("ORDENES POR IMPLEMENTO", this.ordenesTrabajoPorTipoImplemento);
 
      // Filtrar las órdenes de trabajo para mostrar solo las de la fecha actual
     const fechaActual = moment().format('YYYY-MM-DD');
@@ -76,19 +82,28 @@ export class OrdenesTrabajoComponent implements OnInit {
 
     // Filtrar las órdenes de trabajo para mostrar solo las que no han sido finalizadas
     this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => !this.finishedWorkExecutionIds.includes(order.id));
+    
+    // Inicializar selectedDate con la fecha actual
+    this.selectedDate = moment().format('YYYY-MM-DD');
+    this.filterByDate();
   }
 
-
+  filterByDate() {
+    const selectedDateMoment = moment(this.selectedDate, 'YYYY-MM-DD');
+    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order =>
+      order.type_implement === this.login.implement &&
+      !this.finishedWorkExecutionIds.includes(order.id) &&
+      moment(order.date_start).isSame(selectedDateMoment, 'day')
+    );
+  }
+  
   cancel() {
     return this.modalCtrl.dismiss(null, 'cancel','ordenes-trabajo');
   }
 
   selectOrder(order: WorkExecutionOrder) {
     this.selectedWorkOrder = order;
-
     this.configExecution = JSON.parse(this.selectedWorkOrder.configuration);
-    console.log("CONFIGURARIONORDER" , this.configExecution);
-
   }
 
   getNozzleType(id: number): NozzleType | undefined {
@@ -147,7 +162,7 @@ export class OrdenesTrabajoComponent implements OnInit {
       await this.dbService.saveWorkExecutionData(workExecution);
 
       /* Descomentar en prubeas para regular la presion */
-      this.arduinoService.regulatePressureWithBars(configExecution.pressure);
+      //this.arduinoService.regulatePressureWithBars(configExecution.pressure);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;
       // Por ejemplo, cerrar el modal

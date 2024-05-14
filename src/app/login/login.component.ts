@@ -39,6 +39,7 @@ export class LoginComponent implements OnInit {
   workExecutionOrder : WorkExecutionOrder[];
   wExecutionOrder : WorkExecutionOrder | undefined = undefined;
   implementOrder : Array<WorkExecutionOrder> = [];
+  filterImplemento : Array<Implement> = [];
 
   public implemento;
     // currentWorkExecution : WorkExecution | undefined = undefined;
@@ -66,7 +67,19 @@ export class LoginComponent implements OnInit {
     this.implementData = await this.dbService.getImplemenData();
     this.implementOrder = await this.dbService.getWorkExecutionOrder();
    
-    console.log(this.implementOrder, "Ordenes-Implementos");
+    //Tabala ordenes de trabajo
+    console.log(this.implementOrder, "Implementos");
+    
+    //Tabala implementos
+    console.log("ImplementData", this.implementData);
+
+    // Obtén el conjunto de todos los type_implement en implementOrder
+    const typeImplements = new Set(this.implementOrder.map(order => order.type_implement));
+
+    // Filtra implementData para incluir solo implementos con type_implement presentes en typeImplements
+    this.filterImplemento = this.implementData.filter(implement => typeImplements.has(implement.typeImplement));
+
+    console.log("FILTRADO",this.filterImplemento);
 
   }
 

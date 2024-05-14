@@ -10,6 +10,11 @@
       </ion-toolbar>
     </ion-header>
     <ion-content class="ion-padding">
+      <!-- Campo de entrada de fecha -->
+      <ion-item>
+        <ion-label>Seleccionar Fecha:</ion-label>
+        <input type="date" [(ngModel)]="selectedDate" (change)="filterByDate()" />
+      </ion-item>    
       <ion-accordion-group>
         <ion-accordion *ngFor="let order of ordenesTrabajoPorTipoImplemento; let i = index" [value]="i" [class.selected]="order === selectedWorkOrder">
           <ion-item slot="header" (click)="selectOrder(order)">

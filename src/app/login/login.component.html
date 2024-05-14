@@ -44,7 +44,7 @@
             <div class="form-group">
               <label for="implement">Implementos</label>
               <select formControlName="implement" class="form-control" style="text-align: center;">
-                <option *ngFor="let implement of implementOrder" [value]="implement.id">{{ implement.type_implement_name }}- Tipo:{{implement.type_implement}}</option>
+                <option *ngFor="let implement of filterImplemento" [value]="implement.typeImplement">{{ implement.name }}</option>
               </select>
             </div> 
             <!-- <p-messages></p-messages> -->

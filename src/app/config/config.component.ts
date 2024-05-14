@@ -36,7 +36,7 @@ export class ConfigComponent implements OnInit {
 
     this.formData = this.fb.group({
       // ws_server: ['',[Validators.required,Validators.pattern('(?:(?:(?:ht|f)tp)s?://)|(ws?s)?[\\w_-]+(?:\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?')]],
-      api_server: 'https://ps-test.fitosatbeta.com',
+      api_server: 'http://192.168.153.209:8000',
       vol_alert_on: '70',
     });
    }
@@ -121,6 +121,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
+      console.log("preople", people);
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
@@ -133,7 +134,7 @@ export class ConfigComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncCultivationData(cultivations);
+      // await this.dbService.syncCultivationDat  a(cultivations);
       for (const cultivation of cultivations) {
         const existingCultivation = await this.dbService.getRecordById('cultivation', cultivation.id);
         if (!existingCultivation) {
