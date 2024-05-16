@@ -871,10 +871,10 @@ export class DatabaseService extends ElectronService {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
       let sql =
-        "UPDATE work_execution SET work = ?, supervisor = ?, lot = ?, worker = ?, configuration = ?, hectare = ?, cultivation = ?, product = ? , id_from_server = ?  WHERE id = ?;";
+        "UPDATE work_execution SET weorder = ? , implement = ? , work = ?, lot = ? , worker = ? , supervisor = ? , configuration = ? , hectare = ? , cultivation = ? , product = ? , id_from_server = ?  WHERE id = ?;";
 
       // Ejecutar la actualización en la tabla 'work_execution'
-      db.run(sql, [o.work, o.supervisor, o.lot, o.worker, o.configuration, o.hectare, o.cultivation, o.product, o.id_from_server , o.id ], (err: Error | null) => {
+      db.run(sql, [o.weorder, o.implement, o.work, o.lot, o.worker, o.supervisor, o.configuration, o.hectare, o.cultivation , o.product , o.id_from_server , o.id ], (err: Error | null) => {
         if (err) {
           console.error("SQLITE UPDATE error", err);
           reject(err);

@@ -44,13 +44,13 @@
             <div class="form-group">
               <label for="implement">Implementos</label>
               <select formControlName="implement" class="form-control" style="text-align: center;">
-                <option *ngFor="let implement of filterImplemento" [value]="implement.typeImplement">{{ implement.name }}</option>
+                <option *ngFor="let implement of filterImplemento" [value]="implement.id">{{ implement.name }}</option>
               </select>
             </div> 
             <!-- <p-messages></p-messages> -->
           </form>
 				</div>
-				<button type="button" class="btn btn-success m-2" (click)="login()">Iniciar sesión</button>
+				<button  id="btnLogin" type="button" class="btn btn-success m-2" (click)="login()">Iniciar sesión</button>
       </div>
 		</div>
 	</div>

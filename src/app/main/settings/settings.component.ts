@@ -88,9 +88,10 @@ export class SettingsComponent  implements OnInit {
    */
 
   async syncPrimaryTables() : Promise<boolean>{
-    this.loading_message = "Verificando url del API...";
-    console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
+    console.log("SINCRONIZANDO DATOS ............................")
+    //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
+      console.log("EMNTRO AL TRY");
       // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
@@ -101,6 +102,8 @@ export class SettingsComponent  implements OnInit {
       const nozzles = await firstValueFrom(this.apiService.getNozzles());
       const products = await firstValueFrom(this.apiService.getProducts());
       const works = await firstValueFrom(this.apiService.getWorks());
+      const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
+      const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
@@ -161,7 +164,7 @@ export class SettingsComponent  implements OnInit {
           await this.dbService.syncNozzlesData([nozzle]);
         }
       }
- 
+
       // await this.dbService.syncProductData(products);
       for (const product of products) {
         const existingProduct = await this.dbService.getRecordById('product', product.id);
@@ -177,18 +180,40 @@ export class SettingsComponent  implements OnInit {
           await this.dbService.syncWorkData([work]);
         }
       }
-      this.router.navigate(['/main']);
+
+      for (const workOrder of workOrders) {
+        const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
+        if (!existingWorkOrder) {
+            // Convertir el objeto configuration a JSON
+            const workOrderWithJSONConfiguration = { ...workOrder, configuration: JSON.stringify(workOrder.configuration) };
+            // Convertir el campo atomizer a un array
+            const atomizerArray = Array.isArray(workOrder.atomizer) ? workOrder.atomizer : [workOrder.atomizer];
+            // Convertir el campo product a un array si no está vacío
+            const productArray = workOrder.product.length > 0 ? workOrder.product : [];
+            // Crear el objeto con el campo atomizer y product convertidos a JSON
+            const workOrderWithJSONAtomizerAndProduct = { ...workOrderWithJSONConfiguration, atomizer: JSON.stringify(atomizerArray), product: JSON.stringify(productArray) };
+            await this.dbService.syncWorkOrder([workOrderWithJSONAtomizerAndProduct]);
+        }
+      }
+
+      for (const implement of implementss) {
+        const existingImplement = await this.dbService.getRecordById('implement', implement.id);
+        if (!existingImplement) {
+          await this.dbService.syncImplement([implement]);
+        }
+      }
+
       return true;
     }catch(err : any){
       console.error("Error during synchronization:", err);
       return false;
     }
     finally{
-      console.log("aquí debería cerrarse la base de datos");
+      //console.log("aquí debería cerrarse la base de datos");
       // await this.dbService.closeDB();
     }
   }
-
+  
   async generalSettings(){
     this.router.navigate(['/config'], { state: { update : true } });
   }

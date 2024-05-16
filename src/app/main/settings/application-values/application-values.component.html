@@ -33,10 +33,10 @@
                 </select> -->
 
                 <label class="mb-1 mt-2 block font-bold" for="horizontal">Presión</label>
-                <input appKeyboard type="number" formControlName="pressure" placeholder="Ingrese la presión" click="openModal()" class="form-control" style="min-height: 45px;">
+                <input appKeyboard type="number" formControlName="pressure" placeholder="Ingrese la presión" class="form-control" style="min-height: 45px;" (input)="recalcularCaudalObjetivo()">
                 
                 <label class="mb-1 mt-2 block font-bold" for="horizontal">Consumo (L/H)</label>
-                <input appKeyboard type="number" formControlName="consumo"  (ngModelChange)="calculoVelocidad()"  placeholder="Ingrese el consumo" class="form-control" style="min-height: 45px;">
+                <input appKeyboard type="number" formControlName="consume"  (ngModelChange)="calculoVelocidad()"  placeholder="Ingrese el consumo" class="form-control" style="min-height: 45px;">
 
                 <small  *ngIf="isSubmitted && handleError('pressure','required')" class="p-error">
                   Este campo es requerido

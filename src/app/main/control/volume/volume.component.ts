@@ -180,11 +180,13 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.leftControlActive = false;
     this.rightControlActive = false;
     this.bothControlsActive = false;
+    this.changeDetectorRef.detectChanges();
     console.log("ESTADO IZQUIERDA", this.rightControlActive);
     console.log("ESTADO DERECHA", this.leftControlActive);
+    console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
     this.arduinoService.deactivateLeftValve();
     this.arduinoService.deactivateRightValve();
-    //this.changeDetectorRef.detectChanges();
+    console.log("ENTRA A LA CONDICIUON DESPUES DEL COMANDO");
   }
 
   toggleValvulaIzquierda():void{
@@ -208,12 +210,17 @@ export class VolumeComponent  implements OnInit,OnChanges {
     if (this.bothControlsActive) {
       this.leftControlActive = true;
       this.rightControlActive = true;
+      console.log("ESTADO IZQUIERDA", this.rightControlActive);
+      console.log("ESTADO DERECHA", this.leftControlActive);
+      console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
       this.arduinoService.activateLeftValve();
       this.arduinoService.activateRightValve();
     } else {
       this.leftControlActive = false;
       this.rightControlActive = false;
-      this.bothControlsActive = false;
+      console.log("ESTADO IZQUIERDA", this.rightControlActive);
+      console.log("ESTADO DERECHA", this.leftControlActive);
+      console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();
     }

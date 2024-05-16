@@ -29,9 +29,15 @@ export enum Sensor{
     DISTANCE_NEXT_SECTION = 11, //Calcula la distancia por tramo - calculo por velocidad
     ACCUMULATED_VOLUME = 12, //Valor del sensor acumulado
     ACCUMULATED_HECTARE= 13, //Acumulado de la distancia - calculo por velocidad
+  
 
     TOTAL_DISTANCE = 14, //Total por tramo : formula
     ACCUMULATED_DISTANCE = 15, //Acumulado distancia : formula
+
+    /* VERIFICAR ESTADO DEL ARDUINO */
+    STATUS_PRESSURE = 16, //ESTADO DEL ARDUINO DE PRESION
+    STATUS_WATTERFLOW = 17, //ESTADO DEL ARDUINO DEL CAUDAL
+    STATUS_GPS = 18, //ESTADO DEL ARDUINO DEL GPS
 
 
     VALVE_LEFT = 20,
@@ -70,44 +76,6 @@ export enum UnitPressureEnum{
     ATMOSFERA = 3,
     PSI = 4,
     MMHG = 5
-}
-
-export enum Calculos{
-  PresionConstante1 = 60,
-  PresionConstante2 = 90,
-  PresionConstante3 = 120,
-  PresionConstante4 = 150,
-  PresionConstante5 = 300,
-
-  CaudalConstanteBlue1 = 0.32,
-  CaudalConstanteBlue2 = 0.38,
-  CaudalConstanteBlue3 = 0.42,
-  CaudalConstanteBlue4 = 0.50,
-  CaudalConstanteBlue5 = 0.71,
-
-  CaudalConstanteBlack1 = 0.64,
-  CaudalConstanteBlack2 = 0.76,
-  CaudalConstanteBlack3 = 0.86,
-  CaudalConstanteBlack4 = 1.00,
-  CaudalConstanteBlack5 = 1.41,
-
-  CaudalConstanteOrange1 = 0.88,
-  CaudalConstanteOrange2 = 1.06,
-  CaudalConstanteOrange3 = 1.21,
-  CaudalConstanteOrange4 = 1.34,
-  CaudalConstanteOrange5 = 1.90,
-
-  CaudalConstanteRed1 = 1.25,
-  CaudalConstanteRed2 = 1.51,
-  CaudalConstanteRed3 = 1.72,
-  CaudalConstanteRed4 = 1.91,
-  CaudalConstanteRed5 = 2.70,
-
-  CaudalConstanteGreen1 = 1.6,
-  CaudalConstanteGreen2 = 1.93,
-  CaudalConstanteGreen3 = 2.20,
-  CaudalConstanteGreen4 = 2.55,
-  CaudalConstanteGreen5 = 3.60,
 }
 
 export const UnitPressure = [

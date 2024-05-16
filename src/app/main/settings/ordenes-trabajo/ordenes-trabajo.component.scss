@@ -1,4 +1,14 @@
 .selected ion-item{
     --ion-item-background: #2c93d8d5;
     cursor: pointer;
-  }
+}
+
+.horizontal-align {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+
+  

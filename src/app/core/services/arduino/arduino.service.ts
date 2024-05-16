@@ -173,6 +173,8 @@ export class ArduinoService {
       });
 
       if(instance.data[Sensor.VOLUME] > 0){
+        console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
+        //Guardamos en datosCaudal el valor del volumen acumulado
         instance.datosCaudal = instance.data[Sensor.VOLUME];
       }
 
@@ -183,6 +185,25 @@ export class ArduinoService {
       instance.coneectedCaudal = instance.isSensorConnected(sensorVolume);
       instance.connectedPresion = instance.isSensorConnected(sensorPressure);
       instance.connectedGps = instance.isSensorConnected(sensorGps);
+
+      /* Verificar el estado de conexion y desconexion del arduino */
+      if(instance.coneectedCaudal){
+        instance.data[Sensor.STATUS_WATTERFLOW] = 1;
+      }else{
+        instance.data[Sensor.STATUS_WATTERFLOW] = 0;
+      }
+
+      if(instance.connectedGps){
+        instance.data[Sensor.STATUS_GPS] = 1;
+      }else{
+        instance.data[Sensor.STATUS_GPS] = 0;
+      }
+
+      if(instance.connectedPresion){
+        instance.data[Sensor.STATUS_PRESSURE] = 1;
+      }else{
+        instance.data[Sensor.STATUS_PRESSURE] = 0;
+      }
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
@@ -359,7 +380,6 @@ export class ArduinoService {
 
               //Reiniciar el volumen
               instance.data[Sensor.VOLUME] = 0;
-
              
             } 
             onExecution = false;
@@ -414,6 +434,7 @@ export class ArduinoService {
   public resetVolumenInit(): void {
     const command = 'B';
     this.findBySensor(Sensor.VOLUME).sendCommand(command);
+    console.log("VOLUMEN RESETEADO" , this.datosCaudal);
   }
 
   //Metodo para poder saber si un Arduino/Sensor esta conectado o no
@@ -446,6 +467,7 @@ export class ArduinoService {
   // Método para activar la válvula izquierda
   public activateLeftValve(): void {
     this.izquierdaActivada = true;
+    console.log("IZQUIERDEDA ACTIVADA" , this.izquierdaActivada);
     const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
     console.log("Comand" , command);
     this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
@@ -454,6 +476,7 @@ export class ArduinoService {
   // Método para desactivar la válvula izquierda
   public deactivateLeftValve(): void {
     this.izquierdaActivada = false;
+    console.log("IZQUIERDEDA DESACTIVADA" , this.izquierdaActivada);
     const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
     console.log("Comand" , command);
     this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
@@ -463,6 +486,7 @@ export class ArduinoService {
   // Método para activar la válvula derecha
   public activateRightValve(): void {
     this.derechaActivada = true;
+    console.log("DERECHA DESACTIVADA" , this.derechaActivada);
     const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
     console.log("Comand" , command);
     //console.log(command, "comand");
@@ -472,6 +496,7 @@ export class ArduinoService {
   // Método para desactivar la válvula derecha
   public deactivateRightValve(): void {
     this.derechaActivada = false;
+    console.log("DERECHA ACTIVADA" , this.derechaActivada);
     const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
     console.log("Comand" , command);
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);

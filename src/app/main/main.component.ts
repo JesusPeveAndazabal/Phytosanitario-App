@@ -187,9 +187,13 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
 
   cerrarSesion(){
-    // this.cookieService.delete("session",'/');
-    // this.cookieService.delete("supervisor",'/');
     this.router.navigate(['/','login']);
+    this.arduinoService.activateRightValve();
+    this.volumenCompont.rightControlActive = true;
+    this.arduinoService.resetVolumenInit();
+    this.arduinoService.currentRealVolume = 0;
+    this.arduinoService.initialVolume = 0;
+    this.arduinoService.datosCaudal = 0;
   }
 
   private listenTime : moment.Moment = moment();
@@ -198,7 +202,6 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
   
   async onClickPower(){
-    this.powerButtonOn = !this.powerButtonOn;
     this.arduinoService.resetVolumenInit();
     this.arduinoService.datosCaudal = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
@@ -211,6 +214,7 @@ export class MainComponent implements OnInit,AfterViewInit{
         type: WorkStatusChange.STOP,
         data : {id : this.lastWorkExecution!.id}
       };
+
       command.data.id = (await this.databaseService.getLastWorkExecution()).id;
       //console.log(command, "array de socket data");
       //console.log(command.data.id, "id");
@@ -263,6 +267,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);
             
             this.workStatus = WorkStatusChange.START;
+            this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
             // Tu lógica para guardar el volumen y realizar acciones con él
             //console.log("Volumen capturado:", volume);
@@ -308,7 +313,9 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.arduinoService.currentRealVolume = 0;
               this.arduinoService.initialVolume = 0;
               this.arduinoService.datosCaudal = 0;
-              this.cerrarSesion();
+              this.volumenCompont.apagarValvulas();
+              //this.router.navigate(['/','main','settings']);
+              //Se dejara la valvula derecha activada
               // console.log(finalizar, "finalizar");
             }
           },

@@ -12,3 +12,9 @@ ion-content{
 :host-context(.modal-wrapper) {
   max-width: 900px !important;
 }
+
+ion-button{
+ width: 120%;
+ font-size: 27px;
+ margin-left: -10%;
+}

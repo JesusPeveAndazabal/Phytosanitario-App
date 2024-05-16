@@ -38,6 +38,7 @@ export class ApplicationValuesComponent  implements OnInit {
   totalLabel : string ="0 L/min";
   formData!: FormGroup;
   isSubmitted : boolean = false;
+  presionConvertida : any = 0;
   // item: { type: any };
 
 
@@ -72,7 +73,7 @@ export class ApplicationValuesComponent  implements OnInit {
       this.formData = this.fb.group({
         volume: [0,[Validators.required,]],
         speed: ['',[Validators.required,Validators.min(0.01)]],
-        consumo: ['',[Validators.required,Validators.min(0.01)]],
+        consume: ['',[Validators.required,Validators.min(0.01)]],
         pressure: ['',[Validators.required,Validators.min(0.01)]],
         unit: ['',[Validators.required]],
         width: ['',[Validators.required,Validators.min(0.01)]],
@@ -85,6 +86,8 @@ export class ApplicationValuesComponent  implements OnInit {
     this.nozzleTypes = await this.dbService.getNozzleTypeData();
     this.nozzles = await this.dbService.getNozzlesData();
     this.updateSummary(null);
+
+    console.log("NOZZLES" , this.nozzles);
 
 /*     //Esto sirve para buscar en la tabla añadida
     this.pressure_values = this.nozzles.map(p => { return  {pressure : p.pressure, pressure_unit : p.pressure_unit }})
@@ -103,15 +106,14 @@ export class ApplicationValuesComponent  implements OnInit {
     if(this.currentWorkExecution){
       if(this.currentWorkExecution.configuration != ""){
         this.weConfiguration = await JSON.parse(this.currentWorkExecution.configuration);
-        console.log("weConfiguration: " , this.weConfiguration);
         this.nozzleConfig = this.weConfiguration!.nozzles;
         this.formData.setValue({
-          volume : await this.weConfiguration?.volume,
-          consumo : await this.weConfiguration?.consume,
-          speed : await this.weConfiguration?.speed,
-          pressure : await this.weConfiguration?.pressure,
-          unit: await this.weConfiguration?.unit,
-          width : await this.weConfiguration?.width,
+          volume : this.weConfiguration?.volume,
+          consume : this.weConfiguration?.consume,
+          speed : this.weConfiguration?.speed,
+          pressure : this.weConfiguration?.pressure,
+          unit: this.weConfiguration?.unit,
+          width : this.weConfiguration?.width,
         });
 
         //console.log("formData" , this.formData.value.consumo);
@@ -181,41 +183,41 @@ export class ApplicationValuesComponent  implements OnInit {
       //this.arduinoService.regulatePressureWithBars()
       this.nozzleConfig = this.nozzleConfig.map(p => {return { type : p.type, number : p.number, color : parseInt(p.color.toString()) }});
       this.weConfiguration = {
-        nozzles : await this.nozzleConfig,
-        water_flow : await this.total,
-        speed : await this.weConfiguration? this.velocidadReal : 0,
-        humidity : await this.weConfiguration? this.weConfiguration.humidity : 0,
-        temperature : await this.weConfiguration? this.weConfiguration.temperature : 0,
-        wind_kmh : await this.weConfiguration? this.weConfiguration.wind_kmh : 0,
+        nozzles : this.nozzleConfig,
+        water_flow : this.total,
+        speed : this.weConfiguration? this.velocidadReal : 0,
+        humidity : this.weConfiguration? this.weConfiguration.humidity : 0,
+        temperature : this.weConfiguration? this.weConfiguration.temperature : 0,
+        wind_kmh : this.weConfiguration? this.weConfiguration.wind_kmh : 0,
         ...this.formData.value
       }
 
       //console.log("Deberria regular" ,this.weConfiguration?.pressure);
       //Esto es para mandar el comando de regulacion desde el confirmar del boton 
-      //this.arduinoService.regulatePressureWithBars(this.weConfiguration?.pressure);
+      this.arduinoService.regulatePressureWithBars(this.weConfiguration?.pressure);
      
 
       let wExecution : WorkExecution ={
         id: this.currentWorkExecution ? this.currentWorkExecution.id : 0,
-        configuration: await JSON.stringify(this.weConfiguration),
-        date: this.currentWorkExecution ? moment(this.currentWorkExecution.date, 'YYYY-MM-DD H:mm:ss') : moment(),
-        downtime: this.currentWorkExecution ? moment(this.currentWorkExecution.downtime, 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
-        is_finished: 0,
-        working_time: this.currentWorkExecution ? moment(this.currentWorkExecution.working_time, 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
+        weorder : this.currentWorkExecution ? this.currentWorkExecution.weorder : 0,
+        implement : this.currentWorkExecution ? this.currentWorkExecution.implement : 0,
+        work : this.currentWorkExecution ? this.currentWorkExecution.work : 0,
+        lot: this.currentWorkExecution ? this.currentWorkExecution.lot : 0,
         worker: this.currentWorkExecution ? this.currentWorkExecution.worker : (await this.dbService.getLogin()).operador,
-        supervisor: 0,
+        supervisor: this.currentWorkExecution ? this.currentWorkExecution.supervisor : 0,
+        date: this.currentWorkExecution ? moment(this.currentWorkExecution.date, 'YYYY-MM-DD H:mm:ss') : moment(),
+        configuration: JSON.stringify(this.weConfiguration),
+        working_time: this.currentWorkExecution ? moment(this.currentWorkExecution.working_time, 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
+        downtime: this.currentWorkExecution ? moment(this.currentWorkExecution.downtime, 'H:mm:ss') : moment('0:00:00', 'H:mm:ss'),
+        hectare: this.currentWorkExecution ? this.currentWorkExecution.hectare : 0,
+        product: this.currentWorkExecution ? this.currentWorkExecution.product : '',
+        is_finished: 0,
+        id_from_server: this.currentWorkExecution ? this.currentWorkExecution.id_from_server : 0,
+        sended: this.currentWorkExecution ? this.currentWorkExecution.sended : 0,
+        execution_from: this.currentWorkExecution ? this.currentWorkExecution.execution_from : 1,
         cultivation: this.currentWorkExecution ? this.currentWorkExecution.cultivation : 0,
         farm: this.currentWorkExecution ? this.currentWorkExecution.farm : 0,
-        hectare: this.currentWorkExecution ? this.currentWorkExecution.hectare : 0,
-        lot: this.currentWorkExecution ? this.currentWorkExecution.lot : 0,
-        product: this.currentWorkExecution ? this.currentWorkExecution.product : '',
-        work: this.currentWorkExecution ? this.currentWorkExecution.work : 0,
-        id_from_server: this.currentWorkExecution ? this.currentWorkExecution.id_from_server : 0,
-        execution_from: this.currentWorkExecution ? this.currentWorkExecution.execution_from : 1,
-        sended: this.currentWorkExecution ? this.currentWorkExecution.sended : 0,
         min_volume: 0,
-        weorder: 0,
-        implement: 0
       };
 
       if(!this.currentWorkExecution){
@@ -253,10 +255,10 @@ export class ApplicationValuesComponent  implements OnInit {
     let largo;
     this.updateSummary(null);
 
-    tiempoRecorrido = ((this.formData.value.consumo / this.total)/60).toFixed(3);
+    tiempoRecorrido = ((this.formData.value.consume / this.total)/60).toFixed(3);
     largo = ((10000 / this.formData.value.width) / 1000).toFixed(3);
 
-    if(this.formData.value.consumo == "" || this.formData.value.width == ""){
+    if(this.formData.value.consume == "" || this.formData.value.width == ""){
       this.velocidadReal = 0;
     }else{
       this.velocidadReal = parseFloat((largo / tiempoRecorrido).toFixed(2));
@@ -307,60 +309,117 @@ export class ApplicationValuesComponent  implements OnInit {
       
       //let unidadPresion = this.unitsPressure;
 
-      this.calculoConsumo();
+      //this.calculoConsumo();
       this.updateCaudalObjetivoTotal();
       this.calculoVelocidad();
       setTimeout(() => this.updateSummary(null),200);
   }
 
-  calculoConsumo() {
-    console.log("Se entro a esta funcion");
-    let previousItem = null;
-    let currentItem = null;
-    let nextItem = null;
-    let nextNextItem = null;
-    let nextNextItem3 = null;
-    let nextNextItem4 = null;
 
-    const colorSeleccionado = this.selectedColor;
-    let encontrado = false; // Bandera para verificar si se ha encontrado un resultado
-    
-    this.nozzles.forEach((item, index, array) => {
-        if (colorSeleccionado == item.color && !encontrado) {
-            currentItem = item;
-            console.log("previousItem", currentItem, "nextItem", nextItem, "nextNextItem", nextNextItem, "nextNextItem3",  nextNextItem3, "nextNextItem4", nextNextItem4);
-            if (previousItem && nextItem && nextNextItem && nextNextItem3 && nextNextItem4 && colorSeleccionado == item.color) {
-                
-              let presionConvertida = convertPressureUnit(this.formData.value.pressure , UnitPressureEnum.BAR , UnitPressureEnum.PSI);
-                console.log("PresionConvertida", presionConvertida);
-                
-                if (index > 0 && index < array.length - 3) {
-                    if (presionConvertida >= previousItem.pressure && presionConvertida <= nextItem.pressure) {
-                      this.caudalObjetivo = calcular_caudal_objetivo(previousItem.flow , presionConvertida, previousItem.pressure , nextItem.pressure , nextItem.flow);
-                      encontrado = true; 
 
-                    } else if (presionConvertida > nextItem.pressure && presionConvertida <= nextNextItem.pressure) {
-                      this.caudalObjetivo = calcular_caudal_objetivo(nextItem.flow , presionConvertida, nextItem.pressure , nextNextItem.pressure, nextNextItem.flow);
-                      encontrado = true; 
+calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, quantity: number) {
+  this.updateSummary(null);
+  console.log("Se entro a esta funcion");
+  let previousItem: Nozzles | null = null;
+  let currentItem: Nozzles | null = null;
+  let nextItem: Nozzles | null = null;
+  let nextNextItem: Nozzles | null = null;
+  let nextNextItem3: Nozzles | null = null;
+  let nextNextItem4: Nozzles | null = null;
 
-                    } else if (presionConvertida > nextNextItem.pressure && presionConvertida <= nextNextItem3.pressure) {
-                      this.caudalObjetivo = calcular_caudal_objetivo(nextNextItem.flow , presionConvertida, nextNextItem.pressure, nextNextItem3.pressure, nextNextItem3.flow);
-                      encontrado = true; 
-                      
-                    } else if (presionConvertida > nextNextItem3.pressure && presionConvertida <= nextNextItem4.pressure) {
-                      this.caudalObjetivo = calcular_caudal_objetivo(nextNextItem3.flow , presionConvertida , nextNextItem3.pressure, nextNextItem4.pressure, nextNextItem4.flow );  
-                      encontrado = true; 
-                    }
-                }
-            }
-            previousItem = currentItem;
-            nextItem = array[index + 1];
-            nextNextItem = array[index + 2];
-            nextNextItem3 = array[index + 3];
-            nextNextItem4 = array[index + 4];
-        }
-    });
+  const unitNozzle = this.formData.value.unit;
+  console.log("COLOR SELECCIONADO", colorSeleccionado);
+  console.log("TYPE NOZZLE", typeNozzle);
+  console.log("UNIDAD SELECCIONADO", unitNozzle);
+  let encontrado = false; // Bandera para verificar si se ha encontrado un resultado
+
+  this.nozzles.forEach((item: Nozzles, index: number, array: Nozzles[]) => {
+      if (colorSeleccionado == item.color && !encontrado && typeNozzle == item.type) {
+          currentItem = item;
+          console.log("previousItem", currentItem, "nextItem", nextItem, "nextNextItem", nextNextItem, "nextNextItem3", nextNextItem3, "nextNextItem4", nextNextItem4);
+          if (previousItem && nextItem && nextNextItem && nextNextItem3 && nextNextItem4) {
+              let presionConvertida: number;
+              if (typeNozzle == 1) {
+                  presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.PSI);
+                  console.log("PresionConvertida", presionConvertida);
+              } else {
+                  presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.BAR);
+                  console.log("PresionConvertida", presionConvertida);
+              }
+
+              if (index > 0 && index < array.length - 3) {
+                  let caudalTemporal = 0; // Variable temporal para almacenar el caudal objetivo calculado
+                  if (presionConvertida >= previousItem.pressure && presionConvertida <= nextItem.pressure) {
+                      caudalTemporal = calcular_caudal_objetivo(previousItem.flow, presionConvertida, previousItem.pressure, nextItem.pressure, nextItem.flow);
+                      console.log("CAUDAL 1 ", caudalTemporal);
+                      encontrado = true;
+
+                  } else if (presionConvertida > nextItem.pressure && presionConvertida <= nextNextItem.pressure) {
+                      caudalTemporal = calcular_caudal_objetivo(nextItem.flow, presionConvertida, nextItem.pressure, nextNextItem.pressure, nextNextItem.flow);
+                      console.log("CAUDAL 2 ", caudalTemporal);
+                      encontrado = true;
+
+                  } else if (presionConvertida > nextNextItem.pressure && presionConvertida <= nextNextItem3.pressure) {
+                      caudalTemporal = calcular_caudal_objetivo(nextNextItem.flow, presionConvertida, nextNextItem.pressure, nextNextItem3.pressure, nextNextItem3.flow);
+                      console.log("CAUDAL 3 ", caudalTemporal);
+                      encontrado = true;
+
+                  } else if (presionConvertida > nextNextItem3.pressure && presionConvertida <= nextNextItem4.pressure) {
+                      caudalTemporal = calcular_caudal_objetivo(nextNextItem3.flow, presionConvertida, nextNextItem3.pressure, nextNextItem4.pressure, nextNextItem4.flow);
+                      console.log("CAUDAL 4 ", caudalTemporal);
+                      encontrado = true;
+                  }
+
+                  // Acumular el caudal objetivo temporal al total
+                  this.caudalObjetivo += caudalTemporal * quantity;
+                  console.log("CAUDAL SUMADO", this.caudalObjetivo);
+              }
+          }
+          previousItem = currentItem;
+          nextItem = array[index + 1];
+          nextNextItem = array[index + 2];
+          nextNextItem3 = array[index + 3];
+          nextNextItem4 = array[index + 4];
+      }
+  });
 }
+
+
+  recalcularCaudalObjetivo() {
+    this.caudalObjetivo = 0;  // Reiniciar caudalObjetivo a 0 al inicio de la función
+    const presion = this.formData.value.pressure;
+    const boquillasAgrupadas: { [key: string]: { color: number; type: number; quantity: number } } = {};
+
+    // Agrupar boquillas por color y tipo, y calcular la cantidad
+    this.weConfiguration.nozzles.forEach(nozzle => {
+        const key = `${nozzle.color}-${nozzle.type}`;
+        if (!boquillasAgrupadas[key]) {
+            boquillasAgrupadas[key] = {
+                color: nozzle.color,
+                type: nozzle.type,
+                quantity: 0
+            };
+        }
+        boquillasAgrupadas[key].quantity++;
+    });
+
+    // Recalcular el caudal objetivo para cada grupo
+    for (const key in boquillasAgrupadas) {
+        if (boquillasAgrupadas.hasOwnProperty(key)) {
+            const grupo = boquillasAgrupadas[key];
+            const colorSeleccionado = grupo.color;
+            const typeNozzle = grupo.type;
+            const quantity = grupo.quantity;
+            this.calculoConsumo(presion, colorSeleccionado, typeNozzle, quantity);
+        }
+    }
+    this.calculoVelocidad();
+}
+
+
+
+
+
   /**
    * This function is responsible for removing a specific nozzle from the nozzle configuration.
    * It prompts the user with an alert message asking them to confirm if they want to delete the nozzle with the given number.
@@ -417,11 +476,12 @@ export class ApplicationValuesComponent  implements OnInit {
 
     updateCaudalObjetivoTotal() {
     // Sumar todos los caudales objetivos de las boquillas
-    this.caudalObjetivo = this.nozzleConfig.reduce((total, nozzle) => {
-        return total + this.caudalObjetivo;
-    }, 0);
+    this.total =  this.caudalObjetivo;
+
+    console.log("CAUDAL OBJETIVO" , this.caudalObjetivo);
 
     this.total = this.caudalObjetivo;
+    console.log("total" , this.total);
 
     // Actualizar el total en la interfaz de usuario
     this.updateSummary(null);

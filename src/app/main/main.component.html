@@ -6,13 +6,13 @@
       <ion-row class="ion-justify-content-between ">
         <ion-col size="4" class="left-menu py-menu">
           <div class="flex flex-row justify-content-between px-6">
-            <ion-fab-button shape="round" size="small" class="m-0" [ngClass]="currentRoute != '/main/control'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/control']">
+            <ion-fab-button shape="round" size="large" class="m-0" [ngClass]="currentRoute != '/main/control'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/control']">
               <span class="pi pi-home"></span>
             </ion-fab-button>
-            <ion-fab-button *ngIf="canStart" shape="round" size="small" class="m-0" [ngClass]="{'unselected-fab-button': currentRoute != '/main/gps', 'selected-fab-button': currentRoute == '/main/gps', 'gps-button-on': arduinoService.dataGps, 'gps-button-off': !arduinoService.dataGps}" [routerLink]="['/main/gps']">
+            <ion-fab-button *ngIf="canStart" shape="round" size="large" class="m-0" [ngClass]="{'unselected-fab-button': currentRoute != '/main/gps', 'selected-fab-button': currentRoute == '/main/gps', 'gps-button-on': arduinoService.dataGps, 'gps-button-off': !arduinoService.dataGps}" [routerLink]="['/main/gps']">
               <span class="pi pi-send"></span>
             </ion-fab-button>                      
-            <ion-fab-button shape="round" size="small" class="m-0" [ngClass]="currentRoute != '/main/settings'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/settings']">
+            <ion-fab-button shape="round" size="large" class="m-0" [ngClass]="currentRoute != '/main/settings'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/settings']">
               <span class="pi pi-wrench"></span>
             </ion-fab-button>
           <!--   <ion-fab-button shape="round" size="small" class="m-0" [ngClass]="currentRoute != '/main/settings'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/settings/keyboard']">
@@ -26,7 +26,7 @@
 
         <ion-col size="4" class="right-menu py-menu">
           <div class="flex flex-row justify-content-between px-6">
-            <ion-fab-button shape="round" size="small"
+            <ion-fab-button shape="round" size="large"
               *ngIf="canStart"
               (mousedown)="onStartListenPower($event)"
               (touchstart)="onStartListenPower($event)"
@@ -35,7 +35,7 @@
               <span class="bi bi-moisture"></span>
             </ion-fab-button>
 
-            <ion-fab-button shape="round" size="small"
+            <ion-fab-button shape="round" size="large"
               *ngIf="canStart && powerButtonOn"
               (mouseup)="onEndListenPower($event)"
               (touchend)="onEndListenPower($event)"
@@ -45,7 +45,7 @@
             </ion-fab-button>
         
 
-            <ion-fab-button id="person-button" shape="round" size="small" class="m-0">
+            <ion-fab-button id="person-button" shape="round" size="large" class="m-0">
               <span class="pi pi-user"></span>
             </ion-fab-button>
 
