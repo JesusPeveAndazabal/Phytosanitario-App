@@ -1,44 +1,12 @@
-<!-- <div class="container mt-5">
-  <div class="row justify-content-center">
-    <div class="col-md-6">
-      <h1>Login</h1>
-      <div class="card">
-        <div class="card-header">
-          <h3 class="card-title">Control Fitosanitario</h3>
-        </div>
-        <div class="card-body">
+
+<body id="bodyLogin">
+  <div class="login">
+    <div class="login-screen">
+      <div class="login-form">
+        <div class="control-group">
           <form [formGroup]="formData" (submit)="login()">
             <div class="form-group">
-              <label for="code">Código/DNI</label>
-              <input appKeyboard formControlName="code" type="number" class="form-control" placeholder="000000">
-            </div>
-            <div class="form-group">
-              <label for="supervisor">Supervisor</label>
-              <select formControlName="supervisor" class="form-control">
-                <option value="0">-- Sin supervisor --</option>
-                <option *ngFor="let sup of supervisors" value="{{sup.id}}">{{ sup.fullname }}</option>
-              </select>
-            </div>
-            <button type="button" class="btn btn-primary" (click)="login()">Login</button>
-          </form>
-        </div>
-      </div>
-    </div>
-  </div>
-</div> -->
-
-
-	<div class="login">
-		<div class="login-screen">
-			<div class="app-title">
-				<h1>Control Fitosanitario</h1>
-			</div>
-
-			<div class="login-form">
-				<div class="control-group">
-          <form [formGroup]="formData" (submit)="login()">
-            <div class="form-group">
-              <label for="code">Código/DNI</label>
+              <label for="code"><strong>Código/DNI</strong></label>
               <input appKeyboard formControlName="code" type="number" class="form-control" placeholder="000000">
             </div>
             <div class="form-group">
@@ -47,16 +15,14 @@
                 <option *ngFor="let implement of filterImplemento" [value]="implement.id">{{ implement.name }}</option>
               </select>
             </div> 
-            <!-- <p-messages></p-messages> -->
           </form>
-				</div>
-				<button  id="btnLogin" type="button" class="btn btn-success m-2" (click)="login()">Iniciar sesión</button>
+        </div>
+        <button id="btnLogin" type="button" class="btn btn-success m-2" (click)="login()">Iniciar sesión</button>
       </div>
-		</div>
-	</div>
-
+    </div>
+  </div>
   <div class="loader-overlay" *ngIf="showLoader">
     <div class="loader"></div>
     <p>{{ loading_message }}</p>
   </div>
-
+</body>

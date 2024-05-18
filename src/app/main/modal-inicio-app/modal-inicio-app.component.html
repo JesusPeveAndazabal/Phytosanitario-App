@@ -1,21 +1,20 @@
 <ion-header>
     <ion-toolbar>
-      <ion-title>
-        Ingresar Volumen del Tanque
+      <ion-title id="tituloRecarga">
+        <strong>Volumen del Tanque</strong>
       </ion-title>
-      <ion-buttons slot="end">
-        <ion-button (click)="closeModal()">
-        </ion-button>
+      <ion-buttons slot="start">
+        <ion-button (click)="closeModal()"><strong>Cancelar</strong></ion-button>
       </ion-buttons>
     </ion-toolbar>
   </ion-header>
   
   <ion-content>
     <ion-item>
-      <label position="stacked" style="margin-top: 30px;">Volumen (litros)</label>
-      <input appKeyboard type="number" [(ngModel)]="volume" placeholder="1000" class="form-control">
+      <label position="stacked" id="LabelLitros">Ingrese Volumen (litros)</label>
+      <input appKeyboard type="number" [(ngModel)]="volume" placeholder="1000" class="form-control" style="font-size: 20px;">
     </ion-item>
   
-    <ion-button expand="block" (click)="saveVolume()">Guardar</ion-button>
+    <ion-button expand="block" id="btnGuardar" (click)="saveVolume()">Llenar</ion-button>
   </ion-content>
   

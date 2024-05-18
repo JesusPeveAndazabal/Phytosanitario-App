@@ -157,11 +157,16 @@ export class OrdenesTrabajoComponent implements OnInit {
         min_volume : 100,
       }
 
-      //Guardamos la ejecucion de Trabajo
-      await this.dbService.saveWorkExecutionData(workExecution);
-
       /* Descomentar en prubeas para regular la presion */
       this.arduinoService.regulatePressureWithBars(configExecution.pressure);
+      this.arduinoService.resetVolumenInit();
+      this.arduinoService.currentRealVolume = 0;
+      this.arduinoService.initialVolume = 0;
+      this.arduinoService.datosCaudal = 0;
+      this.arduinoService.deactivateLeftValve();
+      this.arduinoService.deactivateRightValve();
+      //Guardamos la ejecucion de Trabajo
+      await this.dbService.saveWorkExecutionData(workExecution);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;
       // Por ejemplo, cerrar el modal

@@ -1,36 +1,75 @@
- .login {
-  margin: 20px auto;
-  width: 300px;
+  /* Estilo para el fondo de login con superposición */
+  #bodyLogin {
+    position: relative;
+    background-image: url('../../assets/images/fondoLogin.webp');
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center center;
+    height: 100vh; /* Asegúrate de que el contenedor cubra toda la pantalla */
   }
+
+  /* Pseudo-elemento para añadir opacidad y color superpuesto */
+  #bodyLogin::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.5); /* Color superpuesto y opacidad */
+    z-index: 1;
+  }
+
+
+  .login {
+    position: relative;
+    margin: 20px auto;
+    width: 300px;
+    z-index: 2;
+  }
+
   .login-screen {
-  background-color: #FFF;
-  padding: 20px;
-  border-radius: 5px;
-  margin-top: 45%;
+    background-color: #FFF;
+    padding: 20px;
+    border-radius: 10px;
+    margin-top: 45%;
+    z-index: 99999;
   }
   
+  .form-control{
+    font-size: 25px;
+    padding: 10px;
+    height: 58px;
+  }
+
+  .form-group label{
+    font-size: 28px;
+  }
+
   .app-title {
-  text-align: center;
-  color: #777;
+    text-align: center;
+    color: #000000;
+    font-size: 90px;
   }
   
   .login-form {
   text-align: center;
   }
+
   .control-group {
-  margin-bottom: 10px;
+   margin-bottom: 10px;
   }
   
   input {
-  text-align: center;
-  background-color: #ECF0F1;
-  border: 2px solid transparent;
-  border-radius: 3px;
-  font-size: 16px;
-  font-weight: 200;
-  padding: 10px 0;
-  width: 250px;
-  transition: border .5s;
+    text-align: center;
+    background-color: #ECF0F1;
+    border: 2px solid transparent;
+    border-radius: 3px;
+    font-size: 16px;
+    font-weight: 200;
+    padding: 10px 0;
+    width: 250px;
+    transition: border .5s;
   }
   
   input:focus {
@@ -41,12 +80,12 @@
   #btnLogin {
     border: 2px solid transparent;
     color: #ffffff;
-    font-size: 16px;
+    font-size: 25px;
     line-height: 25px;
     padding: 10px 0;
     text-decoration: none;
     text-shadow: none;
-    border-radius: 3px;
+    border-radius: 2px;
     box-shadow: none;
     transition: 0.25s;
     display: block;

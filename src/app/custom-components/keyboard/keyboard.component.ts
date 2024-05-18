@@ -20,9 +20,17 @@ export class KeyboardComponent implements OnInit{
       onKeyPress: button => this.onKeyPress(button),
       preventMouseDownDefault : true,
       preventMouseUpDefault : true,
-      layout: {
-        default: ["1 2 3", "4 5 6", "7 8 9", ". 0 {bksp}"],
-        shift: ["! / #", "$ % ^", "& * (", ". ) {bksp}"]
+      layout: { 
+        default: [
+          "1 2 3",
+          "4 5 6",
+          "7 8 9 {enter}",
+          ". 0 {bksp}",
+        ],
+      },
+      display: {
+        '{bksp}': '⌫',
+        '{enter}': '↵',
       },
     });
 
@@ -36,6 +44,11 @@ export class KeyboardComponent implements OnInit{
   }
 
   onKeyPress(button: string) {
-
+    if(button === "{enter}"){
+      console.log("ENTER");
+      if (this.input && this.input.nativeElement) {
+        this.input.nativeElement.blur();
+      }
+    }
   }
 }

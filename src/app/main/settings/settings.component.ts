@@ -57,7 +57,8 @@ export class SettingsComponent  implements OnInit {
   async openAplicationValues() {
     const modal = await this.modalCtrl.create({
       component: ApplicationValuesComponent,
-      id: 'application-values-modal'
+      id: 'application-values-modal',
+      backdropDismiss:false,
     });
     modal.present();
     const { data, role } = await modal.onWillDismiss();
@@ -67,7 +68,8 @@ export class SettingsComponent  implements OnInit {
     const modal = await this.modalCtrl.create({
       component: ApplicationDataComponent,
       id : 'application-data-modal',
-      cssClass: 'application-data'
+      cssClass: 'application-data',
+      backdropDismiss:false,
     });
     modal.present();
 
@@ -77,7 +79,8 @@ export class SettingsComponent  implements OnInit {
   async openOrdenesTrabajo(){
     const modal = await this.modalCtrl.create({
       component : OrdenesTrabajoComponent,
-      id : 'ordenes-trabajo'
+      id : 'ordenes-trabajo',
+      backdropDismiss:false,
     });
     modal.present();
   }

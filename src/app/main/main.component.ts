@@ -230,6 +230,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     if (command.type == WorkStatusChange.START){
       const modal = await this.modalController.create({
         component: ModalInicioAppComponent, // Reemplaza YourModalComponent por el nombre de tu componente modal
+        backdropDismiss : false,
         componentProps: {
           lastWorkExecutionId: this.lastWorkExecution!.id
         }
@@ -264,8 +265,7 @@ export class MainComponent implements OnInit,AfterViewInit{
 
             //Configurar el volumen mínimo e inicial en el servicio.
             //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
-            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);
-            
+            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);            
             this.workStatus = WorkStatusChange.START;
             this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
@@ -314,7 +314,7 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.arduinoService.initialVolume = 0;
               this.arduinoService.datosCaudal = 0;
               this.volumenCompont.apagarValvulas();
-              //this.router.navigate(['/','main','settings']);
+              this.router.navigate(['/','main','settings']);
               //Se dejara la valvula derecha activada
               // console.log(finalizar, "finalizar");
             }

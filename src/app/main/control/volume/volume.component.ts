@@ -61,6 +61,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
 
   valueVelocidad = 0;
   valueCalculo = 0;
+  work;
+  consumo = 0;
 
   distance2: number = 0;
 
@@ -82,8 +84,28 @@ export class VolumeComponent  implements OnInit,OnChanges {
     // this.animateWaves();
     // this.shouldBlink= true;
     this.localConfig = await this.dbService.getLocalConfig();
+    let obtenerLabor = await this.dbService.getLastWorkExecution();
+    let workListado = await this.dbService.getWorkData();
+    this.consumo = JSON.parse(this.wExecution.configuration).consume;
+    console.log(JSON.parse(this.wExecution.configuration).consume);
+    console.log(JSON.parse(this.wExecution.configuration));
+       // Obtener el id del último trabajo ejecutado
+    const workId = obtenerLabor.work;
+
+    // Buscar el objeto en workListado cuyo id coincida con workId
+    this.work = workListado.find(item => item.id === workId);
     
-     
+    // Imprimir el nombre de la labor si se encontró el trabajo
+    if (this.work) {
+        console.log(this.work.name);
+    } else {
+        console.log('No se encontró la labor correspondiente.');
+    }
+   
+       console.log(obtenerLabor.work);
+       console.log(workListado);
+       console.log(this.consumo);
+
     this.minVolume = this.localConfig.vol_alert_on;
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
 

@@ -205,6 +205,15 @@ export class ArduinoService {
         instance.data[Sensor.STATUS_PRESSURE] = 0;
       }
 
+      if(instance.connectedPresion !== previousSensorConnections.sensorPressure){
+        console.log(`El sensor ${sensorPressure} se ${this.connectedPresion ? 'conectó' : 'desconectó'}`);
+        previousSensorConnections.sensorPressure = this.connectedPresion;
+        if(!this.connectedPresion){
+          this.regulatePressureWithBars(await JSON.parse(currentWork.configuration).pressure);
+          console.log("COMANDO regular ", await JSON.parse(currentWork.configuration).pressure);
+        }
+      }
+
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
       // Dentro de tu bloque de código donde manejas la reconexión del sensor de caudal
       if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
@@ -280,6 +289,7 @@ export class ArduinoService {
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
                 this.currentRealVolume = this.initialVolume - (this.datosCaudal + instance.previousAccumulatedVolume);
+                this.data[Sensor.CURRENT_TANK] = this.currentRealVolume;
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   

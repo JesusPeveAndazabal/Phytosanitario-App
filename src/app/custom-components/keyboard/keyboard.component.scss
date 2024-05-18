@@ -5,20 +5,20 @@
     right: 0;
     width: 100%;
     z-index: 999999999999999;
-    height: 35%;
-    font-size: 36px;
-    padding: 26px;
-  }
+    max-height: 100%;
+    font-size: 15px;
+}
 
-// .simple-keyboard {
-//   position: fixed;
-//   background-color: black;
-//   border-radius: 4px;
-//   color: #ffffff;
-//   font-family: Arial;
-//   padding: 3px 6px;
-//   font-size: 13px;
-//   margin-top: 5px;
-//   transform:translateX(-50%);
-//   width: 100%;
-// }
+.simple-keyboard.myTheme1 {
+  height: 42%;
+  border-radius: 0;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+/* AJUSTAR EL TAMAÑO DE LOS BOTONES */
+:host ::ng-deep .hg-theme-default .hg-button {
+  height: 80px !important; /* Ajusta este tamaño según tus necesidades */
+  padding: 5px !important; /* Ajusta este padding según tus necesidades */
+  font-size: 45px !important; /* Ajusta este tamaño según tus necesidades */
+}
