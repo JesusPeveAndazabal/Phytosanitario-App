@@ -681,7 +681,7 @@ export class DatabaseService extends ElectronService {
   async getLastWaterVolume(work : number): Promise<WaterVolumes> {
     return new Promise<WaterVolumes>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
-      let sql = "SELECT * from water_volumes WHERE work_exec_id = ${work} ORDER BY id DESC LIMIT 1";
+      let sql = "SELECT * from water_volumes WHERE work_exec_id = ? ORDER BY id DESC LIMIT 1";
       db.get(sql,[work],(err,rows : WaterVolumes)=>{
         if(err){
           process.nextTick(() => reject(err));
@@ -859,6 +859,8 @@ export class DatabaseService extends ElectronService {
       });
     });
   }
+
+
 
 
   /**

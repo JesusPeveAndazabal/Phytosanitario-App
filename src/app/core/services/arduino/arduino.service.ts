@@ -191,8 +191,7 @@ export class ArduinoService {
               instance.dataCurrent = JSON.parse(prueba.data)[Sensor.CURRENT_TANK];
               instance.currentRealVolume = instance.dataCurrent;
               //instance.datosCaudal = instance.previousAccumulatedVolume;
-              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.dataCurrent);
-              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.datosCaudal);
+              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.currentRealVolume);
           } else {
               console.error("prueba o prueba.data es undefined");
           }
@@ -209,8 +208,9 @@ export class ArduinoService {
         console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
         //Guardamos en datosCaudal el valor del volumen acumulado
         instance.datosCaudal = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
+        console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
         instance.datosCaudal = parseFloat(instance.datosCaudal.toFixed(2));
-        console.log("VOLUMEN RESETEADO", instance.volumenReseteado);
+        //console.log("VOLUMEN RESETEADO", instance.volumenReseteado);
       }
 
        // Aquí puedes colocar la parte relacionada con el sensor
@@ -264,6 +264,7 @@ export class ArduinoService {
           let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
           if (currentWorkPrueba) {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
+            instance.data[Sensor.ACCUMULATED_RESTAURAR] = instance.previousAccumulatedVolume;
             instance.datosCaudal = instance.previousAccumulatedVolume;
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
@@ -312,7 +313,7 @@ export class ArduinoService {
         instance.data[Sensor.ACCUMULATED_CONSUMO] = instance.acumuladoTotal;
       }
 
-      console.log("VOLUMEN ACUMULADO TOTAL" , instance.acumuladoTotal);
+      //console.log("VOLUMEN ACUMULADO TOTAL" , instance.acumuladoTotal);
 
 
       // Continuar solo si hay datos del GPS
@@ -341,8 +342,11 @@ export class ArduinoService {
     
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1 && instance.data[`${Sensor.ACCUMULATED_VOLUME}`] >= 0) {
-                instance.currentRealVolume = instance.initialVolume - (instance.datosCaudal + instance.previousAccumulatedVolume);
-                this.data[Sensor.CURRENT_TANK] = this.currentRealVolume;
+                console.log("CURRENT ANTES DE MODIFICAR" , instance.currentRealVolume);
+                console.log("PREVIOUS VOLUME" , instance.previousAccumulatedVolume);
+                instance.currentRealVolume = instance.initialVolume - instance.datosCaudal;
+                console.log("CURRENT DESPUES DE MODIFICAR" , instance.currentRealVolume);
+                instance.data[Sensor.CURRENT_TANK] = instance.currentRealVolume;
                
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
@@ -367,7 +371,7 @@ export class ArduinoService {
 
             instance.reealNow = instance.reealNow.startOf('seconds');
             
-            console.log("VARIABLE ISRUNNING" , instance.isRunning);
+            //console.log("VARIABLE ISRUNNING" , instance.isRunning);
             
             //Is running en true para guardar datos
             if (currentWork && instance.isRunning) {

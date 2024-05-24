@@ -158,15 +158,15 @@ export class OrdenesTrabajoComponent implements OnInit {
       }
 
       /* Descomentar en prubeas para regular la presion */
-      //this.arduinoService.regulatePressureWithBars(configExecution.pressure);
+      this.arduinoService.regulatePressureWithBars(configExecution.pressure);
       console.log("REGULADOR ORDEN" , configExecution.pressure);
       //this.arduinoService.resetVolumenInit();
       this.arduinoService.datosCaudal = 0;
       this.arduinoService.dataCurrent = 0;
       this.arduinoService.currentRealVolume = 0;
       this.arduinoService.initialVolume = 0;
-/*       this.arduinoService.deactivateLeftValve();
-      this.arduinoService.deactivateRightValve(); */
+      this.arduinoService.deactivateLeftValve();
+      this.arduinoService.deactivateRightValve();
       this.arduinoService.previousAccumulatedVolume = 0;
       this.arduinoService.acumuladoTotal = 0;
       this.arduinoService.volumenReseteado = 0;

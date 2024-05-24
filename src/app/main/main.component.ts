@@ -1,4 +1,5 @@
 import { Login } from './../core/models/login';
+import { interval, startWith, switchMap } from 'rxjs';
 // import { WebSocketClientService } from './../core/services/websocket-client/web-socket-client.service';
 import { DatabaseService} from './../core/services/database/database.service';
 import { WaterVolumes, WorkExecution, WorkExecutionDetail } from './../core/models/work-execution';
@@ -45,6 +46,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   cronometroImproductivo: number = 0;
   enModoProductivo: boolean = false;
   velocidadCronometro: number = 1;
+  previousAccumulatedVolume : number = 0 ;
 
   volume: number;
 
@@ -106,27 +108,35 @@ export class MainComponent implements OnInit,AfterViewInit{
 
     config.lastWorkExecution = this.lastWorkExecution;
     this.localConfig = await this.databaseService.getLocalConfig();
-
-
-    this.arduinoService.getSensorObservable(Sensor.VOLUME).subscribe((valorDelSensor) => {
-      /* if (this.arduinoService.currentRealVolume < this.localConfig.vol_alert_on && this.arduinoService.isRunning){
-        this.workStatus = WorkStatusChange.STOP;
-        this.classButtonPower = "power-button-off";
-      } */
-    });
   }
 
   async openIfNotConnected(){
-
     await this.databaseService.openConnection();
-    // if(!this.databaseService.db){
-    // }
-    // else{
-    //   // let isOpenDatabase = await this.databaseService.db.isDBOpen();
-    //   // console.log(isOpenDatabase);
-    //   //if(!isOpenDatabase)
-    // }
+    const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
+    interval(1000).pipe(
+      startWith(0), // Emite un valor inicial para que comience inmediatamente
+      switchMap(() => this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_RESTAURAR))
+    ).subscribe((valorDelSensor: number) => {
+        this.previousAccumulatedVolume = this.arduinoService.previousAccumulatedVolume;
+        if(this.previousAccumulatedVolume > 0){
+          this.workStatus = WorkStatusChange.START;
+          this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
+          this.powerButtonOn = true;
+          this.arduinoService.isRunning = true;
+          this.someFunction();
+        }
+    });
   }
+
+  async someFunction() {
+    try {
+        const waterVolumes = await this.databaseService.getLastWaterVolume(this.lastWorkExecution.id);
+        const inicialVolume = waterVolumes.volume; // Extraer la propiedad `volume`
+        this.arduinoService.initialVolume = inicialVolume;
+    } catch (error) {
+        console.error('Error fetching last water volume:', error);
+    }
+}
 
   async ngAfterViewInit() {
 
@@ -203,7 +213,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   
   async onClickPower(){
     this.arduinoService.resetVolumenInit();
-    /* this.arduinoService.datosCaudal = 0; */
+    //this.arduinoService.datosCaudal = 0;
     this.arduinoService.previousAccumulatedVolume = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     //console.log(this.lastWorkExecution, "dio click al boton verde");
