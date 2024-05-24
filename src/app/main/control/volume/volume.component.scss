@@ -175,11 +175,11 @@ text {
 
 
 @import "bourbon/app/assets/stylesheets/bourbon";
-$button-background-color:       #a98f2fa1;
-$button-background-color-hover: #a98f2fa1;
+$button-background-color:       #00ffff;
+$button-background-color-hover: #00ffff;
 $button-text-color:             #fff;
 $button-border-color:           #fff;
-$button-border-color-hover:     #a98f2fa1;
+$button-border-color-hover:     #00ffff;
 $button-border-width:           4px;
 $button-border-radius:          3px;
 $button-separation:             50px;
@@ -372,6 +372,8 @@ ion-icon {
   }
 }
  */
+
+ /*ALERTA DE APAGADO DE VALVULAS - MINIMO DE VOLUMEN */
  .alerta {
   position: fixed;
   top: 50%;

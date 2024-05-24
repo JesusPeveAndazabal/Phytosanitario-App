@@ -29,13 +29,15 @@ import isOnline from 'is-online';
 })
 
 export class ArduinoService {
+  public isServiceRestarting: boolean = true;
   listArduinos : ArduinoDevice[] = [];  
   public tiempoProductivo : Chronos = new Chronos(1,"Productivo", false);
   public tiempoImproductivo : Chronos = new Chronos(2,"Improductivo", false);
   localConfig! : LocalConf;
   minVolume = 0;
+  dataCurrent = 0;
   initialVolume: number = 0; // Valor inicial del contenedor
-  currentRealVolume: number = this.initialVolume;  // Inicializa con el valor inicial
+  currentRealVolume: number = 0;  // Inicializa con el valor inicial
   timer: any;
   currentTime: number = 0;
 
@@ -80,7 +82,6 @@ export class ArduinoService {
 
   gpsVar = 0;
 
-
   // Variables para almacenar las coordenadas anteriores del GPS
   previousGpsCoordinates: number[] | null = null;
 
@@ -95,6 +96,8 @@ export class ArduinoService {
   public consumoTotal;
   public conectInternet = false; // Variable para verificar si hay internet o no
   public datosCaudal = 0;
+  public volumenReseteado = 0;
+  public acumuladoTotal = 0;
 
 
   /* Parametros para conexion */
@@ -106,11 +109,11 @@ export class ArduinoService {
   inputPressureValue: number | undefined;
   lastVolume: number | null = null;
   hasGPSData = true;
+  acumulado2 = 0;
 
   // Almacena el valor anterior del acumulador de volumen
   previousAccumulatedVolume = 0;
 
-  
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
@@ -132,11 +135,16 @@ export class ArduinoService {
       );
     }
 
+    // Variable para almacenar el último volumen registrado
+    let ultimoVolumenRegistrado = 0;
+
+
     //Iteracion para recorre los valores de los sensores y guardarlos localmente
     let instance = this;
 
       // Declarar una variable para almacenar el volumen anterior
     let volumenAnterior = 0;
+
 
     // Almacena el estado anterior de conexión de los sensores
     let previousSensorConnections = {
@@ -151,6 +159,7 @@ export class ArduinoService {
       // Define una bandera para controlar si el restablecimiento de currentRealVolume ya ha ocurrido
       let isCurrentRealVolumeReset = false;
 
+
       // Agregar sensores para futuros cambios
       instance.data = {
         ...instance.data,
@@ -160,7 +169,6 @@ export class ArduinoService {
         [Sensor.HUMIDITY]: 0,
         [Sensor.VOLUME_CONTAINER]: 0,
         [Sensor.DISTANCE_NEXT_SECTION]: 0,
-        [Sensor.ACCUMULATED_VOLUME] : 0,
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
       }
 
@@ -171,11 +179,38 @@ export class ArduinoService {
         instance.data = { ...instance.data, ...instance.mapToObject(arduino.message_from_device) };
         arduino.message_from_device = new Map<Sensor, number | number[]>();
       });
+      
+
+
+      if(instance.isServiceRestarting){
+        try {
+          let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
+          let prueba = await instance.databaseService.getLastWorkExecutionCurrent(currentWork.id);
+      
+          if (prueba && prueba.data) {
+              instance.dataCurrent = JSON.parse(prueba.data)[Sensor.CURRENT_TANK];
+              instance.currentRealVolume = instance.dataCurrent;
+              //instance.datosCaudal = instance.previousAccumulatedVolume;
+              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.dataCurrent);
+              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.datosCaudal);
+          } else {
+              console.error("prueba o prueba.data es undefined");
+          }
+        } catch (error) {
+            console.error("Error al obtener o procesar los datos:", error);
+        }
+        this.isServiceRestarting = false; // Reinicio completado
+      }else{
+        //instance.currentRealVolume = instance.initialVolume;
+      }
+
 
       if(instance.data[Sensor.VOLUME] > 0){
         console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
         //Guardamos en datosCaudal el valor del volumen acumulado
-        instance.datosCaudal = instance.data[Sensor.VOLUME];
+        instance.datosCaudal = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
+        instance.datosCaudal = parseFloat(instance.datosCaudal.toFixed(2));
+        console.log("VOLUMEN RESETEADO", instance.volumenReseteado);
       }
 
        // Aquí puedes colocar la parte relacionada con el sensor
@@ -205,13 +240,21 @@ export class ArduinoService {
         instance.data[Sensor.STATUS_PRESSURE] = 0;
       }
 
+      //Para la reconexion de la presion - Regula de acuerdo a la ultima presion guardada
       if(instance.connectedPresion !== previousSensorConnections.sensorPressure){
         console.log(`El sensor ${sensorPressure} se ${this.connectedPresion ? 'conectó' : 'desconectó'}`);
         previousSensorConnections.sensorPressure = this.connectedPresion;
-        if(!this.connectedPresion){
-          this.regulatePressureWithBars(await JSON.parse(currentWork.configuration).pressure);
-          console.log("COMANDO regular ", await JSON.parse(currentWork.configuration).pressure);
-        }
+
+        
+        this.regulatePressureWithBars(0);
+        console.log("COMANDO regular" , 0);
+
+        setTimeout(async () => {
+          const pressureReconexion = await JSON.parse(currentWork.configuration).pressure;
+          this.regulatePressureWithBars(pressureReconexion);
+          console.log("COMANDO regular despues de 2 s" , pressureReconexion);
+        }, 2000);
+      
       }
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
@@ -221,6 +264,7 @@ export class ArduinoService {
           let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
           if (currentWorkPrueba) {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
+            instance.datosCaudal = instance.previousAccumulatedVolume;
             console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
             isCurrentRealVolumeReset = true;
@@ -239,7 +283,7 @@ export class ArduinoService {
           if(currentWork){
             let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
             if(currentWorkPrueba){
-              instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
+              //instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
               console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
             }
           }
@@ -257,9 +301,20 @@ export class ArduinoService {
       this.gpsVar = instance.data[Sensor.GPS];
 
       if(instance.datosCaudal > 0 && instance.datosCaudal != undefined){
-        instance.data[Sensor.ACCUMULATED_VOLUME] = instance.datosCaudal + instance.previousAccumulatedVolume;
+        instance.data[Sensor.ACCUMULATED_VOLUME] = instance.datosCaudal;
       }
-    
+
+      // Verificar si el volumen ha cambiado y sumarlo a acumuladoTotal
+      let volume = parseFloat(instance.data[Sensor.VOLUME]);
+      if (!isNaN(volume) && volume !== 0) {
+        // Sumar el valor actual de volume a acumuladoTotal
+        instance.acumuladoTotal = volume + instance.volumenReseteado;
+        instance.data[Sensor.ACCUMULATED_CONSUMO] = instance.acumuladoTotal;
+      }
+
+      console.log("VOLUMEN ACUMULADO TOTAL" , instance.acumuladoTotal);
+
+
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
           let sensor = parseInt(value[0]) as Sensor;
@@ -276,8 +331,6 @@ export class ArduinoService {
             
             //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
             instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
-           
-
                 
           }else {
             instance.tiempocondicion = 4;
@@ -287,16 +340,19 @@ export class ArduinoService {
             let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
     
             if (currentWork) {
-              if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
-                this.currentRealVolume = this.initialVolume - (this.datosCaudal + instance.previousAccumulatedVolume);
+              if (instance.data[`${Sensor.WATER_FLOW}`] >= 1 && instance.data[`${Sensor.ACCUMULATED_VOLUME}`] >= 0) {
+                instance.currentRealVolume = instance.initialVolume - (instance.datosCaudal + instance.previousAccumulatedVolume);
                 this.data[Sensor.CURRENT_TANK] = this.currentRealVolume;
+               
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   
                 instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
                 instance.data[Sensor.VOLUME] = parseFloat((instance.data[Sensor.ACCUMULATED_VOLUME] - volumenAnterior).toFixed(2));
                 volumenAnterior = instance.data[Sensor.ACCUMULATED_VOLUME];
-                
+
+               
+
               } else {
                 instance.data[Sensor.VOLUME] = 0;
                 instance.tiempoImproductivo.start();
@@ -310,7 +366,9 @@ export class ArduinoService {
             }
 
             instance.reealNow = instance.reealNow.startOf('seconds');
-    
+            
+            console.log("VARIABLE ISRUNNING" , instance.isRunning);
+            
             //Is running en true para guardar datos
             if (currentWork && instance.isRunning) {
               let gps = instance.data[Sensor.GPS];
@@ -444,7 +502,8 @@ export class ArduinoService {
   public resetVolumenInit(): void {
     const command = 'B';
     this.findBySensor(Sensor.VOLUME).sendCommand(command);
-    console.log("VOLUMEN RESETEADO" , this.datosCaudal);
+    this.volumenReseteado += this.datosCaudal;
+    console.log("VOLUMEN RESETEADO" , this.volumenReseteado);
   }
 
   //Metodo para poder saber si un Arduino/Sensor esta conectado o no

@@ -203,7 +203,8 @@ export class MainComponent implements OnInit,AfterViewInit{
   
   async onClickPower(){
     this.arduinoService.resetVolumenInit();
-    this.arduinoService.datosCaudal = 0;
+    /* this.arduinoService.datosCaudal = 0; */
+    this.arduinoService.previousAccumulatedVolume = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     //console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
@@ -250,7 +251,10 @@ export class MainComponent implements OnInit,AfterViewInit{
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
             //console.log("CONF.VOLUMEN" , conf.volume);
             //console.log("VAL" ,this.volumenTanque);
-            console.log("CURRENTREAL" , this.arduinoService.currentRealVolume);
+            console.log("CONFVOLUME" , conf.volume);
+            console.log("VOLUMEN TANQUE" , this.volumenTanque);
+            console.log("CURRENT MAIN" , this.arduinoService.currentRealVolume);
+            console.log("DATACURRENT MAIN" , this.arduinoService.dataCurrent);
             conf.volume = this.volumenTanque - this.arduinoService.currentRealVolume;
             //console.log(volume, this.lastWorkExecution!, "info a guardar");
             // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
@@ -268,7 +272,8 @@ export class MainComponent implements OnInit,AfterViewInit{
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);            
             this.workStatus = WorkStatusChange.START;
             this.powerButtonOn = true;
-            this.classButtonPower = this.workStatus == WorkStatusChange.START ? "power-button-on" : "power-button-off";
+            this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
+            //this.volumenCompont.apagarValvulas();
             // Tu lógica para guardar el volumen y realizar acciones con él
             //console.log("Volumen capturado:", volume);
           }
@@ -331,7 +336,6 @@ export class MainComponent implements OnInit,AfterViewInit{
       });
     
   }
-
 
   get canStart(): boolean{
     if(config.lastWorkExecution){

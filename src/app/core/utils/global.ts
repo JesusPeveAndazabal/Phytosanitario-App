@@ -43,7 +43,8 @@ export enum Sensor{
 
     VALVE_LEFT = 20,
     VALVE_RIGHT = 21,
-    PRESSURE_REGULATOR = 22
+    PRESSURE_REGULATOR = 22,
+    ACCUMULATED_CONSUMO = 23
 }
 
 export enum SocketEvent{

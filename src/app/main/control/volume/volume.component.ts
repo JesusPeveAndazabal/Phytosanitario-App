@@ -63,8 +63,10 @@ export class VolumeComponent  implements OnInit,OnChanges {
   valueCalculo = 0;
   work;
   consumo = 0;
+  prenderValvulas : boolean = true;
 
   distance2: number = 0;
+  private valvulasApagadas: boolean = false;  // Bandera para controlar si las válvulas ya han sido apagadas
 
   //volumenInicial = 200; // Define tu volumen inicial aquí
   constructor(public arduinoService :ArduinoService, private dbService: DatabaseService,private changeDetectorRef: ChangeDetectorRef, public toastController : ToastController) {
@@ -87,9 +89,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
     let obtenerLabor = await this.dbService.getLastWorkExecution();
     let workListado = await this.dbService.getWorkData();
     this.consumo = JSON.parse(this.wExecution.configuration).consume;
-    console.log(JSON.parse(this.wExecution.configuration).consume);
-    console.log(JSON.parse(this.wExecution.configuration));
-       // Obtener el id del último trabajo ejecutado
+
+    // Obtener el id del último trabajo ejecutado
     const workId = obtenerLabor.work;
 
     // Buscar el objeto en workListado cuyo id coincida con workId
@@ -97,14 +98,10 @@ export class VolumeComponent  implements OnInit,OnChanges {
     
     // Imprimir el nombre de la labor si se encontró el trabajo
     if (this.work) {
-        console.log(this.work.name);
+        //console.log(this.work.name);
     } else {
         console.log('No se encontró la labor correspondiente.');
     }
-   
-       console.log(obtenerLabor.work);
-       console.log(workListado);
-       console.log(this.consumo);
 
     this.minVolume = this.localConfig.vol_alert_on;
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
@@ -131,14 +128,15 @@ export class VolumeComponent  implements OnInit,OnChanges {
       
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
         this.recargarTanque = true;
-        this.apagarValvulas();
-        this.arduinoService.isRunning = false;
-        console.log("NTRO ALA CONDICION");
-        console.log("RECARGAR TANQUE", this.recargarTanque);
-        console.log("RECARGAR TANQUE", this.arduinoService.isRunning);
-      } else {
-          this.shouldBlink = false;
-          this.recargarTanque = false;
+        this.arduinoService.previousAccumulatedVolume = 0;
+        if (!this.valvulasApagadas) {
+          this.apagarValvulas();
+          this.valvulasApagadas = true;  // Marca las válvulas como apagadas
+        }
+      } else if (this.volume >= this.minVolume) {
+        this.shouldBlink = false;
+        this.recargarTanque = false;
+        this.valvulasApagadas = false;  // Restablece la bandera cuando el volumen está por encima del mínimo
       }
     });
 

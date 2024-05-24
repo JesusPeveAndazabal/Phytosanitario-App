@@ -1467,8 +1467,35 @@ export class DatabaseService extends ElectronService {
         });
         db.close();
     });
-}
-  
+  }
+
+    //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
+    // Función para obtener el registro del detalle de ejecuciones de trabajo
+    // Función para obtener el último registro del detalle de ejecuciones de trabajo
+    async getLastWorkExecutionCurrent(work: number): Promise<WorkExecutionDetail> {
+      return new Promise<WorkExecutionDetail>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql = `
+          SELECT * FROM work_execution_details 
+          WHERE id_work_execution = ? 
+            AND CAST(JSON_EXTRACT(data, '$."19"') AS DECIMAL) > 0
+          ORDER BY id DESC 
+          LIMIT 1;
+        `;
+
+        db.get(sql, [work], (err, row: any) => {
+          if (err) {
+            process.nextTick(() => reject(err));
+          } else {
+            process.nextTick(() => resolve(row));
+          }
+        });
+
+        db.close();
+      });
+    }
+
+
 
   async getWorkExecutionDetailReal(work : number): Promise<WorkExecutionDetail[]> {
     return new Promise<WorkExecutionDetail[]>((resolve, reject) =>{
