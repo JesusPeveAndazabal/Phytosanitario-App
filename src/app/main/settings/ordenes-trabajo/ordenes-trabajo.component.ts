@@ -132,7 +132,6 @@ export class OrdenesTrabajoComponent implements OnInit {
 
   async confirm(){
     let configExecution = JSON.parse(this.selectedWorkOrder.configuration);
-    console.log(this.selectedWorkOrder);
     if (this.selectedWorkOrder) {
       let workExecution: WorkExecution = {
         id :1,
@@ -169,6 +168,8 @@ export class OrdenesTrabajoComponent implements OnInit {
       this.arduinoService.deactivateRightValve();
       this.arduinoService.previousAccumulatedVolume = 0;
       this.arduinoService.acumuladoTotal = 0;
+      this.arduinoService.restaurarConsumoTotal = 0;
+      this.arduinoService.restaurarDistancia = 0;
       this.arduinoService.volumenReseteado = 0;
       this.arduinoService.isRunning = false;
       // Por ejemplo, cerrar el modal

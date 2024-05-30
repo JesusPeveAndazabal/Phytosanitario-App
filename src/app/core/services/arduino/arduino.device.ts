@@ -95,6 +95,7 @@ export class ArduinoDevice {
             const parser = instance.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
             instance.listenToDevice(parser);
             clearInterval(instance.messageInterval);
+            console.log("MENSAJE" , instance.messageInterval);
           }
         }else if(instance.manualSetting){
           instance.isRunning = true;
@@ -132,6 +133,7 @@ export class ArduinoDevice {
           this.sensorSubjectMap.get(sensorType)!.next(numericValue);
         }
         this.message_from_device.set(sensorType, numericValue);
+        console.log("MESSAGE" , this.message_from_device);
 
         //this.arduinoService.notifySensorValue(sensorType, numericValue);
       });

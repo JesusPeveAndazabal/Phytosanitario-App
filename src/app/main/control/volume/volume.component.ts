@@ -77,6 +77,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     if(this.wExecution){
 
       this.setVolume(this.volume);
+      console.log("VOLUME" , this.volume);
     }
     // this.shouldBlink= true;
   }
@@ -97,7 +98,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.work = workListado.find(item => item.id === workId);
     
     // Imprimir el nombre de la labor si se encontró el trabajo
-    if (this.work) {
+    if (this.work.name) {
         //console.log(this.work.name);
     } else {
         console.log('No se encontró la labor correspondiente.');
@@ -140,6 +141,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
       }
     });
 
+
     this.container = new Wave({
       unit: 10, // wave size
       info: {
@@ -149,7 +151,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
       animationFrame: .014,
       timeoutSecond: 35,
       el: '#animation-frame',
-      canvas: document.getElementById('animation-frame'),
       colorList: ['#0ff'] ,
       opacity: [0.8] ,
       zoom: [3],
@@ -178,7 +179,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
   setVolume(volume: number){
     this.volume = parseFloat(volume.toFixed(2));
     this.percentVolume = isNaN(this.percentVolume) ? 0 : this.percentVolume;
-    this.container.xAxis = this.map(this.percentVolume,0,100,this.container.canvas.height,0);
+    this.container.xAxis = this.map(this.volume, 0, this.maxCurrentVolume, this.container.canvas.height, 0);
+    console.log(this.container.xAxis);
+    this.container.update();
   }
 
   // toggleValvulaDerecha($event : any):void{
@@ -200,13 +203,11 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.leftControlActive = false;
     this.rightControlActive = false;
     this.bothControlsActive = false;
-    this.changeDetectorRef.detectChanges();
     console.log("ESTADO IZQUIERDA", this.rightControlActive);
     console.log("ESTADO DERECHA", this.leftControlActive);
-    console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
     this.arduinoService.deactivateLeftValve();
     this.arduinoService.deactivateRightValve();
-    console.log("ENTRA A LA CONDICIUON DESPUES DEL COMANDO");
+    //this.changeDetectorRef.detectChanges();
   }
 
   toggleValvulaIzquierda():void{
@@ -230,17 +231,12 @@ export class VolumeComponent  implements OnInit,OnChanges {
     if (this.bothControlsActive) {
       this.leftControlActive = true;
       this.rightControlActive = true;
-      console.log("ESTADO IZQUIERDA", this.rightControlActive);
-      console.log("ESTADO DERECHA", this.leftControlActive);
-      console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
       this.arduinoService.activateLeftValve();
       this.arduinoService.activateRightValve();
     } else {
       this.leftControlActive = false;
       this.rightControlActive = false;
-      console.log("ESTADO IZQUIERDA", this.rightControlActive);
-      console.log("ESTADO DERECHA", this.leftControlActive);
-      console.log("ESTADO BOTONPRINCIPAL", this.bothControlsActive);
+      this.bothControlsActive = false;
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();
     }
@@ -299,59 +295,46 @@ class Wave {
   }
 
   update() {
-
-    this.draw (this.canvas, this.colorList);
-
-    // Actualización de información de dibujo común
+    this.draw(this.canvas, this.colorList);
     this.info.seconds = this.info.seconds + this.animationFrame;
     this.info.time = this.info.seconds * Math.PI;
-    // auto recursión
-    setTimeout(this.update.bind(this), this.timeoutSecond); //¡Esto de Establecer tiempo de espera se convierte en ventana!
+    setTimeout(this.update.bind(this), this.timeoutSecond);
   }
 
-  draw(canvas : any, color : any) {
-    //console.log(canvas.width, canvas.height);
-    // Obtenga el contexto del objetivo this.canvas
+  draw(canvas: any, color: any) {
     var context = canvas.contextCache;
-    // dibujo de lienzo claro
     context.clearRect(0, 0, canvas.width, canvas.height);
-    //Dibuje una ola dibujarWave this.canvas, color[número (especifique el número de ondas desde 0)], transparencia, zoom de ancho de onda, retardo de posición de inicio de onda)
-    for (let i = 0; i < this.colorList.length; i++){
-      this.drawWave (canvas, color[i], this.opacity[i], this.zoom[i], this.startPosition[i]);
+    for (let i = 0; i < this.colorList.length; i++) {
+      this.drawWave(canvas, color[i], this.opacity[i], this.zoom[i], this.startPosition[i]);
     }
   }
 
-  drawWave (canvas: any, color : any, alpha : any, zoom: any, delay: any) {
+  drawWave(canvas: any, color: any, alpha: any, zoom: any, delay: any) {
     var context = canvas.contextCache;
     context.globalAlpha = alpha;
-    context.beginPath(); //inicio de camino
-    this.drawSine (canvas, this.info.time / 0.5, zoom, delay);
-
-    if(this.stroke){
-      context.strokeStyle = color; //color de linea
-      context.lineWidth = this.lineWidth; //ancho de línea
-      context.stroke(); //Cable
+    context.beginPath();
+    this.drawSine(canvas, this.info.time / 0.5, zoom, delay);
+    if (this.stroke) {
+      context.strokeStyle = color;
+      context.lineWidth = this.lineWidth;
+      context.stroke();
     }
-    if(this.fill){
-      context.lineTo(canvas.width + 10, canvas.height); //camino a la parte inferior derecha del lienzo
-      context.lineTo(0, canvas.height); //camino a la parte inferior izquierda del lienzo
-      context.closePath() //cerrar el camino
-      context.fillStyle = color;//color de relleno
-      context.fill(); //llenar
+    if (this.fill) {
+      context.lineTo(canvas.width + 10, canvas.height);
+      context.lineTo(0, canvas.height);
+      context.closePath();
+      context.fillStyle = color;
+      context.fill();
     }
   }
 
-  drawSine (canvas: any, t:any, zoom:any, delay:any) {
+  drawSine(canvas: any, t: any, zoom: any, delay: any) {
     var xAxis = this.xAxis;
     var yAxis = this.yAxis;
     var context = canvas.contextCache;
-    // Set the initial x and y, starting at 0,0 and translating to the origin on
-    // the canvas.
-    var x = t; //ajuste el tiempo a la posición horizontal
+    var x = t;
     var y = Math.sin(x) / zoom;
-    context.moveTo(yAxis, this.unit * y + xAxis); //colocar el pase en la posición inicial
-
-    // Loop to draw segments (Dibuja una onda para el ancho.)
+    context.moveTo(yAxis, this.unit * y + xAxis);
     for (let i = yAxis; i <= canvas.width + 10; i += 10) {
       x = t + (-yAxis + i) / this.unit / zoom;
       y = Math.sin(x - delay) / 3;

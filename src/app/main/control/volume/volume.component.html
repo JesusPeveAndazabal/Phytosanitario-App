@@ -1,4 +1,6 @@
-<h1 id="tituloLaborConsumo">{{work.name}} - {{consumo}} L/H</h1>
+<h1 id="tituloLaborConsumo">
+    {{work ? work.name : 'Nombre no disponible'}} - {{consumo}} L/H
+</h1>
 <div id="volume-info">
 
 	<svg version="1.1" id="elp-badge" class="badge"
@@ -41,7 +43,7 @@
 
 	<text text-anchor="middle">
 		<textPath xlink:href="#SVGID_x5F_1_x5F_" startOffset="593">
-			<tspan class="badge-footer" fill="#FFFFFF" font-family="'Open Sans'" font-size="20pt"></tspan>
+			<tspan class="badge-footer" fill="#FFFFFF" font-family="'Open Sans'" font-size="20pt">{{currentPercentVolume}}%</tspan>
 		</textPath>
 	</text>
 </svg>
@@ -59,6 +61,7 @@
 <canvas id="animation-frame" class="circle" [ngClass]="{'blink-red': shouldBlink}"></canvas>
 
 <div class="field">
+
 	<!-- <div class="tractor"></div> -->
 </div>
 

@@ -17,6 +17,7 @@ import { ElectronService } from '../core/services';
 import { WorkExecution } from '../core/models/work-execution';
 import { Implement } from '../core/models/Implements';
 import { WorkExecutionOrder } from '../core/models/workExecutionOrder';
+import { ArduinoService } from '../core/services/arduino/arduino.service'; 
 import * as moment from 'moment';
 // import { WorkExecutionConfiguration } from '../core/models/we-configuration';
 // import { WorkExecution } from '../core/models/work-execution';
@@ -48,6 +49,7 @@ export class LoginComponent implements OnInit {
     private generalService:GeneralService,
     private databaseService:DatabaseService,
     private electronService : ElectronService,
+    private arduinoService : ArduinoService,
     private router:Router,
     private apiService:GeneralService,
     private toastController: ToastController) {
@@ -98,6 +100,9 @@ export class LoginComponent implements OnInit {
     // console.log(this.formData.valid, "login");
     //console.log("Ingreso al login : 1 vez");
     if(this.formData.valid){
+      this.arduinoService.deactivateLeftValve();
+      this.arduinoService.deactivateRightValve();
+      this.arduinoService.regulatePressureWithBars(0);
       //console.log("Ingreso a la condicion");
       // console.log(this.personData.find(person => (person.code == this.formData.value.code)), "personData2");
       // console.log(firstValueFrom(this.apiService.getPeople(environment.token)), "personData2");

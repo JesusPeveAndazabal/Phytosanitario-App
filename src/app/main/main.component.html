@@ -7,13 +7,17 @@
         <ion-col size="4" class="left-menu py-menu">
           <div class="flex flex-row justify-content-between px-6">
             <ion-fab-button shape="round" size="large" class="m-0" [ngClass]="currentRoute != '/main/control'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/control']">
-              <span class="pi pi-home"></span>
+              <span class="pi pi-home" style="font-size:171%;"></span>
+            </ion-fab-button>
+            <ion-fab-button id="internet-conection" shape="round" size="large" 
+            class="m-0" [ngClass]="{'internet-button-on': arduinoService.conectInternet, 'internet-button-off': !arduinoService.conectInternet}">
+            <i class="bi bi-wifi" style="font-size:171%;"></i>
             </ion-fab-button>
             <ion-fab-button *ngIf="canStart" shape="round" size="large" class="m-0" [ngClass]="{'unselected-fab-button': currentRoute != '/main/gps', 'selected-fab-button': currentRoute == '/main/gps', 'gps-button-on': arduinoService.dataGps, 'gps-button-off': !arduinoService.dataGps}" [routerLink]="['/main/gps']">
-              <span class="pi pi-send"></span>
-            </ion-fab-button>                      
+              <span class="bi bi-geo-alt" style="font-size:171%;"></span>
+            </ion-fab-button>                   
             <ion-fab-button shape="round" size="large" class="m-0" [ngClass]="currentRoute != '/main/settings'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/settings']">
-              <span class="pi pi-wrench"></span>
+              <span class="pi pi-wrench" style="font-size:171%;"></span>
             </ion-fab-button>
           <!--   <ion-fab-button shape="round" size="small" class="m-0" [ngClass]="currentRoute != '/main/settings'? 'unselected-fab-button':'selected-fab-button' " [routerLink]="['/main/settings/keyboard']">
               <span class="bi bi-grip-horizontal"></span>
@@ -32,7 +36,7 @@
               (touchstart)="onStartListenPower($event)"
               (click)="onClickPower()"
               [ngClass]="classButtonPower" class="m-0">
-              <span class="bi bi-moisture"></span>
+              <span class="bi bi-moisture" style="font-size:171%;"></span>
             </ion-fab-button>
 
             <ion-fab-button shape="round" size="large"
@@ -41,12 +45,11 @@
               (touchend)="onEndListenPower($event)"
               [ngClass]="{'power-button-on': powerButtonOn, 'power-button-off': !powerButtonOn}"
               class="m-0">
-              <span class="pi pi-power-off"></span>
+              <span class="pi pi-power-off" style="font-size:171%;"></span>
             </ion-fab-button>
-        
 
             <ion-fab-button id="person-button" shape="round" size="large" class="m-0">
-              <span class="pi pi-user"></span>
+              <span class="pi pi-user" style="font-size:171%;"></span>
             </ion-fab-button>
 
             <ion-modal #modalInfo id="modal-info" trigger="person-button" triggerAction="click">

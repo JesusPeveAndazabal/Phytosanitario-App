@@ -213,6 +213,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   
   async onClickPower(){
     this.arduinoService.resetVolumenInit();
+    this.arduinoService.restaurarConsumoTotal = 0;
     //this.arduinoService.datosCaudal = 0;
     this.arduinoService.previousAccumulatedVolume = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();

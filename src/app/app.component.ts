@@ -6,7 +6,7 @@ import { Component, OnInit } from '@angular/core';
 import { createSchema } from './core/utils/db-schemas';
 import { ElectronService } from './core/services';
 import { Configuration } from './core/utils/configuration';
-import { firstValueFrom } from 'rxjs';
+import { concatMap, firstValueFrom, map, of, range, takeWhile, tap, timer } from 'rxjs';
 import { ApiService } from './core/services/api/api.service';
 import { WorkExecution, WorkExecutionDetail } from './core/models/work-execution';
 import { ArduinoDevice } from './core/services/arduino/arduino.device';
@@ -15,6 +15,7 @@ import { ipcRenderer } from 'electron';
 
 import * as log from 'electron-log';
 import * as path from 'path';
+import * as moment from 'moment';
 
 @Component({
   selector: 'app-root',
@@ -25,6 +26,7 @@ import * as path from 'path';
 export class AppComponent implements OnInit {
   isWeb = false;
   private initPlugin= false;
+  private onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
   
 
   constructor(
@@ -45,7 +47,7 @@ export class AppComponent implements OnInit {
         let file = electronService.fs.readFileSync(electronService.path.resolve("bd/","conf.env"),{encoding:'utf-8'});
         
         //Leyendo el archivo de configuración
-        file.split(`\n`).forEach((el)=>{
+        file.split(`\r\n`).forEach((el)=>{
           let par = el.split("=");
           switch(par[0]){
             case "TOKEN":
@@ -81,11 +83,12 @@ export class AppComponent implements OnInit {
       let records = [];
       let records1 = [];
       let sended = [];
-      let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
-      setInterval(()=>{
-        if(!onExecution){
-          onExecution = true;
+      let instance = this;
+
+     /* setInterval(()=>{
+        if(!instance.onExecution){
+          instance.onExecution = true;
 
           //Loop que envía los registros por guardar en el servidor vía API/REST
           const iteration = async () =>{
@@ -94,6 +97,8 @@ export class AppComponent implements OnInit {
                 try{
                   let response : WorkExecution = wExecution;
                   console.log("RESPONSE" , response);
+
+                  //Enviar por POST si es la primera vez que se envía al server
                   if(!wExecution.id_from_server){
                     try {
                       if (wExecution.configuration.trim() !== '') {
@@ -115,6 +120,7 @@ export class AppComponent implements OnInit {
                       let workExecutionEnviado = await this.databaseService.updateExecutionSended(wExecution);
                     }                    
                   }
+                  //Enviar por PUT si no es la primera vez que se envía al server
                   else{
                     //Actualizar
                     // Lógica para actualizar los registros en el servidor si es necesario
@@ -126,46 +132,67 @@ export class AppComponent implements OnInit {
                   if(response.id){
                     if(response.id > 0 || response.id == -1){                      
                       let nonSendedExecutionDetail = await this.databaseService.getNotSendedExecutionDetail(wExecution.id)
-
+                      let total = nonSendedExecutionDetail.length;
                       let page_size = 60;
-                      let page_number = 1;
+                      let maxPages = Math.ceil(total / page_size);
+                      
 
-                      while(((page_number - 1) * page_size) < nonSendedExecutionDetail.length){
-                        let start = page_size * (page_number - 1);
-                        let paquete = nonSendedExecutionDetail.slice(start,start + page_size);
+                      //let page_number = 1;
 
-                        page_number += 1;
+                      let counter = range(1,maxPages);
+                      let iterador = counter.pipe(
+                        concatMap(value => timer(1000)
+                          .pipe(
+                            //takeWhile(p_number => p_number <= maxPages )
+                            tap((value )=> {
+                              
+                            })
+                          ) 
+                        )  
+                      );
+                      dc
+                      iterador.subscribe({
+                        next: async (p_number : number) =>{
+                          let start = page_size * (p_number - 1);
+                          console.log(wExecution.id + " = start & counter => "+start +" - "+ (start + page_size), moment().format("HH:mm:ss"));
+                          let paquete = nonSendedExecutionDetail.slice(start,start + page_size);
 
-                        try{
-                          paquete.forEach(async (wDetail : WorkExecutionDetail) => {
-                            wDetail.data = JSON.parse(wDetail.data);
-                            try {
-                                if (wDetail.gps && wDetail.gps.trim() !== '') {
-                                    wDetail.gps = JSON.parse(wDetail.gps);
-                                    console.log(wDetail.gps);
-                                    console.log("Detalle gps JSON" ,JSON.parse(wDetail.gps));
-                                    console.log("La cadena JSON de gps se ha analizado correctamente");
-                                } else {
-                                    console.log("La cadena JSON de gps está vacía");
-                                }
-                            } catch (error) {
-                                console.log("Error al analizar JSON de gps:", error);
-                            }
-                            wDetail.gps = [wDetail.gps[1],wDetail.gps[0]];
-                            wDetail.work_execution = wExecution.id_from_server;                  
-                          });
+                          try{
+                            paquete.forEach(async (wDetail : WorkExecutionDetail) => {
+                              wDetail.data = JSON.parse(wDetail.data);
+                              try {
+                                  if (wDetail.gps && wDetail.gps.trim() !== '') {
+                                      wDetail.gps = JSON.parse(wDetail.gps);
+                                      console.log(wDetail.gps);
+                                      console.log("Detalle gps JSON" ,JSON.parse(wDetail.gps));
+                                      console.log("La cadena JSON de gps se ha analizado correctamente");
+                                  } else {
+                                      console.log("La cadena JSON de gps está vacía");
+                                  }
+                              } catch (error) {
+                                  console.log("Error al analizar JSON de gps:", error);
+                              }
+                              wDetail.gps = [wDetail.gps[1],wDetail.gps[0]];
+                              wDetail.work_execution = wExecution.id_from_server;                  
+                            });
 
-                          let response = await firstValueFrom(this.apiService.sendRegistroAsyncExecutionDetail(paquete));
+                            let response = await firstValueFrom(this.apiService.sendRegistroAsyncExecutionDetail(paquete));
 
-                          //Se asume que está guardando correctamente
-                          paquete.forEach(async (wDetail : WorkExecutionDetail) => {
-                            await this.databaseService.updateExecutionSendedDetail(wDetail);
-                          });
+                            //Se asume que está guardando correctamente
+                            paquete.forEach(async (wDetail : WorkExecutionDetail) => {
+                              await this.databaseService.updateExecutionSendedDetail(wDetail);
+                            });
 
-                        }catch(exception){
-                          console.log(exception);
+                          }catch(exception){
+                            console.log(exception);
+                          }
                         }
-                      }      
+                      });
+
+                      // while(((page_number - 1) * page_size) < nonSendedExecutionDetail.length){
+                      //   
+                        
+                      // }      
                     }
                   }
                 }catch(exception){
@@ -178,7 +205,7 @@ export class AppComponent implements OnInit {
 
             });
 
-            onExecution = false;
+            instance.onExecution = false;
             records = [];
             records1 = [];
             sended = [];
@@ -189,6 +216,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000);   
+      },9000); */
   }
-}
+} 
