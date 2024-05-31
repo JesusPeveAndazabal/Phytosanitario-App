@@ -197,13 +197,13 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
 
   cerrarSesion(){
-    this.router.navigate(['/','login']);
     this.arduinoService.activateRightValve();
     this.volumenCompont.rightControlActive = true;
     this.arduinoService.resetVolumenInit();
     this.arduinoService.currentRealVolume = 0;
     this.arduinoService.initialVolume = 0;
     this.arduinoService.datosCaudal = 0;
+    this.router.navigate(['/','login']);
   }
 
   private listenTime : moment.Moment = moment();
@@ -212,10 +212,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
   
   async onClickPower(){
-    this.arduinoService.resetVolumenInit();
-    this.arduinoService.restaurarConsumoTotal = 0;
-    //this.arduinoService.datosCaudal = 0;
-    this.arduinoService.previousAccumulatedVolume = 0;
+
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     //console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
@@ -250,6 +247,10 @@ export class MainComponent implements OnInit,AfterViewInit{
 
       modal.onDidDismiss().then(async (data) => {
         if (data && data.data) {
+          this.arduinoService.resetVolumenInit();
+          this.arduinoService.restaurarConsumoTotal = 0;
+          //this.arduinoService.datosCaudal = 0;
+          this.arduinoService.previousAccumulatedVolume = 0;
           this.volumenTanque = parseFloat(data.data);
           if (!isNaN(this.volumenTanque)) {
             this.localConfig = await this.databaseService.getLocalConfig();

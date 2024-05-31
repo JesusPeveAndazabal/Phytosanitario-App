@@ -361,7 +361,11 @@ export class ArduinoService {
             instance.tiempocondicion = 1;
             
             //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
-            instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
+            //instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
+            instance.data[Sensor.DISTANCE_NEXT_SECTION] = (Math.random() * 10) / 3.6;
+            console.log("Distancia por tramo" , instance.data[Sensor.DISTANCE_NEXT_SECTION]);
+            instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
+            console.log("ACUMULADO DE HECTAREAS" , instance.accumulated_distance);
                 
           }else {
             instance.tiempocondicion = 4;
@@ -381,7 +385,6 @@ export class ArduinoService {
                 instance.tiempoProductivo.start();
                 instance.tiempoImproductivo.stop();
   
-                instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
                 instance.data[Sensor.VOLUME] = parseFloat((instance.data[Sensor.ACCUMULATED_VOLUME] - volumenAnterior).toFixed(2));
                 volumenAnterior = instance.data[Sensor.ACCUMULATED_VOLUME];
  

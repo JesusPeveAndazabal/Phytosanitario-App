@@ -47,7 +47,7 @@ export class AppComponent implements OnInit {
         let file = electronService.fs.readFileSync(electronService.path.resolve("bd/","conf.env"),{encoding:'utf-8'});
         
         //Leyendo el archivo de configuración
-        file.split(`\r\n`).forEach((el)=>{
+        file.split(`\n`).forEach((el)=>{
           let par = el.split("=");
           switch(par[0]){
             case "TOKEN":
@@ -86,7 +86,7 @@ export class AppComponent implements OnInit {
 
       let instance = this;
 
-     /* setInterval(()=>{
+      setInterval(()=>{
         if(!instance.onExecution){
           instance.onExecution = true;
 
@@ -150,7 +150,7 @@ export class AppComponent implements OnInit {
                           ) 
                         )  
                       );
-                      dc
+                      
                       iterador.subscribe({
                         next: async (p_number : number) =>{
                           let start = page_size * (p_number - 1);
@@ -216,6 +216,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000); */
+      },9000); 
   }
 } 

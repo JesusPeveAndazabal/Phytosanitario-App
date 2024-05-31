@@ -46,7 +46,8 @@ export enum Sensor{
     PRESSURE_REGULATOR = 22, // REGULADOR DE PRESION
     ACCUMULATED_CONSUMO = 23,
     ACCUMULATED_RESTAURAR = 24,
-    TIME_CONSUMO = 25
+    TIME_CONSUMO = 25,
+    ADD_BATCH = 26
 }
 
 export enum SocketEvent{
