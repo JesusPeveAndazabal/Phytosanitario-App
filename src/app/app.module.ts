@@ -19,6 +19,9 @@ import { AtomizerAuthInterceptor } from './core/security/atomizer-auth.intercept
 import { DropdownModule } from 'primeng/dropdown';
 import { Routes, RouterModule } from '@angular/router';
 import { ArduinoService } from './core/services/arduino/arduino.service';
+import { NgxsModule } from '@ngxs/store';
+import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
+import { ValveState } from '../app/core/state/valve.state';
 // import { ElectronService } from './core/services';
 // AoT requires an exported function for factories
 const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new TranslateHttpLoader(http, './assets/i18n/', '.json');
@@ -34,6 +37,8 @@ const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new Transl
     BrowserAnimationsModule,
     HttpClientModule,
     AppRoutingModule,
+    NgxsModule.forRoot([ValveState]),
+    NgxsLoggerPluginModule.forRoot(),
     IonicModule.forRoot(),
     TranslateModule.forRoot({
       loader: {

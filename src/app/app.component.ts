@@ -216,6 +216,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000); 
+      },9000);  
   }
 } 

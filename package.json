@@ -57,6 +57,8 @@
     "@googlemaps/js-api-loader": "1.16.2",
     "@ionic/angular": "7.6.2",
     "@ionic/pwa-elements": "3.2.2",
+    "@ngxs/logger-plugin": "3.8.2",
+    "@ngxs/store": "3.8.2",
     "@serialport/list": "10.4.0",
     "@serialport/parser-readline": "10.3.0",
     "@types/serialport": "8.0.2",

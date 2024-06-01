@@ -6,6 +6,9 @@ import { ChangeDetectorRef, Component, EventEmitter, Injectable, Input, OnChange
 import { DatabaseService } from '../../../core/services';
 import { LocalConf } from '../../../core/models/local_conf';
 import { ToastController } from '@ionic/angular';
+import { ValveState, ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve } from '../../../core/state/valve.state';
+import { Select, Store } from '@ngxs/store';
+import { Observable } from 'rxjs';
 // import { WebSocketClientService } from 'src/app/core/services/services';
 // import { Sensor, SocketEvent,config } from 'src/app/core/utils/global';
 @Injectable({
@@ -17,6 +20,10 @@ import { ToastController } from '@ionic/angular';
   styleUrls: ['./volume.component.scss'],
 })
 export class VolumeComponent  implements OnInit,OnChanges {
+  leftControlActive$: Observable<boolean>;
+  rightControlActive$: Observable<boolean>;
+  bothControlsActive$: Observable<boolean>;
+
   @Input("wExecution") wExecution! : WorkExecution;
   @Input("leftControlActive") leftControlActive : boolean = false;
   @Input("rightControlActive") rightControlActive : boolean = false;
@@ -26,7 +33,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
   @Input("latitudGPS") latitudGPS : number = 0;
   @Input("longitudGPS") longitudGPS : number = 0;
 
-  
 
     // Output
   // @Output() leftControlActiveChange: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -69,7 +75,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   private valvulasApagadas: boolean = false;  // Bandera para controlar si las válvulas ya han sido apagadas
 
   //volumenInicial = 200; // Define tu volumen inicial aquí
-  constructor(public arduinoService :ArduinoService, private dbService: DatabaseService,private changeDetectorRef: ChangeDetectorRef, public toastController : ToastController) {
+  constructor(public arduinoService :ArduinoService, private store: Store , private dbService: DatabaseService,private changeDetectorRef: ChangeDetectorRef, public toastController : ToastController) {
 
    }
 
@@ -86,6 +92,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
     //this.setVolume(40);
     // this.animateWaves();
     // this.shouldBlink= true;
+    this.leftControlActive$ = this.store.select(ValveState.leftValveActive);
+    this.rightControlActive$ = this.store.select(ValveState.rightValveActive);
+    this.bothControlsActive$ = this.store.select(ValveState.bothValvesActive); // Debes definir this.bothValvesActive en el ValveState
     this.localConfig = await this.dbService.getLocalConfig();
     let obtenerLabor = await this.dbService.getLastWorkExecution();
     let workListado = await this.dbService.getWorkData();
@@ -188,14 +197,13 @@ export class VolumeComponent  implements OnInit,OnChanges {
   //   this.arduinoService.toggleValvulaDerecha();
   // }
   toggleValvulaDerecha():void{
-    this.rightControlActive = !this.rightControlActive;
-    // this.derecha = this.rightControlActive;
-    console.log("Estado derecha" , this.rightControlActive);
-    if(this.rightControlActive){
-      this.arduinoService.activateRightValve();
-    }else{
-      this.arduinoService.deactivateRightValve();
-    }
+    this.store.selectOnce(ValveState.rightValveActive).subscribe(isActive => {
+      if (isActive) {
+        this.arduinoService.deactivateRightValve();
+      } else {
+        this.arduinoService.activateRightValve();
+      }
+    });
   }
 
   /* Sirve para apagar las 2 valvulas */
@@ -211,37 +219,24 @@ export class VolumeComponent  implements OnInit,OnChanges {
   }
 
   toggleValvulaIzquierda():void{
-    this.leftControlActive = !this.leftControlActive;
-    // this.izquierda = this.leftControlActive;
-    console.log("Estado Izquierda" , this.leftControlActive);
-    if(this.leftControlActive){
-      this.arduinoService.activateLeftValve();
-    }else{
-      this.arduinoService.deactivateLeftValve();
-    }
+    this.store.selectOnce(ValveState.leftValveActive).subscribe(isActive => {
+      if (isActive) {
+        this.arduinoService.deactivateLeftValve();
+      } else {
+        this.arduinoService.activateLeftValve();
+      }
+    });
   }
 
-  //Se utiliza para el apagado de valvulas y prendida del boton de enemedio
-  toggleAmbasValvulas() {
-    console.log("AMBAS VALVULAS");
-    // Alternar el estado de ambas válvulas
-    this.bothControlsActive = !this.bothControlsActive;
-  
-    // Activa o desactiva las dos válvulas según el estado de ambos controles
-    if (this.bothControlsActive) {
-      this.leftControlActive = true;
-      this.rightControlActive = true;
-      this.arduinoService.activateLeftValve();
-      this.arduinoService.activateRightValve();
-    } else {
-      this.leftControlActive = false;
-      this.rightControlActive = false;
-      this.bothControlsActive = false;
-      this.arduinoService.deactivateLeftValve();
-      this.arduinoService.deactivateRightValve();
-    }
+  toggleAmbasValvulas(): void {
+    this.store.selectOnce(ValveState.bothValvesActive).subscribe(isActive => {
+      if (isActive) {
+        this.arduinoService.deactivateBothValves();
+      } else {
+        this.arduinoService.activateBothValves();
+      }
+    });
   }
-  
 
   map(value : number, fromLow : number, fromHigh : number, toLow : number, toHigh : number) {
     return (value - fromLow) * (toHigh - toLow) / (fromHigh - fromLow) + toLow;

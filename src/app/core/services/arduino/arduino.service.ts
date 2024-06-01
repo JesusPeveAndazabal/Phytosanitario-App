@@ -17,6 +17,9 @@ import { Configuration } from '../../utils/configuration';
 import * as moment from 'moment';
 import { LocalConf } from '../../models/local_conf';
 import { WorkExecution , WorkExecutionDetail } from '../../models/work-execution';
+import { Store } from '@ngxs/store';
+import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve , ActivateBothValves, DeactivateBothValves } from '../../state/valve.state';
+
 //import { getDistance} from 'geolib';
 
 import isOnline from 'is-online';
@@ -124,7 +127,7 @@ export class ArduinoService {
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
-  constructor( private electronService: ElectronService , private databaseService : DatabaseService) {
+  constructor( private electronService: ElectronService , private databaseService : DatabaseService , private store: Store) {
     this.setupSensorSubjects();
     this.checkInternetConnection();
     this.getDistancia();
@@ -599,6 +602,7 @@ export class ArduinoService {
   // Método para activar la válvula izquierda
   public activateLeftValve(): void {
     this.izquierdaActivada = true;
+    this.store.dispatch(new ActivateLeftValve());
     console.log("IZQUIERDA ACTIVADA" , this.izquierdaActivada);
     const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la válvula izquierda
     console.log("Comand" , command);
@@ -608,6 +612,7 @@ export class ArduinoService {
   // Método para desactivar la válvula izquierda
   public deactivateLeftValve(): void {
     this.izquierdaActivada = false;
+    this.store.dispatch(new DeactivateLeftValve());
     console.log("IZQUIERDA DESACTIVADA" , this.izquierdaActivada);
     const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la válvula izquierda
     console.log("Comand" , command);
@@ -618,6 +623,7 @@ export class ArduinoService {
   // Método para activar la válvula derecha
   public activateRightValve(): void {
     this.derechaActivada = true;
+    this.store.dispatch(new ActivateRightValve());
     console.log("DERECHA ACTIVADA" , this.derechaActivada);
     const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la válvula derecha
     console.log("Comand" , command);
@@ -628,11 +634,28 @@ export class ArduinoService {
   // Método para desactivar la válvula derecha
   public deactivateRightValve(): void {
     this.derechaActivada = false;
+    this.store.dispatch(new DeactivateRightValve());
     console.log("DERECHA DESCAACTIVADA" , this.derechaActivada);
     const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la válvula derecha
     console.log("Comand" , command);
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
     //console.log("Comando desactivar valvula derecha", command);
+  }
+
+  public activateBothValves(): void {
+    this.store.dispatch(new ActivateBothValves());
+    const commandLeft = Sensor.VALVE_LEFT + '|1\n';
+    const commandRight = Sensor.VALVE_RIGHT + '|1\n';
+    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(commandLeft);
+    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
+  }
+  
+  public deactivateBothValves(): void {
+    this.store.dispatch(new DeactivateBothValves());
+    const commandLeft = Sensor.VALVE_LEFT + '|0\n';
+    const commandRight = Sensor.VALVE_RIGHT + '|0\n';
+    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(commandLeft);
+    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
   }
 
   getDistance(coord1, coord2) {

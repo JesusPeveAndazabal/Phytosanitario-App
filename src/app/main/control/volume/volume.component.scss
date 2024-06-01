@@ -315,6 +315,14 @@ ion-icon {
   font-size: $button-font-size;
 }
 
+.button.selected {
+  background-color: $button-background-color; /* Color que desees para indicar que está activo */
+}
+
+.dual-control-button.selected {
+  background-color: $button-background-color; /* Color que desees para indicar que está activo */
+}
+
 
 #water {
   background-color: blue;
