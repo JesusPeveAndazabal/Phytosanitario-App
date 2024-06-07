@@ -79,24 +79,41 @@ export class ArduinoDevice {
         //console.log("isConnected" , instance.isConnected);
         //Obtener en la variable message los datos de bufffer mediante read()
         let message: Uint8Array | null = instance.port.read();
+        //console.log("MENSAJE" , message);
         if(message != null){
           //Conversion de los datos de la variable message y convertirlosm a formato utf-8
           const messagedecode: string = new TextDecoder('utf-8').decode(message);
-          //console.log(messagedecode);
+          console.log("MENSAHE CODEADO" , messagedecode);
           //Se separa por la funcion split
           let messageBuffer = messagedecode.split('|');
-          //console.log(messageBuffer);
+          console.log("MESAJE DEL BUFFER" , messageBuffer);
 
           if(messageBuffer[0] == 'C'){
             instance.mode = parseInt(messageBuffer[1]);
+            console.log("MODO" , instance.mode);
             instance.sensors = messageBuffer[2].split(',').map((x: string) => parseInt(x, 10));
+            console.log("SENSIRES" , instance.sensors);
             instance.port.write(Buffer.from('OK\n', 'utf-8'));
             instance.isRunning = true;
             const parser = instance.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+            console.log("PARSER" , parser);
             instance.listenToDevice(parser);
             clearInterval(instance.messageInterval);
             console.log("MENSAJE" , instance.messageInterval);
+          }else if(messageBuffer[0] >= '0'){
+            instance.mode = 1;
+            console.log("MODO DE CAUDAL" , instance.mode);
+            instance.sensors = [5,2];
+            console.log("SENSIRES DE CAUDAL" , instance.sensors);
+            instance.port.write(Buffer.from('OK\n', 'utf-8'));
+            instance.isRunning = true;
+            const parser = instance.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
+            console.log("PARSER DE CAUDAL" , parser);
+            instance.listenToDevice(parser);
+            clearInterval(instance.messageInterval);
+            console.log("MENSAJE DE CAUDAL" , instance.messageInterval);
           }
+
         }else if(instance.manualSetting){
           instance.isRunning = true;
         }
@@ -133,7 +150,7 @@ export class ArduinoDevice {
           this.sensorSubjectMap.get(sensorType)!.next(numericValue);
         }
         this.message_from_device.set(sensorType, numericValue);
-        console.log("MESSAGE" , this.message_from_device);
+        //console.log("MESSAGE" , this.message_from_device);
 
         //this.arduinoService.notifySensorValue(sensorType, numericValue);
       });

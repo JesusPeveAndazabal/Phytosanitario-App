@@ -60,6 +60,7 @@ export class ApplicationValuesComponent  implements OnInit {
   keyboard: any;
 
   showKeyboard: boolean = false;
+  velocidadDeseada : any;
 
 
   private pressure_values : any[] = [];
@@ -88,6 +89,8 @@ export class ApplicationValuesComponent  implements OnInit {
     this.updateSummary(null);
 
     console.log("NOZZLES" , this.nozzles);
+
+
 
 /*     //Esto sirve para buscar en la tabla añadida
     this.pressure_values = this.nozzles.map(p => { return  {pressure : p.pressure, pressure_unit : p.pressure_unit }})
@@ -265,7 +268,6 @@ export class ApplicationValuesComponent  implements OnInit {
     }else{
       this.velocidadReal = parseFloat((largo / tiempoRecorrido).toFixed(2));
     }
-    
   }
 
   // Función para mostrar u ocultar el teclado
@@ -330,51 +332,51 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
   let nextNextItem4: Nozzles | null = null;
 
   const unitNozzle = this.formData.value.unit;
-  console.log("COLOR SELECCIONADO", colorSeleccionado);
-  console.log("TYPE NOZZLE", typeNozzle);
-  console.log("UNIDAD SELECCIONADO", unitNozzle);
+  //console.log("COLOR SELECCIONADO", colorSeleccionado);
+  //console.log("TYPE NOZZLE", typeNozzle);
+ //console.log("UNIDAD SELECCIONADO", unitNozzle);
   let encontrado = false; // Bandera para verificar si se ha encontrado un resultado
 
   this.nozzles.forEach((item: Nozzles, index: number, array: Nozzles[]) => {
       if (colorSeleccionado == item.color && !encontrado && typeNozzle == item.type) {
           currentItem = item;
-          console.log("previousItem", currentItem, "nextItem", nextItem, "nextNextItem", nextNextItem, "nextNextItem3", nextNextItem3, "nextNextItem4", nextNextItem4);
+          //console.log("previousItem", currentItem, "nextItem", nextItem, "nextNextItem", nextNextItem, "nextNextItem3", nextNextItem3, "nextNextItem4", nextNextItem4);
           if (previousItem && nextItem && nextNextItem && nextNextItem3 && nextNextItem4) {
               let presionConvertida: number;
               if (typeNozzle == 1) {
                   presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.PSI);
-                  console.log("PresionConvertida", presionConvertida);
+                  //console.log("PresionConvertida", presionConvertida);
               } else {
                   presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.BAR);
-                  console.log("PresionConvertida", presionConvertida);
+                  //console.log("PresionConvertida", presionConvertida);
               }
 
               if (index > 0 && index < array.length - 3) {
                   let caudalTemporal = 0; // Variable temporal para almacenar el caudal objetivo calculado
                   if (presionConvertida >= previousItem.pressure && presionConvertida <= nextItem.pressure) {
                       caudalTemporal = calcular_caudal_objetivo(previousItem.flow, presionConvertida, previousItem.pressure, nextItem.pressure, nextItem.flow);
-                      console.log("CAUDAL 1 ", caudalTemporal);
+                      //console.log("CAUDAL 1 ", caudalTemporal);
                       encontrado = true;
 
                   } else if (presionConvertida > nextItem.pressure && presionConvertida <= nextNextItem.pressure) {
                       caudalTemporal = calcular_caudal_objetivo(nextItem.flow, presionConvertida, nextItem.pressure, nextNextItem.pressure, nextNextItem.flow);
-                      console.log("CAUDAL 2 ", caudalTemporal);
+                      //console.log("CAUDAL 2 ", caudalTemporal);
                       encontrado = true;
 
                   } else if (presionConvertida > nextNextItem.pressure && presionConvertida <= nextNextItem3.pressure) {
                       caudalTemporal = calcular_caudal_objetivo(nextNextItem.flow, presionConvertida, nextNextItem.pressure, nextNextItem3.pressure, nextNextItem3.flow);
-                      console.log("CAUDAL 3 ", caudalTemporal);
+                      //console.log("CAUDAL 3 ", caudalTemporal);
                       encontrado = true;
 
                   } else if (presionConvertida > nextNextItem3.pressure && presionConvertida <= nextNextItem4.pressure) {
                       caudalTemporal = calcular_caudal_objetivo(nextNextItem3.flow, presionConvertida, nextNextItem3.pressure, nextNextItem4.pressure, nextNextItem4.flow);
-                      console.log("CAUDAL 4 ", caudalTemporal);
+                      //console.log("CAUDAL 4 ", caudalTemporal);
                       encontrado = true;
                   }
 
                   // Acumular el caudal objetivo temporal al total
                   this.caudalObjetivo += caudalTemporal * quantity;
-                  console.log("CAUDAL SUMADO", this.caudalObjetivo);
+                  //console.log("CAUDAL SUMADO", this.caudalObjetivo);
               }
           }
           previousItem = currentItem;
@@ -511,7 +513,11 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
         this.total = 0;
     }
     this.totalLabel = `${this.total.toFixed(2)} L/min`;
-}
+  }
+
+
+
+
 
   /* changeUnit($event : any){
     // console.log("cambio de item");

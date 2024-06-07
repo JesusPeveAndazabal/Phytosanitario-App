@@ -263,10 +263,6 @@ export class MainComponent implements OnInit,AfterViewInit{
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
             //console.log("CONF.VOLUMEN" , conf.volume);
             //console.log("VAL" ,this.volumenTanque);
-            console.log("CONFVOLUME" , conf.volume);
-            console.log("VOLUMEN TANQUE" , this.volumenTanque);
-            console.log("CURRENT MAIN" , this.arduinoService.currentRealVolume);
-            console.log("DATACURRENT MAIN" , this.arduinoService.dataCurrent);
             conf.volume = this.volumenTanque - this.arduinoService.currentRealVolume;
             //console.log(volume, this.lastWorkExecution!, "info a guardar");
             // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");

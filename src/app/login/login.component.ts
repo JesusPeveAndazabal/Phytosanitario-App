@@ -103,6 +103,7 @@ export class LoginComponent implements OnInit {
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();
       this.arduinoService.regulatePressureWithBars(0);
+      this.syncPrimaryTables();
       //console.log("Ingreso a la condicion");
       // console.log(this.personData.find(person => (person.code == this.formData.value.code)), "personData2");
       // console.log(firstValueFrom(this.apiService.getPeople(environment.token)), "personData2");
@@ -111,7 +112,6 @@ export class LoginComponent implements OnInit {
       {
         this.implemento = this.formData.value.implement;
         console.log("TIPOIMPLEMENTOLOGIN" , this.implemento);
-        this.syncPrimaryTables();
         await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
         this.router.navigateByUrl('/main');
         

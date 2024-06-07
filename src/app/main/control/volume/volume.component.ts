@@ -140,7 +140,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
         this.recargarTanque = true;
         this.arduinoService.previousAccumulatedVolume = 0;
         if (!this.valvulasApagadas) {
-          this.apagarValvulas();
+          this.toggleAmbasValvulas();
           this.valvulasApagadas = true;  // Marca las válvulas como apagadas
         }
       } else if (this.volume >= this.minVolume) {

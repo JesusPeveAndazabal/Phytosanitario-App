@@ -24,7 +24,6 @@ import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateR
 
 import isOnline from 'is-online';
 
-
 //Este se comporta como el device_manager
 
 @Injectable({
@@ -121,6 +120,8 @@ export class ArduinoService {
   pruebaleft  : boolean = true;
   pruebaRight : boolean = true;
 
+  calcularConsumo : boolean = false;
+
   // Almacena el valor anterior del acumulador de volumen
   previousAccumulatedVolume = 0;
 
@@ -147,7 +148,6 @@ export class ArduinoService {
 
     // Variable para almacenar el último volumen registrado
     let ultimoVolumenRegistrado = 0;
-
 
     //Iteracion para recorre los valores de los sensores y guardarlos localmente
     let instance = this;
@@ -191,14 +191,11 @@ export class ArduinoService {
         arduino.message_from_device = new Map<Sensor, number | number[]>();
       });
       
-
-
       if(instance.isServiceRestarting){
         try {
           let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
           let prueba = await instance.databaseService.getLastWorkExecutionCurrent(currentWork.id);
-          console.log("DATA", prueba.data);
-      
+          
           if (prueba && prueba.data) {
               instance.dataCurrent = JSON.parse(prueba.data)[Sensor.CURRENT_TANK];
               instance.currentRealVolume = instance.dataCurrent;
@@ -206,17 +203,8 @@ export class ArduinoService {
               instance.valvulaDerecha = JSON.parse(prueba.data)[Sensor.VALVE_RIGHT];
               instance.valvulaIzquierda = JSON.parse(prueba.data)[Sensor.VALVE_LEFT];
 
-              console.log("VALVULA DERECHA" , instance.valvulaDerecha , "VALVULA IZQUIERDA" , instance.valvulaIzquierda);
-
-              console.log("DATA", prueba.data);
-              console.log("CONSUMO TOTTAL RESTAURADO", instance.restaurarConsumoTotal);
-            
               instance.restaurarDistancia = JSON.parse(prueba.data)[Sensor.ACCUMULATED_HECTARE];
               instance.accumulated_distance = parseFloat(instance.restaurarDistancia.toFixed(2));
-
-
-              //instance.datosCaudal = instance.previousAccumulatedVolume;
-              console.log("ENTRO AL SERVICIO, IMPRESION DE LA PRUEBA", instance.currentRealVolume);
           }
         } catch (error) {
             console.error("Error al obtener o procesar los datos:", error);
@@ -228,12 +216,9 @@ export class ArduinoService {
 
 
       if(instance.data[Sensor.VOLUME] > 0){
-        //console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
         //Guardamos en datosCaudal el valor del volumen acumulado
         instance.datosCaudal = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
-        //console.log("DATOS CAUDAL SERVICIO" , instance.datosCaudal);
         instance.datosCaudal = parseFloat(instance.datosCaudal.toFixed(2));
-        //console.log("VOLUMEN RESETEADO", instance.volumenReseteado);
       }
 
        // Aquí puedes colocar la parte relacionada con el sensor
@@ -243,6 +228,9 @@ export class ArduinoService {
       instance.coneectedCaudal = instance.isSensorConnected(sensorVolume);
       instance.connectedPresion = instance.isSensorConnected(sensorPressure);
       instance.connectedGps = instance.isSensorConnected(sensorGps);
+
+      //instance.data[Sensor.SPEED] = (Math.floor(Math.random() * (11 - 5 + 1)) + 5).toFixed(2);
+      instance.data[Sensor.SPEED] = 9.75;
 
       /* Verificar el estado de conexion y desconexion del arduino */
       if(instance.coneectedCaudal){
@@ -263,14 +251,18 @@ export class ArduinoService {
         instance.data[Sensor.STATUS_PRESSURE] = 0;
       }
 
+      /* if(instance.data[Sensor.SPEED] >= 1){
+        let presionCalculada = instance.calcularPresion(instance.data[Sensor.SPEED]);
+        console.log("PRESION CALCULADA" , presionCalculada , "VELOCIDAD" , instance.data[Sensor.SPEED]);
+      } */
+
       //Para la reconexion de la presion - Regula de acuerdo a la ultima presion guardada
       if(instance.connectedPresion !== previousSensorConnections.sensorPressure){
         console.log(`El sensor ${sensorPressure} se ${this.connectedPresion ? 'conectó' : 'desconectó'}`);
         previousSensorConnections.sensorPressure = this.connectedPresion;
-
-        
+  
         this.regulatePressureWithBars(0);
-        console.log("COMANDO regular" , 0);
+        //console.log("COMANDO regular" , 0);
 
         setTimeout(async () => {
           const pressureReconexion = await JSON.parse(currentWork.configuration).pressure;
@@ -282,12 +274,7 @@ export class ArduinoService {
             instance.activateRightValve();        
             instance.activateLeftValve();
           }
-
-          console.log("COMANDO regular despues de 2 s" , pressureReconexion);
-          console.log("COMANDO DERECHA" , instance.data[Sensor.VALVE_RIGHT]);
-          console.log("COMANDO IZQUIERDA" , instance.data[Sensor.VALVE_LEFT]);
         }, 2000);
-      
       }
 
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
@@ -299,7 +286,6 @@ export class ArduinoService {
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
             instance.data[Sensor.ACCUMULATED_RESTAURAR] = instance.previousAccumulatedVolume;
             instance.datosCaudal = instance.previousAccumulatedVolume;
-            console.log("RESTABLECIDO 1", instance.previousAccumulatedVolume);
             // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
             isCurrentRealVolumeReset = true;
             previousSensorConnections.sensorVolume = true;
@@ -309,7 +295,7 @@ export class ArduinoService {
 
       // Compara el estado actual con el estado anterior para detectar cambios
       if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
-        console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectó' : 'desconectó'}`);
+        /* console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectó' : 'desconectó'}`); */
         previousSensorConnections.sensorVolume = this.coneectedCaudal;
 
         // Si se desconecta el sensor de caudal, guarda el último valor válido del acumulador de volumen
@@ -318,7 +304,7 @@ export class ArduinoService {
             let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
             if(currentWorkPrueba){
               //instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
-              console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume);
+              /* console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume); */
             }
           }
         }
@@ -328,13 +314,22 @@ export class ArduinoService {
       
       if (instance.hasGPSData) {
         instance.dataGps = true;
+        console.log("ESTADO DEL CONSUMO" , instance.calcularConsumo);
       } else {
         instance.dataGps = false;
       }
 
+      if(instance.calcularConsumo){
+        instance.data[Sensor.ADD_BATCH] = 1;
+        //console.log("ADD BATCH" , instance.data[Sensor.ADD_BATCH]);
+        instance.calcularConsumo = false;
+      }else{
+        //console.log("ADD BATCH" , instance.data[Sensor.ADD_BATCH]);
+        instance.data[Sensor.ADD_BATCH] = 0;
+      }
+
       this.gpsVar = instance.data[Sensor.GPS];
       
-
       if(instance.datosCaudal > 0 && instance.datosCaudal != undefined){
         instance.data[Sensor.ACCUMULATED_VOLUME] = instance.datosCaudal;
           // Verificar si el volumen ha cambiado y sumarlo a acumuladoTotal
@@ -345,9 +340,6 @@ export class ArduinoService {
             instance.data[Sensor.ACCUMULATED_CONSUMO] = instance.acumuladoTotal + instance.restaurarConsumoTotal;
           }
       }
-
-      //console.log("VOLUMEN ACUMULADO TOTAL" , instance.acumuladoTotal);
-
 
       // Continuar solo si hay datos del GPS
         Object.entries(this.data).forEach((value) => {
@@ -362,27 +354,23 @@ export class ArduinoService {
           
           if (instance.data[`${Sensor.WATER_FLOW}`] >= 1) {
             instance.tiempocondicion = 1;
+            instance.data[Sensor.TIME_CONSUMO] = instance.tiempocondicion; 
+            instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
+            instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];                
             
-            //Hallar la distancia - la velocidad se divide entre 3.6 para la conversion de metros por segundos
-            //instance.data[Sensor.DISTANCE_NEXT_SECTION] = instance.data[Sensor.SPEED] / 3.6;
-            instance.data[Sensor.DISTANCE_NEXT_SECTION] = (Math.random() * 10) / 3.6;
-            console.log("Distancia por tramo" , instance.data[Sensor.DISTANCE_NEXT_SECTION]);
-            instance.accumulated_distance += instance.data[`${Sensor.DISTANCE_NEXT_SECTION}`];
-            console.log("ACUMULADO DE HECTAREAS" , instance.accumulated_distance);
-                
           }else {
             instance.tiempocondicion = 4;
+            instance.data[Sensor.TIME_CONSUMO] = instance.tiempocondicion;
           }
+
           instance.reealNow =  moment();
+
           const iteration = async () => {
             let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
     
             if (currentWork) {
               if (instance.data[`${Sensor.WATER_FLOW}`] >= 1 && instance.data[`${Sensor.ACCUMULATED_VOLUME}`] >= 0) {
-                //console.log("CURRENT ANTES DE MODIFICAR" , instance.currentRealVolume);
-                //console.log("PREVIOUS VOLUME" , instance.previousAccumulatedVolume);
                 instance.currentRealVolume = instance.initialVolume - instance.datosCaudal;
-                //console.log("CURRENT DESPUES DE MODIFICAR" , instance.currentRealVolume);
                 instance.data[Sensor.CURRENT_TANK] = instance.currentRealVolume;
                
                 instance.tiempoProductivo.start();
@@ -400,42 +388,12 @@ export class ArduinoService {
               currentWork.downtime = instance.tiempoImproductivo.time();
               currentWork.working_time = instance.tiempoProductivo.time();
 
-/*                
-              const downtime = moment.duration(currentWork.downtime.format('HH:mm:ss'));
-              const workingTime = moment.duration(currentWork.working_time.format('HH:mm:ss'));
-              
-              // Sumar los tiempos
-              const totalTime = moment.duration(downtime).add(workingTime);
-              
-                          // Convertir el tiempo total a segundos
-              const totalSeconds = totalTime.asSeconds();
 
-              // Multiplicar los segundos por 60 y dividir por 1000
-              const resultSeconds = (totalSeconds * 60) / 1000;
-
-              // Convertir los segundos resultantes a una duración de moment.js
-              const resultDuration = moment.duration(resultSeconds, 'seconds');
-
-              // Obtener las horas, minutos y segundos del tiempo resultante
-              const resultHours = Math.floor(resultDuration.asHours());
-              const resultMinutes = Math.floor(resultDuration.minutes());
-              const resultSecondsOnly = Math.floor(resultDuration.seconds());
-
-              // Formatear el resultado en H:mm:ss
-              const formattedResult = `${resultHours}:${resultMinutes.toString().padStart(2, '0')}:${resultSecondsOnly.toString().padStart(2, '0')}`;
-
-              console.log("TIEMPO PRODUCTIVO" , currentWork.working_time.format('HH:mm:ss'));
-              console.log("TIEMPO IMPRODUCTIVO" , currentWork.downtime.format('HH:mm:ss'));
-              console.log("Total Time (H:mm:ss):", totalTime.hours() + ":" + totalTime.minutes().toString().padStart(2, '0') + ":" + totalTime.seconds().toString().padStart(2, '0'));
-              console.log("Formatted Result (H:mm:ss):", formattedResult);
-                   */
               await this.databaseService.updateTimeExecution(currentWork);
             }
 
-            instance.reealNow = instance.reealNow.startOf('seconds');
-            
-            //console.log("VARIABLE ISRUNNING" , instance.isRunning);
-            
+            //instance.reealNow = instance.reealNow.startOf('seconds');
+                        
             //Is running en true para guardar datos
             if (currentWork && instance.isRunning) {
               let gps = instance.data[Sensor.GPS];
@@ -506,13 +464,11 @@ export class ArduinoService {
                 events: events.join(", "),
                 id: 0,
               };
-              //console.log("wExecutionDetail : " , JSON.stringify(wExecutionDetail));
-              //console.log("precision" , JSON.stringify(this.precision));
+
               //Guardar solo cuando haya datos del gps
-
-              await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
               instance.reealNow = instance.reealNow.startOf('seconds');
-
+              await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
+  
               //Reiniciar el volumen
               instance.data[Sensor.VOLUME] = 0;
              
@@ -569,6 +525,7 @@ export class ArduinoService {
     const command = 'B';
     this.findBySensor(Sensor.VOLUME).sendCommand(command);
     this.volumenReseteado += this.datosCaudal;
+    this.calcularConsumo = true;
     console.log("VOLUMEN RESETEADO" , this.volumenReseteado);
   }
 
@@ -657,6 +614,23 @@ export class ArduinoService {
     this.findBySensor(Sensor.VALVE_LEFT).sendCommand(commandLeft);
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
   }
+
+  // Función para calcular la presión en función de la velocidad
+  public calcularPresion(velocidad) {
+    // Aquí debes establecer la relación entre la velocidad y la presión en tu sistema
+    // Por ejemplo, podrías tener una relación lineal, una tabla de valores predefinidos, o una fórmula específica
+    // Por ahora, usaré un ejemplo simple con una relación lineal:
+    
+    // Definir la relación entre la velocidad y la presión (ejemplo simple)
+    const factorConversion = 1.05; // Este valor debe ser ajustado según la relación específica en tu sistema
+    
+    // Calcular la presión en función de la velocidad usando la relación establecida
+    const presion = (velocidad * factorConversion).toFixed(1);
+    
+    // Retornar el valor de presión calculado
+    return presion;
+  }
+    
 
   getDistance(coord1, coord2) {
     const R = 6371; // Radio de la Tierra en kilómetros
