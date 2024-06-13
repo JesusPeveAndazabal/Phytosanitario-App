@@ -44,6 +44,7 @@ export class AppComponent implements OnInit {
       this.databaseService.openConnection();
 
       if(this.electronService.isElectron){
+        //log.transports.file.resolvePath = () => path.join( , 'bd/errores.log');
         let file = electronService.fs.readFileSync(electronService.path.resolve("bd/","conf.env"),{encoding:'utf-8'});
         
         //Leyendo el archivo de configuración
@@ -87,7 +88,7 @@ export class AppComponent implements OnInit {
       let instance = this;
       let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
-      setInterval(()=>{
+     /*  setInterval(()=>{
         if(!onExecution){
           onExecution = true;
 
@@ -193,6 +194,6 @@ export class AppComponent implements OnInit {
         iteration();
 
         }
-      },9000);   
+      },9000);  */  
     } 
 } 

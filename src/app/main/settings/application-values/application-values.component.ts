@@ -88,7 +88,7 @@ export class ApplicationValuesComponent  implements OnInit {
     this.nozzles = await this.dbService.getNozzlesData();
     this.updateSummary(null);
 
-    console.log("NOZZLES" , this.nozzles);
+    //console.log("NOZZLES" , this.nozzles);
 
 
 
@@ -323,7 +323,7 @@ export class ApplicationValuesComponent  implements OnInit {
 
 calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, quantity: number) {
   this.updateSummary(null);
-  console.log("Se entro a esta funcion");
+  //console.log("Se entro a esta funcion");
   let previousItem: Nozzles | null = null;
   let currentItem: Nozzles | null = null;
   let nextItem: Nozzles | null = null;
@@ -482,10 +482,10 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
     // Sumar todos los caudales objetivos de las boquillas
     this.total =  this.caudalObjetivo;
 
-    console.log("CAUDAL OBJETIVO" , this.caudalObjetivo);
+    //console.log("CAUDAL OBJETIVO" , this.caudalObjetivo);
 
     this.total = this.caudalObjetivo;
-    console.log("total" , this.total);
+    //console.log("total" , this.total);
 
     // Actualizar el total en la interfaz de usuario
     this.updateSummary(null);
