@@ -31,9 +31,9 @@ export class ElectronService {
       this.path = window.require('path');
       /* initialize logger */
 
-      // this.logger = window.require('electron-log');
-      // this.setupLogger();
-      // this.logger.info('main.ts');
+      this.logger = window.require('electron-log');
+      this.setupLogger();
+      this.logger.info('main.ts');
       /* end of initialize logger */
 
       this.ipcRenderer = window.require('electron').ipcRenderer;
@@ -63,7 +63,7 @@ export class ElectronService {
 
   setupLogger() {
     // Same as for console transport
-    this.logger.transports.file.level = 'info';
+    //this.logger.transports.file.level = 'info';
     this.logger.transports.file.format = '{h}:{i}:{s}:{ms} {text}';
 
     // Set approximate maximum log size in bytes. When it exceeds,
@@ -77,5 +77,25 @@ export class ElectronService {
 
     // set existed file stream
     //logger.transports.file.stream = fs.createWriteStream('log.log');
+  }
+
+  info(...params : any[]){
+    this.logger.info(params);
+    console.info(params);
+  }
+
+  error(...params : any[]){
+    this.logger.error(params);
+    console.error(params);
+  }
+
+  warning(...params : any[]){
+    this.logger.warn(params);
+    console.warn(params);
+  }
+
+  log(...params : any[]){
+    this.logger.log(params);
+    console.log(params);
   }
 }

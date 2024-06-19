@@ -160,8 +160,10 @@ export class OrdenesTrabajoComponent implements OnInit {
       this.arduinoService.regulatePressureWithBars(configExecution.pressure);
       console.log("REGULADOR ORDEN" , configExecution.pressure);
       //this.arduinoService.resetVolumenInit();
+      this.arduinoService.isRunning = false;
       this.arduinoService.datosCaudal = 0;
       this.arduinoService.dataCurrent = 0;
+      this.arduinoService.volumenAcumulado = 0;
       this.arduinoService.currentRealVolume = 0;
       this.arduinoService.initialVolume = 0;
       this.arduinoService.deactivateLeftValve();
@@ -171,13 +173,13 @@ export class OrdenesTrabajoComponent implements OnInit {
       this.arduinoService.restaurarConsumoTotal = 0;
       this.arduinoService.restaurarDistancia = 0;
       this.arduinoService.volumenReseteado = 0;
-      this.arduinoService.isRunning = false;
+
       // Por ejemplo, cerrar el modal
       await this.modalCtrl.dismiss(this.selectedWorkOrder, 'confirm', 'ordenes-trabajo');
       //Guardamos la ejecucion de Trabajo
       await this.dbService.saveWorkExecutionData(workExecution);
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
-      config.lastWorkExecution = this.lastWorkExecution;
+      //config.lastWorkExecution = this.lastWorkExecution;
       this.router.navigateByUrl('/main');
     }
   }

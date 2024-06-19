@@ -75,7 +75,7 @@ export class AppComponent implements OnInit {
           }
         });
 
-        console.log("Configuration",Configuration);
+        electronService.log("Configuration",Configuration);
       }
   }
 

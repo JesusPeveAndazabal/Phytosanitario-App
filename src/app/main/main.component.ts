@@ -46,8 +46,8 @@ export class MainComponent implements OnInit,AfterViewInit{
   cronometroImproductivo: number = 0;
   enModoProductivo: boolean = false;
   velocidadCronometro: number = 1;
-  previousAccumulatedVolume : number = 0 ;
-
+  //previousAccumulatedVolume : number = 0 ;
+  valorTanque : number = 0;
   volume: number;
 
   volumenTanque: number = 0;
@@ -115,10 +115,11 @@ export class MainComponent implements OnInit,AfterViewInit{
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
     interval(1000).pipe(
       startWith(0), // Emite un valor inicial para que comience inmediatamente
-      switchMap(() => this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_RESTAURAR))
+      switchMap(() => this.arduinoService.getSensorObservable(Sensor.CURRENT_TANK))
     ).subscribe((valorDelSensor: number) => {
-        this.previousAccumulatedVolume = this.arduinoService.previousAccumulatedVolume;
-        if(this.previousAccumulatedVolume > 0){
+        this.valorTanque = valorDelSensor;  
+        console.log("VALOR INICIAL DE VOLUME" , this.valorTanque);
+        if(this.valorTanque > 0){
           this.workStatus = WorkStatusChange.START;
           this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
           this.powerButtonOn = true;
@@ -257,8 +258,8 @@ export class MainComponent implements OnInit,AfterViewInit{
             this.localConfig = await this.databaseService.getLocalConfig();
             //console.log("GETLOCALCONFIG" , this.localConfig);
             this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-            //console.log("GETLASTWORK" , this.lastWorkExecution);
             await this.openIfNotConnected();
+            //console.log("GETLASTWORK" , this.lastWorkExecution);
             let volume : WaterVolumes = { id :0 ,volume: this.volumenTanque,work_exec_id : this.lastWorkExecution!.id };
             //console.log(volume, "volume");
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
@@ -275,13 +276,13 @@ export class MainComponent implements OnInit,AfterViewInit{
 
             //Regular la presión cada vez que se configure el volumen del tanque
             //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
-
             //Configurar el volumen mínimo e inicial en el servicio.
             //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);            
             this.workStatus = WorkStatusChange.START;
             this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
+
             //this.volumenCompont.apagarValvulas();
             // Tu lógica para guardar el volumen y realizar acciones con él
             //console.log("Volumen capturado:", volume);
@@ -323,7 +324,7 @@ export class MainComponent implements OnInit,AfterViewInit{
               config.lastWorkExecution = false;
               this.arduinoService.isRunning = false;
               this.finished;
-              this.arduinoService.resetVolumenInit();
+              //this.arduinoService.resetVolumenInit();
               this.arduinoService.currentRealVolume = 0;
               this.arduinoService.initialVolume = 0;
               this.arduinoService.datosCaudal = 0;

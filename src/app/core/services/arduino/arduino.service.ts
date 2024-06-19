@@ -1,659 +1,363 @@
 // arduino.service.ts
-
 import { Injectable, Input } from '@angular/core';
-
 import { SerialPort} from 'serialport';
-
 import { ReadlineParser } from '@serialport/parser-readline'
-
 import { ElectronService } from '../electron/electron.service';
-
 import { ArduinoDevice } from './arduino.device';
-
 import { Subject, Observable } from 'rxjs';
-
 import { Sensor, SocketEvent, WorkStatusChange } from '../../utils/global';
-
 import { DatabaseService  } from '../database/database.service';
-
 import { Chronos } from '../../utils/utils';
-
 import { Database, sqlite3 } from 'sqlite3';
-
 import { Product } from '../../models/product';
-
 import { Mode } from '../../utils/global';
-
 import { devices } from 'playwright';
-
 import { start } from 'repl';
-
 import { Configuration } from '../../utils/configuration';
-
 import * as moment from 'moment';
-
 import { LocalConf } from '../../models/local_conf';
-
 import { WorkExecution , WorkExecutionDetail } from '../../models/work-execution';
-
 import { Store } from '@ngxs/store';
-
 import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve , ActivateBothValves, DeactivateBothValves } from '../../state/valve.state';
-
-
-
 import { getDistance} from 'geolib';
-
-
-
 import isOnline from 'is-online';
-
-
 
 //Este se comporta como el device_manager
 
-
-
 @Injectable({
-
   providedIn: 'root',
-
 })
-
-
 
 export class ArduinoService {
 
   public isServiceRestarting: boolean = true;
-
-  listArduinos : ArduinoDevice[] = [];  
-
   public tiempoProductivo : Chronos = new Chronos(1,"Productivo", false);
-
   public tiempoImproductivo : Chronos = new Chronos(2,"Improductivo", false);
 
+  listArduinos : ArduinoDevice[] = [];  
   localConfig! : LocalConf;
-
   minVolume = 0;
-
   dataCurrent = 0;
-
   initialVolume: number = 0; // Valor inicial del contenedor
-
   currentRealVolume: number = 0;  // Inicializa con el valor inicial
-
   timer: any;
-
   currentTime: number = 0;
-
-
-
   now = moment();
-
   reealNow = moment();
-
-
-
   detail_number = 0;
-
   DEBUG = true;
-
   devicesCant : string[] = [];
-
-
-
   izquierdaActivada = false;
-
   derechaActivada = false;
-
-
-
   isRunning: boolean = false;
-
-
-
   timerProductive: any;
-
   currentTimeProductive: number = 0;
-
-
-
   timerImproductive: any;
-
   currentTimeImproductive: number = 0;
 
-
-
   //VARIABLES PARA LOS ENUMERADORES
-
   data : any = {};
-
   precision : any = {};
-
-
-
   volumenDescontado = 0;
-
-  //volumenInicial = 0;
-
-
 
   /* vARIABLES PARA LOS EVENTOS */
 
   caudalNominal: number = 0;
-
   speedalert: number = 0;
-
   info: number = 0;
-
   tiempocondicion = 0;
 
-
-
-  
-
   accumulated_volume = 0;
-
   accumulated_distance = 0;
-
   public distance = 0;
-
   public distanciaHtml = 0;
-
   pointInicial;
-
   pointFinal;
 
-
-
   gpsVar = 0;
-
-
 
   // Variables para almacenar las coordenadas anteriores del GPS
 
   previousGpsCoordinates: number[] | null = null;
-
-
-
   gpsCoordinatesInicial: number[];
-
   gpsCoordinatesFinal: number[];
-
-
-
   gpsCoordinates: number[];
-
-
-
   volumenAcumul = 0;
-
   ultimoTiempoNotificacion: number = 0;
 
   public dataGps = false; // Variable para verificar si hay datos del GPS
-
   public consumoTotal;
-
   public conectInternet = false; // Variable para verificar si hay internet o no
-
   public datosCaudal = 0;
-
   public volumenReseteado = 0;
-
   public acumuladoTotal = 0;
-
-
-
 
 
   /* Parametros para conexion */
 
   public coneectedCaudal: boolean;
-
   public connectedPresion:boolean;
-
   public connectedGps:boolean;
 
-
-
-  
-
   inputPressureValue: number | undefined;
-
   lastVolume: number | null = null;
-
   hasGPSData = true;
-
   acumulado2 = 0;
-
   restaurarConsumoTotal : 0;
-
   restaurarDistancia : 0;
 
-
-
   valvulaDerecha : boolean = false;
-
   valvulaIzquierda : boolean = false;
-
   pruebaleft  : boolean = true;
-
   pruebaRight : boolean = true;
 
 
-
   calcularConsumo : boolean = false;
-
   volumenTx : number = 0;
-
   volumenReinicio : boolean = false;
-
   ConsumoReal : number = 0;
-
-
-
+  volumenTramo : number = 0;
+  
+  // Declarar una variable para almacenar el volumen anterior
+  volumenAnterior = 0;
   // Almacena el valor anterior del acumulador de volumen
 
   previousAccumulatedVolume = 0;
-
   coordenadaInicial : number[];
-
   coordenadaFinal : number[];
-
   banderaDistancia : boolean = true;
-
- 
+  banderaActivarValvulas : boolean = false;
 
   volumenArduino: number = 0; // Variable global para almacenar el volumen del Arduino
-
   volumenAcumulado: number = 0; // Volumen acumulado desde el Ãºltimo reinici
-
+  lastRegulatedSpeed: number | null = null;
+  speedThreshold: number = 1; // Define el umbral de diferencia de velocidad
 
 
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
 
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
-
-
   constructor( private electronService: ElectronService , private databaseService : DatabaseService , private store: Store) {
 
     this.setupSensorSubjects();
-
     this.checkInternetConnection();
-  
     //this.getDistancia();
-
-
 
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
 
       if(workExecution){
-
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
-
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
-
       }
 
     });
 
-    
-
     for(let i = 1; i <= Configuration.nDevices; i++){
 
       this.listArduinos.push(
-
         new ArduinoDevice(Configuration[`device${i}`],115200,true,electronService)
-
       );
 
     }
 
-
-
-    // Variable para almacenar el Ãºltimo volumen registrado
-
-    let ultimoVolumenRegistrado = 0;
-
-
-
     //Iteracion para recorre los valores de los sensores y guardarlos localmente
-
     let instance = this;
-
-
-
-      // Declarar una variable para almacenar el volumen anterior
-
-    let volumenAnterior = 0;
-
-
-
-
 
     // Almacena el estado anterior de conexiÃ³n de los sensores
 
     let previousSensorConnections = {
-
       sensorVolume: false,
-
       sensorPressure: false,
-
       sensorGps: false
-
     };
 
-
-
     setInterval(async () => {
+      instance.reealNow = instance.reealNow.startOf('seconds');
+      instance.electronService.log("Tiempo que se ejecuta", instance.reealNow.format('HH:mm:mm'));
 
       let onExecution = false;
 
-
-
       // Define una bandera para controlar si el restablecimiento de currentRealVolume ya ha ocurrido
-
       let isCurrentRealVolumeReset = false;
 
-
-
       // Agregar sensores para futuros cambios
-
       instance.data = {
-
         ...instance.data,
-
         [Sensor.PPM]: 0,
-
         [Sensor.PH]: 0,
-
         [Sensor.TEMPERATURE]: 0,
-
         [Sensor.HUMIDITY]: 0,
-
         [Sensor.VOLUME_CONTAINER]: 0,
-
         [Sensor.DISTANCE_NEXT_SECTION]: 0,
-
         [Sensor.ACCUMULATED_HECTARE] : parseFloat(instance.accumulated_distance.toFixed(2)), //Velocidad 
-
       }
-
-      
-
-      //instance.data[Sensor.VOLUME] = 14.41;
 
       let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
 
+      //FOREACH QUE RECORRE LA ISTA DE ARDUINOS CONECTADOS
       instance.listArduinos.forEach(arduino => {
-
         arduino.message_from_device.forEach((sensor) => {
-
         });
 
         instance.data = { ...instance.data, ...instance.mapToObject(arduino.message_from_device) };
-
         arduino.message_from_device = new Map<Sensor, number | number[]>();
 
-        //console.log("ACUMULADO VOLUMEN" , instance.data[Sensor.VOLUME]);
-
-
-
         if(instance.data[Sensor.VOLUME] > 0){
-
           instance.volumenTx = instance.data[Sensor.VOLUME];
-
           //instance.volumenArduino = instance.data[Sensor.VOLUME];
-
-          //console.log("ACUMULADO VOLUMEN" , instance.volumenTx);
-
+          //this.electronService.log("ACUMULADO VOLUMEN" , instance.volumenTx);
         }
 
       });
 
-
-
-      //console.log("LISTA DE ARDUINOS" , instance.listArduinos[1]);
-
+      //instance.electronService.log("LECTURA DEL VOLUMEN", instance.data[Sensor.VOLUME]);
       
-
       if(instance.isServiceRestarting){
-
         try {
 
           let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
-
           let prueba = await instance.databaseService.getLastWorkExecutionCurrent(currentWork.id);
-
-          
 
           if (prueba && prueba.data) {
 
               instance.dataCurrent = JSON.parse(prueba.data)[Sensor.CURRENT_TANK];
 
               if(instance.volumenTx > 0){
-
                 const waterVolumes = await this.databaseService.getLastWaterVolume(currentWork.id);
-
                 instance.currentRealVolume = waterVolumes.volume - instance.volumenTx;
-
               }else if(instance.volumenTx <= 0){
-
                 instance.currentRealVolume = instance.dataCurrent;
-
                 instance.volumenReinicio = true;
-
               }
 
-
-
               instance.restaurarConsumoTotal = JSON.parse(prueba.data)[Sensor.ACCUMULATED_RESTAURAR];
-              console.log("RESTAURAR CONSUMO TOTAL" , instance.restaurarConsumoTotal);
-
-              instance.volumenAcumulado = JSON.parse(prueba.data)[Sensor.ADD_BATCH];
-              console.log("VOLUMEN ACUMULADO" , instance.volumenAcumulado);
+              //this.electronService.log("RESTAURAR CONSUMO TOTAL" , instance.restaurarConsumoTotal);
 
               instance.valvulaDerecha = JSON.parse(prueba.data)[Sensor.VALVE_RIGHT];
-
               instance.valvulaIzquierda = JSON.parse(prueba.data)[Sensor.VALVE_LEFT];
 
-
-
               instance.restaurarDistancia = JSON.parse(prueba.data)[Sensor.ACCUMULATED_HECTARE];
-
               instance.accumulated_distance = parseFloat(instance.restaurarDistancia.toFixed(2));
-
           }
 
-
-
         } catch (error) {
-
             console.error("Error al obtener o procesar los datos:", error);
-
         }
-
-        
 
         this.isServiceRestarting = false; // Reinicio completado
 
       
 
       }else{
-
         //instance.currentRealVolume = instance.initialVolume;
-
       }
 
+      instance.electronService.log("REINICIO SEGUNDO" , instance.reealNow.format('HH:mm:ss'));
 
-
+      //CONDICION PARA OBTNER EL CONSUMO DE DATOS CAUDAL
       if(instance.data[Sensor.VOLUME] >= 1){
 
         //Guardamos en datosCaudal el valor del volumen acumulado
-
         if(!instance.volumenReinicio){
-
           //Si se reinicia el procesador 
-
           instance.datosCaudal = instance.data[Sensor.VOLUME];
-
         }else if(instance.volumenReinicio){
           //Si se reinicia de forma por caimnaes
-
           instance.datosCaudal = instance.data[Sensor.VOLUME] + instance.previousAccumulatedVolume;
-
         }
+
         instance.datosCaudal = parseFloat(instance.datosCaudal.toFixed(2));
         instance.data[Sensor.ACCUMULATED_VOLUME] = instance.datosCaudal;
-    
+        //instance.electronService.log("DATOS CAUDAL" , instance.datosCaudal);
       }
 
+      instance.electronService.log("CAUDAL SEGUNDO SEGUNDO" , instance.reealNow.format('HH:mm:ss'));
 
-
+      //CONEXIONES Y DESCONEXIONES DEL ARDUINO
        // AquÃ­ puedes colocar la parte relacionada con el sensor
-
       let sensorVolume = Sensor.WATER_FLOW; // El sensor que deseas verificar
-
       let sensorPressure = Sensor.PRESSURE; // El sensor que deseas verificar
-
       let sensorGps = Sensor.GPS; // El sensor que deseas verificar
-
       instance.coneectedCaudal = instance.isSensorConnected(sensorVolume);
-
       instance.connectedPresion = instance.isSensorConnected(sensorPressure);
-
       instance.connectedGps = instance.isSensorConnected(sensorGps);
 
-
-
+    
       /* Verificar el estado de conexion y desconexion del arduino */
 
       if(instance.coneectedCaudal){
-
         instance.data[Sensor.STATUS_WATTERFLOW] = 1;
-
       }else{
-
         instance.data[Sensor.STATUS_WATTERFLOW] = 0;
-
       }
-
-
 
       if(instance.connectedGps){
-
         instance.data[Sensor.STATUS_GPS] = 1;
-
       }else{
-
         instance.data[Sensor.STATUS_GPS] = 0;
-
       }
-
-
 
       if(instance.connectedPresion){
-
         instance.data[Sensor.STATUS_PRESSURE] = 1;
-
       }else{
-
         instance.data[Sensor.STATUS_PRESSURE] = 0;
-
       }
 
-
-
-      /* if(instance.data[Sensor.SPEED] >= 1){
-
-        let presionCalculada = instance.calcularPresion(instance.data[Sensor.SPEED]);
-
-        console.log("PRESION CALCULADA" , presionCalculada , "VELOCIDAD" , instance.data[Sensor.SPEED]);
-
-      } */
-
+      instance.electronService.log("CONEXIONES Y DESCONEXION" , instance.reealNow.format('HH:mm:ss'));
 
 
       //Para la reconexion de la presion - Regula de acuerdo a la ultima presion guardada
 
       if(instance.connectedPresion !== previousSensorConnections.sensorPressure){
 
-        //console.log(`El sensor ${sensorPressure} se ${this.connectedPresion ? 'conectÃ³' : 'desconectÃ³'}`);
+        //this.electronService.log(`El sensor ${sensorPressure} se ${this.connectedPresion ? 'conectÃ³' : 'desconectÃ³'}`);
 
         previousSensorConnections.sensorPressure = this.connectedPresion;
 
         instance.regulatePressureWithBars(0);
 
-
-
         setTimeout(async () => {
-
+          //Borrar mas adelantado
           const pressureReconexion = await JSON.parse(currentWork.configuration).pressure;
-
           instance.regulatePressureWithBars(pressureReconexion);
 
-          instance.data[Sensor.VALVE_RIGHT] = instance.valvulaDerecha;
-
-          instance.data[Sensor.VALVE_LEFT] = instance.valvulaIzquierda;
-
-          
-
           if(instance.valvulaDerecha || instance.valvulaIzquierda){
-
             instance.activateRightValve();        
-
             instance.activateLeftValve();
-
+  
+            instance.data[Sensor.VALVE_RIGHT] = instance.valvulaDerecha;
+            instance.data[Sensor.VALVE_LEFT] = instance.valvulaIzquierda;
           }
+  
 
-        }, 2000);
+        }, 1000);
 
       }
 
-
-
       // Si se reconecta el sensor de caudal, recupera el valor del acumulador de volumen
-
       // Dentro de tu bloque de cÃ³digo donde manejas la reconexiÃ³n del sensor de caudal
 
       if (this.coneectedCaudal && !previousSensorConnections.sensorVolume && !isCurrentRealVolumeReset) {
-
+        
         if(currentWork){
-
+          
           let currentWorkPrueba: WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);
 
           if (currentWorkPrueba) {
-
             instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
-
             instance.data[Sensor.ACCUMULATED_RESTAURAR] = instance.previousAccumulatedVolume;
-
             instance.datosCaudal = instance.previousAccumulatedVolume;
-
-            // Marcar que el restablecimiento de currentRealVolume ya ha ocurrido
-
             isCurrentRealVolumeReset = true;
-
             previousSensorConnections.sensorVolume = true;
-
           }
-
         }   
-
       }
 
-
-
       // Compara el estado actual con el estado anterior para detectar cambios
-
       if (this.coneectedCaudal !== previousSensorConnections.sensorVolume) {
-
-        /* console.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectÃ³' : 'desconectÃ³'}`); */
-
+        /* this.electronService.log(`El sensor ${sensorVolume} se ${this.coneectedCaudal ? 'conectÃ³' : 'desconectÃ³'}`); */
         previousSensorConnections.sensorVolume = this.coneectedCaudal;
-
-
 
         // Si se desconecta el sensor de caudal, guarda el Ãºltimo valor vÃ¡lido del acumulador de volumen
 
@@ -664,11 +368,8 @@ export class ArduinoService {
             let currentWorkPrueba : WorkExecutionDetail = await instance.databaseService.getLastWorkExecutionDetail(currentWork.id);  
 
             if(currentWorkPrueba){
-
               //instance.previousAccumulatedVolume = JSON.parse(currentWorkPrueba.data)[Sensor.ACCUMULATED_VOLUME];
-
-              /* console.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume); */
-
+              /* this.electronService.log("RESTABLECIDO 2" , instance.previousAccumulatedVolume); */
             }
 
           }
@@ -677,341 +378,204 @@ export class ArduinoService {
 
       }
 
-
-
+      //OBTENER EL VALOR DEL GPS
       this.hasGPSData = this.data[Sensor.GPS] !== undefined && instance.data[Sensor.GPS] !== null && instance.data[Sensor.GPS] != this.gpsVar;
 
-      
-
+      //SI HAY DATOS ESTA EN TRUE Y SINO EN FALSE      
       if (instance.hasGPSData) {
-
         instance.dataGps = true;
-
       } else {
-
         instance.dataGps = false;
-
       }
-
-
-
       this.gpsVar = instance.data[Sensor.GPS];
 
-    
-      // Continuar solo si hay datos del GPS
+      //MNOTIFICAR POR CADA CAMBIO DE LOS SENSORES
+      Object.entries(this.data).forEach((value) => {
 
-        Object.entries(this.data).forEach((value) => {
+        let sensor = parseInt(value[0]) as Sensor;
 
-          let sensor = parseInt(value[0]) as Sensor;
+        instance.notifySensorValue(sensor, sensor == Sensor.GPS ? value[1] as number[] : value[1] as number);
 
-          instance.notifySensorValue(sensor, sensor == Sensor.GPS ? value[1] as number[] : value[1] as number);
+      }); 
 
-        }); 
+      instance.electronService.log("GPS Y DESCONEXION" , instance.reealNow.format('HH:mm:ss'));
 
-        
+      //OBTENER LA HORA ACTUAL PARA GUARDAR LOS SEGUNDOS
+      instance.reealNow =  moment();
 
-        instance.reealNow =  moment();
+      if (!onExecution) {
 
-        
+        onExecution = true;
 
-        if (!onExecution) {
+        const iteration = async () => {
+          if (currentWork) {
 
-          onExecution = true;
-
-
-
-          const iteration = async () => {
-
-            let currentWork: WorkExecution = await instance.databaseService.getLastWorkExecution();
-
-            if (currentWork) {
-
-              if (instance.data[Sensor.WATER_FLOW] > 0) {
-
+            //CONDICION TIEMPO PRODUCTIVO E IMPRODUUCTIVO
+            if (instance.data[Sensor.WATER_FLOW] > 0) {
+              //instance.electronService.log("HAY CAUDAL");
                 instance.tiempocondicion = 1;
+              instance.tiempoProductivo.start();
+              instance.tiempoImproductivo.stop();
+              
+              instance.currentRealVolume = instance.initialVolume - instance.datosCaudal;
 
-                instance.data[Sensor.TIME_CONSUMO] = instance.tiempocondicion;
+              //Validacion de presion para la distancia recorrida
+              if(instance.data[Sensor.PRESSURE] > 1.5 && instance.banderaDistancia && instance.data[Sensor.SPEED] > 0){
 
-                instance.tiempoProductivo.start();
-                instance.tiempoImproductivo.stop();
+                // Registra las coordenadas GPS actuales
+                instance.coordenadaInicial = instance.data[Sensor.GPS];
+                //this.electronService.log("COORDENADA INICIAL" , instance.coordenadaInicial);
+                instance.banderaDistancia = false;
 
-                // Verificar si el volumen ha cambiado y sumarlo a acumuladoTotal
-      
-                let volume = parseFloat(instance.data[Sensor.VOLUME]);
-      
-                if (!isNaN(volume)) {
-      
-                  // Sumar el valor actual de volume a acumuladoTotal
-      
-                  instance.acumuladoTotal = volume;
-      
-                  instance.data[Sensor.ACCUMULATED_CONSUMO] = instance.acumuladoTotal;
-      
-                }
-                  
-                instance.data[Sensor.VOLUME] = parseFloat((instance.data[Sensor.ACCUMULATED_CONSUMO] - volumenAnterior).toFixed(2));
-                volumenAnterior = instance.data[Sensor.ACCUMULATED_CONSUMO];
-                instance.currentRealVolume = instance.initialVolume - instance.volumenAcumulado;
+              }else if(instance.data[Sensor.PRESSURE] <= 1.5 && !instance.banderaDistancia && instance.data[Sensor.SPEED] > 0){
 
-                //Validacion de presion para la distancia recorrida
+                // Registra las coordenadas finales 
+                instance.coordenadaFinal = instance.data[Sensor.GPS];
 
-                if(instance.data[Sensor.PRESSURE] > 0.5 && instance.banderaDistancia && instance.data[Sensor.SPEED] > 0){
+                const distanciaRecorridaMetros = getDistance(
 
-                  // Registra las coordenadas GPS actuales
+                  { latitude : instance.coordenadaInicial[0] , longitude : instance.coordenadaInicial[1]},
 
-                  instance.coordenadaInicial = instance.data[Sensor.GPS];
+                  { latitude : instance.coordenadaFinal[0] , longitude :instance.coordenadaFinal[1]},0.01
 
-                  //console.log("COORDENADA INICIAL" , instance.coordenadaInicial);
-
-                  instance.banderaDistancia = false;
-
-                }else if(instance.data[Sensor.PRESSURE] < 0.5 && !instance.banderaDistancia && instance.data[Sensor.SPEED] > 0){
-
-                  // Registra las coordenadas finales 
-
-                  instance.coordenadaFinal = instance.data[Sensor.GPS];
-
-                  const distanciaRecorridaMetros = getDistance(
-
-                    { latitude : instance.coordenadaInicial[0] , longitude : instance.coordenadaInicial[1]},
-
-                    { latitude : instance.coordenadaFinal[0] , longitude :instance.coordenadaFinal[1]},0.01
-
-                  );
-
-                  //Se acumulara la distancia en caso hay recorrido productivo
-
-                  instance.accumulated_distance += distanciaRecorridaMetros;
-
-                  instance.banderaDistancia = true;
-
-                }
-
-              } else{
-
-                instance.tiempocondicion = 4;
-
-                instance.data[Sensor.TIME_CONSUMO] = instance.tiempocondicion;
-
-                instance.data[Sensor.VOLUME] = 0;
-
-                instance.tiempoImproductivo.start();
-
-                instance.tiempoProductivo.stop();
-
+                );
+                //Se acumulara la distancia en caso hay recorrido productivo
+                instance.accumulated_distance += distanciaRecorridaMetros;
+                instance.banderaDistancia = true;
               }
 
-              instance.volumenAcumulado += instance.data[Sensor.VOLUME];
-              instance.data[Sensor.ADD_BATCH] = instance.volumenAcumulado;
-              instance.data[Sensor.CURRENT_TANK] = instance.currentRealVolume;
-            
-
-              currentWork.downtime = instance.tiempoImproductivo.time();
-              currentWork.working_time = instance.tiempoProductivo.time();
-
-              await this.databaseService.updateTimeExecution(currentWork);
+            } else{
+              //ESTO ES PARA UANDO NO HAY CAUDAL 
+              //instance.electronService.log("NO HAY CAUDAL");
+              instance.tiempocondicion = 4;
+              //instance.data[Sensor.VOLUME] = 0;
+              instance.tiempoImproductivo.start();
+              instance.tiempoProductivo.stop();
             }
 
-                        
+            instance.reealNow = instance.reealNow.startOf('seconds');
 
-            //Is running en true para guardar datos
+            instance.electronService.log("FIN DE CONDICION CAUDAL", instance.reealNow.format('HH:mm:ss'));
 
-            if (currentWork && instance.isRunning) {
+            //ACTUALIZAMOS EL VALOR EN LA VARIABLE CURRENT_TANK
+            instance.data[Sensor.CURRENT_TANK] = instance.currentRealVolume;
 
-              let gps = instance.data[Sensor.GPS];
+            currentWork.downtime = instance.tiempoImproductivo.time();
+            currentWork.working_time = instance.tiempoProductivo.time();
 
+            await this.databaseService.updateTimeExecution(currentWork);
+          }
 
+          //SI HAY ALGU TRABAJO Y LA VARIABLE ESTA EN INSRUNNING = TRUE
 
-              // Evaluar los eventos
+          if (currentWork && instance.isRunning) {
 
-              let events: string[] = [];
+            let gps = instance.data[Sensor.GPS];
 
-              let has_events = false;
+            // Evaluar los eventos
+            let events: string[] = [];
+            let has_events = false;
 
-    
 
-              instance.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
+            //PARA HALLAR LA PRECISION
+            instance.precision = {
+              ...instance.precision,
+              [Sensor.WATER_FLOW] : 100,
+              [Sensor.PRESSURE] : 100,
+              [Sensor.GPS] : 100
 
-              instance.info = JSON.parse(currentWork.configuration).pressure;
+              /* [Sensor.WATER_FLOW] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.WATER_FLOW}`] - instance.caudalNominal)/instance.caudalNominal) * 100)),
+              [Sensor.PRESSURE] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.PRESSURE}`] - instance.info) / instance.info) * 100)),
+              [Sensor.SPEED] : Math.round(100  - ((Math.abs(instance.data[`${Sensor.SPEED}`] - instance.speedalert) / instance.speedalert) * 100)), */
+            }
 
-              instance.speedalert = JSON.parse(currentWork.configuration).speed;
+            //EVENTO DE CAUDAL
+            if (instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 0.90 && instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 1.1) {
 
+            // Caudal Verde
 
-
-              instance.precision = {
-
-                ...instance.precision,
-
-                [Sensor.WATER_FLOW] : 100,
-
-                [Sensor.PRESSURE] : 100,
-
-                [Sensor.GPS] : 100
-
-              
-
-                /* [Sensor.WATER_FLOW] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.WATER_FLOW}`] - instance.caudalNominal)/instance.caudalNominal) * 100)),
-
-                [Sensor.PRESSURE] : Math.round(100 - ((Math.abs(instance.data[`${Sensor.PRESSURE}`] - instance.info) / instance.info) * 100)),
-
-                [Sensor.SPEED] : Math.round(100  - ((Math.abs(instance.data[`${Sensor.SPEED}`] - instance.speedalert) / instance.speedalert) * 100)), */
-
-              }
-
-
-
-              if (instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 0.90 && instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 1.1) {
-
-                // Caudal Verde
-
-              } else if ((instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 0.50 && instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.9) ||
-
-                (instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 1.5 && instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.1)) {
-
-                has_events = true;
-
-                events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              } else {
-
-                has_events = true;
-
-                events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              }
-
-    
-
-              if (instance.data[Sensor.PRESSURE] > instance.info * 0.90 && instance.data[Sensor.PRESSURE] < instance.info * 1.1) {
-
-                // PresiÃ³n Verde
-
-              } else if ((instance.data[Sensor.PRESSURE] > instance.info * 0.50 && instance.data[Sensor.PRESSURE] < instance.info * 0.9) ||
-
-                (instance.data[Sensor.PRESSURE] < instance.info * 1.5 && instance.data[Sensor.PRESSURE] > instance.info * 1.1)) {
-
-                has_events = true;
-
-                events.push("LA PRESIÃ“N ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              } else {
-
-                has_events = true;
-
-                events.push("LA PRESIÃ“N ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              }
-
-    
-
-              if (instance.data[Sensor.SPEED] > instance.speedalert * 0.90 && instance.data[Sensor.SPEED] < instance.speedalert * 1.1) {
-
-                // Velocidad Verde
-
-              } else if ((instance.data[Sensor.SPEED] > instance.speedalert * 0.50 && instance.data[Sensor.SPEED] < instance.speedalert * 0.9) ||
-
-                (instance.data[Sensor.SPEED] < instance.speedalert * 1.5 && instance.data[Sensor.SPEED] > instance.speedalert * 1.1)) {
-
-                has_events = true;
-
-                events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              } else {
-
-                has_events = true;
-
-                events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
-
-              }
-
-
-
-              if ((instance.data[Sensor.PRESSURE] < instance.info * 0.50 || instance.data[Sensor.PRESSURE] > instance.info * 1.5) ||
-
-                (instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.50 || instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5) ||
-
-                (instance.data[Sensor.SPEED] < instance.speedalert * 0.50 || instance.data[Sensor.SPEED] > instance.speedalert * 1.5)) {
-
-                has_events = true;
-
-                events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
-
-              }
-
-                
-
-                  
-
-              console.log("ANTES DE GUARDAR WATTERFLOW: " , instance.data[Sensor.WATER_FLOW]);
-
-              console.log("DATA" , JSON.stringify(instance.data));
-
-              let wExecutionDetail: WorkExecutionDetail = {
-
-                id_work_execution: currentWork.id,
-
-                time: instance.reealNow,
-
-                sended: false,
-
-                data: JSON.stringify(instance.data),
-
-                precision: JSON.stringify(instance.precision),
-
-                gps: JSON.stringify(gps),
-
-                has_events: has_events,
-
-                events: events.join(", "),
-
-                id: 0,
-
-              };
-
-
-
-              //Guardar solo cuando haya datos del gps
-
-              instance.reealNow = instance.reealNow.startOf('seconds');
-
-              await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
-
+            }else if ((instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 0.50 && instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.9) ||
+              (instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 1.5 && instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.1)) {
+              has_events = true;
+              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
   
+            //EVENTO DE PRESION
+            if (instance.data[Sensor.PRESSURE] > instance.info * 0.90 && instance.data[Sensor.PRESSURE] < instance.info * 1.1) {
+            } else if ((instance.data[Sensor.PRESSURE] > instance.info * 0.50 && instance.data[Sensor.PRESSURE] < instance.info * 0.9) ||
+              (instance.data[Sensor.PRESSURE] < instance.info * 1.5 && instance.data[Sensor.PRESSURE] > instance.info * 1.1)) {
+              has_events = true;
+              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
 
-              //Reiniciar el volumen
+            //EVENTO DE VELOCIDAD
+            if (instance.data[Sensor.SPEED] > instance.speedalert * 0.90 && instance.data[Sensor.SPEED] < instance.speedalert * 1.1) {
+              // Velocidad Verde
+            } else if ((instance.data[Sensor.SPEED] > instance.speedalert * 0.50 && instance.data[Sensor.SPEED] < instance.speedalert * 0.9) ||
+              (instance.data[Sensor.SPEED] < instance.speedalert * 1.5 && instance.data[Sensor.SPEED] > instance.speedalert * 1.1)) {
+              has_events = true;
+              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
 
-              instance.data[Sensor.VOLUME] = 0;
+            //EVENTOS DE CAUDAL - VELOCIDAD Y PRESION
+            if ((instance.data[Sensor.PRESSURE] < instance.info * 0.50 || instance.data[Sensor.PRESSURE] > instance.info * 1.5) ||
+              (instance.data[Sensor.WATER_FLOW] < instance.caudalNominal * 0.50 || instance.data[Sensor.WATER_FLOW] > instance.caudalNominal * 1.5) ||
+              (instance.data[Sensor.SPEED] < instance.speedalert * 0.50 || instance.data[Sensor.SPEED] > instance.speedalert * 1.5)) {
+              has_events = true;
+              events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
+            }
 
-             
+            instance.electronService.log("FIN DE EVENTOS", instance.reealNow.format('HH:mm:ss'));
 
-            } 
+            instance.reealNow = instance.reealNow.startOf('seconds');
+           
+            let wExecutionDetail: WorkExecutionDetail = {
+              id_work_execution: currentWork.id,
+              time: instance.reealNow,
+              sended: false,
+              data: JSON.stringify(instance.data),
+              precision: JSON.stringify(instance.precision),
+              gps: JSON.stringify(gps),
+              has_events: has_events,
+              events: events.join(", "),
+              id: 0,
+            };
 
-            onExecution = false;
+            instance.electronService.log("SE GUARDA EN LA BASE DE DATOS" , instance.reealNow.format('HH:mm:ss'));
 
-          }
+            //GUARDAR ENM LA BASE DE DATOS  
+            await instance.databaseService.saveWorkExecutionDataDetail(wExecutionDetail);
 
-         /*  let currentTime = moment();
-
-          console.log("Current time: " + instance.reealNow.format("YYYY-MM-DD H:mm:ss.SSS")); */
-
-          if (instance.reealNow.diff(instance.now, 'seconds') >= instance.tiempocondicion) {
-
-            instance.now = instance.reealNow;
-
-            await iteration();
-
-          }
-
-
+            //Reiniciar el volumen
+            //instance.data[Sensor.VOLUME] = 0;
+          } 
+          
+          onExecution = false;
 
         }
 
-      
+        instance.electronService.log("FINALIZAR ITERACION" , instance.reealNow.format('HH:mm:ss'));
 
-    }, 500);
+        instance.electronService.log("********************************************************************");
 
-    
-
+        if (instance.reealNow.diff(instance.now, 'seconds') >= instance.tiempocondicion) {
+          instance.now = instance.reealNow;
+          //instance.electronService.log("SEGUNDO QUE SE EJECUTA" , instance.now.format('HH:mm:ss'));
+          await iteration();
+          instance.reealNow = instance.reealNow.startOf('seconds');
+        }
+      }
+      //instance.data[Sensor.VOLUME] = 0;
+    }, 200);
   }
 
 
@@ -1026,7 +590,7 @@ export class ArduinoService {
 
 /*   getDistancia(){
 
-    //console.log(this.distance, "RETORNO DE DISTANCIA")
+    //this.electronService.log(this.distance, "RETORNO DE DISTANCIA")
 
     return this.distance;
 
@@ -1076,7 +640,7 @@ export class ArduinoService {
 
 
 
-    console.log("Comando Regulador" , `${regulatorId}|${barPressure}`);
+    //this.electronService.log("Comando Regulador" , `${regulatorId}|${barPressure}`);
 
   }
 
@@ -1094,7 +658,7 @@ export class ArduinoService {
 
     this.calcularConsumo = true;
 
-    console.log("VOLUMEN RESETEADO" , this.volumenReseteado);
+    //this.electronService.log("VOLUMEN RESETEADO" , this.volumenReseteado);
 
   }
 
@@ -1102,7 +666,7 @@ export class ArduinoService {
 
   public resetTanque(){
     this.volumenAcumulado = 0;
-    console.log("VOLUMEN QUE DEBE RESETEARSE" , this.volumenAcumulado);
+    //this.electronService.log("VOLUMEN QUE DEBE RESETEARSE" , this.volumenAcumulado);
   }
 
 
@@ -1147,6 +711,56 @@ export class ArduinoService {
 
   }
 
+  // Función para regular la presión basada en la velocidad
+  public regulatePressureBasedOnSpeed(speed: number) {
+
+    if (this.lastRegulatedSpeed !== null && Math.abs(speed - this.lastRegulatedSpeed) < this.speedThreshold) {
+      // Si la diferencia entre la velocidad actual y la última regulada es menor que el umbral, no hacer nada
+      return;
+    }
+
+    // Definir los rangos de velocidad y presión adecuados
+    const pressureRanges = [
+      { minSpeed: 1, maxSpeed: 1.47, targetPressure: 3},  // Ejemplo: 1.5 bar cuando velocidad < 10
+      { minSpeed: 1.47, maxSpeed: 1.57, targetPressure: 3.5 }, // Ejemplo: 2.0 bar cuando velocidad entre 10 y 20
+      { minSpeed: 1.57, maxSpeed: 1.67, targetPressure: 4}, // Ejemplo: 2.5 bar cuando velocidad entre 20 y 30
+      { minSpeed: 1.67, maxSpeed: 6.08, targetPressure: 4.5},
+      { minSpeed: 6.08, maxSpeed: 6.37, targetPressure: 5},
+      { minSpeed: 6.37, maxSpeed: 6.68, targetPressure: 5.5},
+      { minSpeed: 6.68, maxSpeed: 6.98, targetPressure: 6},
+      { minSpeed: 6.98, maxSpeed: 7.23, targetPressure: 6.5},
+      { minSpeed: 7.23, maxSpeed: 7.49, targetPressure: 7},
+      { minSpeed: 7.49, maxSpeed: 7.74, targetPressure: 7.5},
+      { minSpeed: 7.74, maxSpeed: 7.98, targetPressure: 8},
+      { minSpeed: 7.98, maxSpeed: 8.22, targetPressure: 8.5},
+      { minSpeed: 8.22, maxSpeed: 8.44, targetPressure: 9},
+      { minSpeed: 8.44, maxSpeed: 8.68, targetPressure: 9.5},
+      { minSpeed: 8.68, maxSpeed: 8.93, targetPressure: 10},
+      { minSpeed: 8.93, maxSpeed: 9.11, targetPressure: 10.5},
+      { minSpeed: 9.11, maxSpeed: 9.29, targetPressure: 11},
+      { minSpeed: 9.29, maxSpeed: 9.48, targetPressure: 11.5},
+      { minSpeed: 9.48, maxSpeed: 9.68, targetPressure: 12},
+      { minSpeed: 9.68, maxSpeed: 9.85, targetPressure: 12.5},
+      { minSpeed: 9.85, maxSpeed: 10.03, targetPressure: 13},
+      { minSpeed: 10.03, maxSpeed: 10.21, targetPressure: 13.5},
+      { minSpeed: 10.21, maxSpeed: 10.40, targetPressure: 14},
+    ];
+
+    // Buscar el rango de presión adecuado según la velocidad actual
+    const targetPressure = pressureRanges.find(range => speed >= range.minSpeed && speed < range.maxSpeed)?.targetPressure;
+
+    if (targetPressure !== undefined) {
+      //this.electronService.log("TARGET PRESSURE" , targetPressure);
+      // Lógica para ajustar la presión a targetPressure
+      this.regulatePressureWithBars(targetPressure); // Esta función debería implementarse para ajustar la presión físicamente
+       // Actualizar la última velocidad regulada
+      this.lastRegulatedSpeed = speed;
+    } else {
+      //console.warn(`No se encontró un rango de presión para la velocidad ${speed}`);
+      // Aquí podrías decidir qué hacer si no hay un rango definido para la velocidad actual
+    }
+  }
+
 
 
   //
@@ -1159,6 +773,50 @@ export class ArduinoService {
 
   }
 
+    // Definir una función para interpolar la presión a partir de la velocidad
+  public interpolarPresion(velocidad: number): number {
+      // Tabla de variaciones de presión con respecto a la velocidad
+      const tablaVariaciones = [
+          { velocidad: 1.67, presion: 4},
+          { velocidad: 6.37, presion: 4.5},
+          { velocidad: 6.69, presion: 5 },
+          { velocidad: 7.02, presion: 5.5 },
+          { velocidad: 7.33, presion: 6 },
+          { velocidad: 7.61, presion: 6.5},
+          { velocidad: 7.87, presion: 7},
+          { velocidad: 8.12, presion: 7.5},
+          { velocidad: 8.37, presion: 8},
+          { velocidad: 8.63, presion: 8.5},
+          { velocidad: 8.88, presion: 9},
+          { velocidad: 9.11, presion: 9.5},
+          { velocidad: 9.34, presion: 10},
+          { velocidad: 9.58, presion: 10.5},
+          { velocidad: 9.75, presion: 11},
+          { velocidad: 9.96, presion: 11.5},
+          { velocidad: 10.14, presion: 12},
+          { velocidad: 10.33, presion: 12.5},
+          { velocidad: 10.52, presion: 13},
+          { velocidad: 10.73, presion: 13.5},
+          { velocidad: 10.89, presion: 14}
+      ];
+  
+      // Buscar los puntos en la tabla más cercanos a la velocidad dada
+      let puntoMenor;
+      let puntoMayor;
+      for (const punto of tablaVariaciones) {
+          if (punto.velocidad <= velocidad) {
+              puntoMenor = punto;
+          } else {
+              puntoMayor = punto;
+              break;
+          }
+      }
+  
+      // Interpolar la presión entre los dos puntos
+      const presionInterpolada = puntoMenor.presion + (puntoMayor.presion - puntoMenor.presion) * (velocidad - puntoMenor.velocidad) / (puntoMayor.velocidad - puntoMenor.velocidad);
+      return presionInterpolada;
+    }
+
 
 
   // MÃ©todo para activar la vÃ¡lvula izquierda
@@ -1169,11 +827,11 @@ export class ArduinoService {
 
     this.store.dispatch(new ActivateLeftValve());
 
-    console.log("IZQUIERDA ACTIVADA" , this.izquierdaActivada);
+    //this.electronService.log("IZQUIERDA ACTIVADA" , this.izquierdaActivada);
 
     const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la vÃ¡lvula izquierda
 
-    console.log("Comand" , command);
+    //this.electronService.log("Comand" , command);
 
     this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
 
@@ -1189,15 +847,15 @@ export class ArduinoService {
 
     this.store.dispatch(new DeactivateLeftValve());
 
-    console.log("IZQUIERDA DESACTIVADA" , this.izquierdaActivada);
+    this.electronService.log("IZQUIERDA DESACTIVADA" , this.izquierdaActivada);
 
     const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la vÃ¡lvula izquierda
 
-    console.log("Comand" , command);
+    this.electronService.log("Comand" , command);
 
     this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
 
-    //console.log("Comando desactivar valvula izquierda", command);
+    //this.electronService.log("Comando desactivar valvula izquierda", command);
 
   }
 
@@ -1211,13 +869,13 @@ export class ArduinoService {
 
     this.store.dispatch(new ActivateRightValve());
 
-    console.log("DERECHA ACTIVADA" , this.derechaActivada);
+    this.electronService.log("DERECHA ACTIVADA" , this.derechaActivada);
 
     const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la vÃ¡lvula derecha
 
-    console.log("Comand" , command);
+    this.electronService.log("Comand" , command);
 
-    //console.log(command, "comand");
+    //this.electronService.log(command, "comand");
 
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
 
@@ -1233,15 +891,15 @@ export class ArduinoService {
 
     this.store.dispatch(new DeactivateRightValve());
 
-    console.log("DERECHA DESCAACTIVADA" , this.derechaActivada);
+    this.electronService.log("DERECHA DESCAACTIVADA" , this.derechaActivada);
 
     const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la vÃ¡lvula derecha
 
-    console.log("Comand" , command);
+    this.electronService.log("Comand" , command);
 
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
 
-    //console.log("Comando desactivar valvula derecha", command);
+    //this.electronService.log("Comando desactivar valvula derecha", command);
 
   }
 
@@ -1359,13 +1017,13 @@ export class ArduinoService {
 
             this.conectInternet = true;
 
-            //console.log('El procesador tiene conexiÃ³n a Internet.');
+            //this.electronService.log('El procesador tiene conexiÃ³n a Internet.');
 
         } else {
 
             this.conectInternet = false;
 
-            //console.log('El procesador no tiene conexiÃ³n a Internet.');
+            //this.electronService.log('El procesador no tiene conexiÃ³n a Internet.');
 
         }
 
@@ -1419,7 +1077,7 @@ export class ArduinoService {
 
     const tiempoActual = Date.now();
 
-    //console.log(`Nuevo valor para ${sensorType}: ${value}`)
+    //this.electronService.log(`Nuevo valor para ${sensorType}: ${value}`)
 
     if (this.sensorSubjectMap.has(sensorType)) {
 

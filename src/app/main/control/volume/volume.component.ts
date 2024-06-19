@@ -57,6 +57,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   derecha: boolean = false;
   izquierda: boolean = false;
   distanciaTramo = 0;
+  consumoTotal = 0;
 
   public alertaRecarga : boolean = false;
   toast: any; // Variable para almacenar el toast
@@ -70,6 +71,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
   work;
   consumo = 0;
   prenderValvulas : boolean = true;
+  valorIsRunning : boolean = false;
+  banderaValvulas : boolean = false;
 
   distance2: number = 0;
   private valvulasApagadas: boolean = false;  // Bandera para controlar si las válvulas ya han sido apagadas
@@ -117,6 +120,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
 
     this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_HECTARE).subscribe((value: number) => {
+      this.valorIsRunning = this.arduinoService.isRunning;
       let ancho = JSON.parse(this.wExecution.configuration).width;
       //console.log("valor metros", value);
       this.valueVelocidad = value;
@@ -133,8 +137,10 @@ export class VolumeComponent  implements OnInit,OnChanges {
     ).subscribe((valorDelSensor: number) => {
 
       // Actualiza el volumen actual en tu clase
+      this.consumoTotal = this.arduinoService.datosCaudal;
       this.volume = this.arduinoService.currentRealVolume;
       this.volume = parseFloat(this.volume.toFixed(2));
+      
       
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
         this.recargarTanque = true;
@@ -231,10 +237,15 @@ export class VolumeComponent  implements OnInit,OnChanges {
 
   toggleAmbasValvulas(): void {
     this.store.selectOnce(ValveState.bothValvesActive).subscribe(isActive => {
-      if (isActive) {
+      console.log("is active" , isActive);
+      console.log("ARDUINO SERVICE IS RUNNING" , this.valorIsRunning);
+      if (isActive && this.banderaValvulas) {
+        console.log("Entro a esta condiucion de desactivar");
         this.arduinoService.deactivateBothValves();
-      } else {
+      } else if(this.valorIsRunning) {
+        console.log("Entro a esta condiucion de activar");
         this.arduinoService.activateBothValves();
+        this.banderaValvulas = true;
       }
     });
   }
