@@ -119,16 +119,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.minVolume = this.localConfig.vol_alert_on;
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
 
-    this.arduinoService.getSensorObservable(Sensor.ACCUMULATED_HECTARE).subscribe((value: number) => {
-      this.valorIsRunning = this.arduinoService.isRunning;
-      let ancho = JSON.parse(this.wExecution.configuration).width;
-      //console.log("valor metros", value);
-      this.valueVelocidad = value;
-      this.distance = (value * ancho)/10000;
-      this.distance = parseFloat(this.distance.toFixed(4));    
-      //console.log("Valor de la distancia" , this.distance.toFixed(2));
-    });
-
     // Suponiendo que tienes una variable volumenInicial definida en tu clase
 
     interval(1000).pipe(
@@ -137,13 +127,13 @@ export class VolumeComponent  implements OnInit,OnChanges {
     ).subscribe((valorDelSensor: number) => {
 
       // Actualiza el volumen actual en tu clase
-      this.consumoTotal = this.arduinoService.datosCaudal;
+      //this.consumoTotal = parseFloat(this.arduinoService.acumuladoTotal.toFixed(2));
       this.volume = this.arduinoService.currentRealVolume;
       this.volume = parseFloat(this.volume.toFixed(2));
       
       
       if (this.volume < this.minVolume && this.arduinoService.isRunning) {
-        this.recargarTanque = true;
+        //this.recargarTanque = true;
         this.arduinoService.previousAccumulatedVolume = 0;
         if (!this.valvulasApagadas) {
           //COMENTADO POR AHORA

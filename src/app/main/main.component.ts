@@ -17,6 +17,8 @@ import { ArduinoService } from '../core/services/arduino/arduino.service';
 import { LocalConf } from '../core/models/local_conf';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 import { VolumeComponent } from './control/volume/volume.component';
+import { ElectronService } from '../core/services';
+
 
 
 
@@ -85,6 +87,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     private modalController: ModalController,
     public arduinoService : ArduinoService,
     public volumenCompont : VolumeComponent,
+    public electronService : ElectronService
     ) {
       // console.log(this.login, "main.component... constructor");
 
@@ -113,10 +116,11 @@ export class MainComponent implements OnInit,AfterViewInit{
   async openIfNotConnected(){
     await this.databaseService.openConnection();
     const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
-    interval(1000).pipe(
+/*     interval(1000).pipe(
       startWith(0), // Emite un valor inicial para que comience inmediatamente
       switchMap(() => this.arduinoService.getSensorObservable(Sensor.CURRENT_TANK))
     ).subscribe((valorDelSensor: number) => {
+        this.electronService.log("SE EJECUTA ESTE INVERVALO");
         this.valorTanque = valorDelSensor;  
         console.log("VALOR INICIAL DE VOLUME" , this.valorTanque);
         if(this.valorTanque > 0){
@@ -126,7 +130,7 @@ export class MainComponent implements OnInit,AfterViewInit{
           this.arduinoService.isRunning = true;
           this.someFunction();
         }
-    });
+    }); */
   }
 
   async someFunction() {
@@ -150,6 +154,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
 
   async loadPersonValues(){
+
     await this.openIfNotConnected();
 
     await this.databaseService.getLastWorkExecution()
@@ -201,7 +206,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     this.arduinoService.activateRightValve();
     this.volumenCompont.rightControlActive = true;
     this.arduinoService.resetVolumenInit();
-    this.arduinoService.volumenAcumulado = 0;
+    //this.arduinoService.volumenAcumulado = 0;
     this.arduinoService.currentRealVolume = 0;
     this.arduinoService.initialVolume = 0;
     this.arduinoService.datosCaudal = 0;
@@ -214,7 +219,7 @@ export class MainComponent implements OnInit,AfterViewInit{
   }
   
   async onClickPower(){
-    this.arduinoService.volumenAcumulado = 0;
+    //this.arduinoService.volumenAcumulado = 0;
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     //console.log(this.lastWorkExecution, "dio click al boton verde");
     // console.log(this.loadPersonValues, "person values");
@@ -250,7 +255,7 @@ export class MainComponent implements OnInit,AfterViewInit{
       modal.onDidDismiss().then(async (data) => {
         if (data && data.data) {
           //this.arduinoService.resetTanque();
-          //this.arduinoService.resetVolumenInit();
+          this.arduinoService.resetVolumenInit();
           //this.arduinoService.restaurarConsumoTotal = 0;
           //this.arduinoService.previousAccumulatedVolume = 0;
           this.volumenTanque = parseFloat(data.data);

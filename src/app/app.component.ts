@@ -72,6 +72,8 @@ export class AppComponent implements OnInit {
             case "DEVICE_4":
               Configuration.device4 = par[1];
               break;
+            case "DEVICE_5":
+              Configuration.device5 = par[1];
           }
         });
 

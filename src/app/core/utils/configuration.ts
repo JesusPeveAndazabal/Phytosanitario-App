@@ -5,5 +5,6 @@ export const Configuration ={
     device1 :"",
     device2: "",
     device3: "",
-    device4: ""
+    device4: "",
+    device5: ""
 };

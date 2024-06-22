@@ -28,14 +28,14 @@ export interface WaterVolumes{
 }
 
 export interface WorkExecutionDetail{
-  id : number;
-  id_work_execution : number;
-  time : moment.Moment;
-  sended : boolean;
-  data : string;
-  precision : string;
-  gps : string|any;
-  has_events : boolean;
-  events : string;
+  id? : number;
+  id_work_execution? : number;
+  time? : moment.Moment;
+  sended? : boolean;
+  data? : string;
+  precision? : string;
+  gps? : string|any;
+  has_events? : boolean;
+  events? : string;
   work_execution? : number;
 }

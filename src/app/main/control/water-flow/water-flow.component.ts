@@ -2,6 +2,9 @@ import { WorkExecutionConfiguration } from './../../../core/models/we-configurat
 import { WorkExecution } from './../../../core/models/work-execution';
 import { Component, Input, OnInit, SimpleChanges } from '@angular/core';
 import { ArduinoService } from '../../../core/services/arduino/arduino.service';
+import { Select, Store } from '@ngxs/store';
+import { Observable } from 'rxjs';
+import { SensorState } from '../../../core/services/arduino/eventsSensors';
 
 declare var d3 : any;
 
@@ -13,6 +16,8 @@ declare var d3 : any;
 export class WaterFlowComponent  implements OnInit {
   @Input("wExecution") wExecution! : WorkExecution;
   @Input("realWaterflow") realWaterflow : number = 0;
+
+  waterFlow$: Observable<number>;
 
   private duration = 500;
   private animationDuration = 1500;
@@ -29,12 +34,14 @@ export class WaterFlowComponent  implements OnInit {
   };
 
 
-  constructor(public arduinoService: ArduinoService) { }
+  constructor(public arduinoService: ArduinoService,private store : Store) { }
 
   async ngOnInit() {
     //this.drawDonutChart("#efficiency-water-flow",0,".35em");
 // Asigna el valor de connectedCaudal según la lógica de tu aplicaciónMINIMO VOLUMEN
     this.setRealWaterflow(0);
+
+    this.waterFlow$ = this.store.select(SensorState.waterFlow);
   }
 
   ngOnChanges(changes: SimpleChanges) {

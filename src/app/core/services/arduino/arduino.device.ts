@@ -3,9 +3,11 @@ import { SerialPort} from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { ElectronService } from '../electron/electron.service';
 import { Sensor } from '../../utils/global';
+import { Store } from '@ngxs/store';
 
 //Importacion del observable para el uso de las funciones reactivas para obtener los datos de los sensores
 import { Observable, Subject } from 'rxjs';
+import { WaterFlow , Volumen , Pressure , RightValve , LeftValve , Gps , Speed} from './eventsSensors';
 
 export class ArduinoDevice {
   private isRunning: boolean = false;
@@ -40,7 +42,7 @@ export class ArduinoDevice {
   constructor(
     public path: string,public baudrate: number,public autoOpen: boolean,
     private electronService: ElectronService,
-    // private arduinoService: ArduinoService,
+    private store: Store,
   ) {
       this.connectToDevice(path, baudrate,autoOpen);
       /* this.setupSensorSubjects(); */
@@ -92,6 +94,8 @@ export class ArduinoDevice {
             instance.mode = parseInt(messageBuffer[1]);
             //console.log("MODO" , instance.mode);
             instance.sensors = messageBuffer[2].split(',').map((x: string) => parseInt(x, 10));
+ 
+
             //console.log("SENSIRES" , instance.sensors);
             instance.port.write(Buffer.from('OK\n', 'utf-8'));
             instance.isRunning = true;
@@ -129,6 +133,8 @@ export class ArduinoDevice {
       const values = data.trim().split('|');
       // Assuming values represent sensor readings
       //console.log(values);
+
+      
       values.forEach((value : string, index : number) => {
         //Sensor id es igual a sensor type
         const sensorId = this.sensors[index];
@@ -136,9 +142,42 @@ export class ArduinoDevice {
         let numericValue : number | number[];
         if(sensorId == Sensor.GPS){
           numericValue = value.split(',').map(v => parseFloat(v));
+          let valSensor = JSON.parse(`{"${Sensor.GPS}" : ${JSON.stringify(numericValue)}}`);
+          this.store.dispatch(new Gps(valSensor));
         }
-        else
-          numericValue = parseFloat(value);
+        else{
+          switch (sensorId){
+            case Sensor.WATER_FLOW:
+              let valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${value}}`);
+              this.store.dispatch(new WaterFlow(valSensorFlow));
+              break;
+            
+            case Sensor.VOLUME:
+              let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${value}}`);
+              this.store.dispatch(new Volumen(valSensorVolume));
+              break;
+
+            case Sensor.PRESSURE:
+              let valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${value}}`);
+              this.store.dispatch(new Pressure(valSensorPressure));
+              break;
+
+            case Sensor.VALVE_RIGHT:
+              let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
+              this.store.dispatch(new RightValve(valSensorValveRight));
+              break;
+
+            case Sensor.VALVE_LEFT:
+              let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
+              this.store.dispatch(new LeftValve(valSensorValveLeft));
+              break;
+            case Sensor.SPEED:
+              let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${value}}`);
+              this.store.dispatch(new Speed(valSensorSpeed));
+              break;
+          }
+        }
+        numericValue = parseFloat(value);
 
         //Sensor type = 2/5
         const sensorType = sensorId;
@@ -151,6 +190,7 @@ export class ArduinoDevice {
 
         //this.arduinoService.notifySensorValue(sensorType, numericValue);
       });
+      
       this.saveCurrentValues();
     });
   }
