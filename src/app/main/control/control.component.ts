@@ -11,6 +11,7 @@ import { Sensor, SocketEvent, UnitPressureEnum, WorkStatusChange, convertPressur
 import { combineLatest, interval, map, startWith, switchMap } from 'rxjs';
 import Swal from 'sweetalert2';
 import { VolumeComponent } from './volume/volume.component';
+import { ElectronService } from '../../core/services';
 @Injectable({
   providedIn: "root"
 })
@@ -51,7 +52,7 @@ export class ControlComponent  implements OnInit {
   caudalNominal: number = 0;
   maximoPresion: number = 0;
   minimoPresion: number = 0;
-  constructor(private dbService : DatabaseService, private arduinoService :ArduinoService, private zone: NgZone, public volumenComp : VolumeComponent) {
+  constructor(private dbService : DatabaseService, private arduinoService :ArduinoService, private zone: NgZone, public electronService : ElectronService) {
 
   }
 
@@ -87,6 +88,7 @@ export class ControlComponent  implements OnInit {
     ).subscribe((valorDelSensor:number) => {
       this.waterFlow = valorDelSensor;
       this.maxVolume = this.arduinoService.initialVolume;
+      this.electronService.log("CONTROL", this.maxVolume);
       config.maxVolume = this.arduinoService.initialVolume;
       if(this.arduinoService.isRunning){
         if(this.arduinoService.derechaActivada||this.arduinoService.izquierdaActivada){

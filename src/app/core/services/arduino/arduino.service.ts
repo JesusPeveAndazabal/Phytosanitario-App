@@ -164,10 +164,80 @@ export class ArduinoService {
 
     }
 
+    if(this.isServiceRestarting){
+      this.electronService.log("SE REINICIO EL APLICATIVO");
+    }
+  
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
       next: async (value) =>{
-        // Implementar guardado en la db
-        await this.databaseService.saveWorkExecutionDataDetail(value);
+
+          let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
+
+
+          // Evaluar los eventos
+          let events: string[] = [];
+          let has_events = false;
+          let data = JSON.parse(value.data);
+
+          //Para compara los eventos
+          this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
+          this.info = JSON.parse(currentWork.configuration).pressure;
+          this.speedalert = JSON.parse(currentWork.configuration).speed;
+
+
+          //EVENTO DE CAUDAL
+          if (data[Sensor.WATER_FLOW] > this.caudalNominal * 0.90 && data[Sensor.WATER_FLOW] < this.caudalNominal * 1.1) {
+            // Caudal Verde
+            }else if ((data[Sensor.WATER_FLOW] > this.caudalNominal * 0.50 && data[Sensor.WATER_FLOW] < this.caudalNominal * 0.9) ||
+              (data[Sensor.WATER_FLOW] < this.caudalNominal * 1.5 && data[Sensor.WATER_FLOW] > this.caudalNominal * 1.1)) {
+              has_events = true;
+              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+          }
+
+          //EVENTO DE PRESION
+          if (data[Sensor.PRESSURE] > this.info * 0.90 && data[Sensor.PRESSURE] < this.info * 1.1) {
+            } else if ((data[Sensor.PRESSURE] > this.info * 0.50 && data[Sensor.PRESSURE] < this.info * 0.9) ||
+              (data[Sensor.PRESSURE] < this.info * 1.5 && data[Sensor.PRESSURE] > this.info * 1.1)) {
+              has_events = true;
+              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+          }
+
+          //EVENTO DE VELOCIDAD
+          if (data[Sensor.SPEED] > this.speedalert * 0.90 && data[Sensor.SPEED] < this.speedalert * 1.1) {
+            // Velocidad Verde
+            } else if ((data[Sensor.SPEED] > this.speedalert * 0.50 && data[Sensor.SPEED] < this.speedalert * 0.9) ||
+              (data[Sensor.SPEED] < this.speedalert * 1.5 && data[Sensor.SPEED] > this.speedalert * 1.1)) {
+              has_events = true;
+              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+            } else {
+              has_events = true;
+              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+          }
+
+          //EVENTOS DE CAUDAL - VELOCIDAD Y PRESION
+          if ((data[Sensor.PRESSURE] < this.info * 0.50 || data[Sensor.PRESSURE] > this.info * 1.5) ||
+              (data[Sensor.WATER_FLOW] < this.caudalNominal * 0.50 || data[Sensor.WATER_FLOW] > this.caudalNominal * 1.5) ||
+              (data[Sensor.SPEED] < this.speedalert * 0.50 || data[Sensor.SPEED] > this.speedalert * 1.5)) {
+              has_events = true;
+              events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
+          }
+
+          value.id_work_execution = currentWork.id;
+          value.has_events = has_events;
+          value.events = events.join(", ");
+          value.time = value.time.startOf('seconds');
+
+          
+          if(currentWork && this.isRunning){
+            await this.databaseService.saveWorkExecutionDataDetail(value);
+          }
+          
       },
 
     });
@@ -181,31 +251,12 @@ export class ArduinoService {
   }
 
 
-
-/*   getDistancia(){
-
-    //this.electronService.log(this.distance, "RETORNO DE DISTANCIA")
-
-    return this.distance;
-
-  }
-
- */
-
-
-
   public mapToObject(map: Map<any, any>): { [key: string]: any } {
-
     const obj: { [key: string]: any } = {};
-
     map.forEach((value, key) => {
-
       if (key !== undefined) {
-
         obj[key.toString()] = value;
-
       }
-
     });
 
     return obj;
@@ -243,17 +294,8 @@ export class ArduinoService {
   //Metodo para resetear el volumen inicial y minimo
 
   public resetVolumenInit(): void {
-
     const command = 'B';
-
     this.findBySensor(Sensor.VOLUME).sendCommand(command);
-
-    this.volumenReseteado = this.datosCaudal;
-
-    this.calcularConsumo = true;
-
-    this.electronService.log("VOLUMEN RESETEADO" , this.volumenReseteado);
-
   }
 
 
@@ -284,6 +326,7 @@ export class ArduinoService {
   inicializarContenedor(inicial: number, minimo: number): void {
 
     this.initialVolume = inicial;
+    console.log("initial arduino servie" , this.initialVolume);
 
     this.currentRealVolume = inicial;
 
@@ -291,7 +334,7 @@ export class ArduinoService {
 
     this.isRunning = true;
 
-  }
+}
 
 
 

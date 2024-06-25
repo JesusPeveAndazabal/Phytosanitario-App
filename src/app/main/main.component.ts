@@ -255,7 +255,7 @@ export class MainComponent implements OnInit,AfterViewInit{
       modal.onDidDismiss().then(async (data) => {
         if (data && data.data) {
           //this.arduinoService.resetTanque();
-          this.arduinoService.resetVolumenInit();
+
           //this.arduinoService.restaurarConsumoTotal = 0;
           //this.arduinoService.previousAccumulatedVolume = 0;
           this.volumenTanque = parseFloat(data.data);
@@ -271,6 +271,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             //console.log("CONF.VOLUMEN" , conf.volume);
             //console.log("VAL" ,this.volumenTanque);
             conf.volume = this.volumenTanque - this.arduinoService.currentRealVolume;
+            //this.arduinoService.resetVolumenInit();
             //console.log(volume, this.lastWorkExecution!, "info a guardar");
             // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
             this.lastWorkExecution!.configuration = JSON.stringify(conf);
@@ -283,11 +284,13 @@ export class MainComponent implements OnInit,AfterViewInit{
             //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
             //Configurar el volumen mínimo e inicial en el servicio.
             //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
-            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);            
+            console.log("INCIIAL VOLUMEN" , this.volumenTanque , this.localConfig.vol_alert_on);  
+            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on); 
+         
             this.workStatus = WorkStatusChange.START;
             this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
-
+            this.arduinoService.resetVolumenInit();
             //this.volumenCompont.apagarValvulas();
             // Tu lógica para guardar el volumen y realizar acciones con él
             //console.log("Volumen capturado:", volume);

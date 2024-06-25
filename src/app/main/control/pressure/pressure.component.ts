@@ -7,6 +7,10 @@ import { WorkExecutionConfiguration } from './../../../core/models/we-configurat
 import { UnitPressure, convertPressureUnit,UnitPressureEnum } from './../../../core/utils/global';
 import { DatabaseService } from '../../../core/services';
 import { ControlComponent } from '../control.component';
+import { Observable } from 'rxjs';
+import { Store } from '@ngxs/store';
+import { SensorState } from '../../../core/services/arduino/eventsSensors';
+
 
 
 @Component({
@@ -26,9 +30,16 @@ export class PressureComponent  implements OnChanges,AfterViewInit {
   // leftControlActive : boolean = false;
   // rightControlActive : boolean = false;
 
+  pressure$: Observable<number>;
+
   private wConfig : WorkExecutionConfiguration | undefined;
 
-  constructor(private volume:VolumeComponent, public  arduinoService: ArduinoService, private dbService:DatabaseService) { }
+  constructor(private volume:VolumeComponent, public  arduinoService: ArduinoService, private dbService:DatabaseService , private store : Store) { }
+
+  ngOnInit(){
+    this.pressure$ = this.store.select(SensorState.pressure);
+  }
+    
 
   ngAfterViewInit() {
     if(this.wExecution){

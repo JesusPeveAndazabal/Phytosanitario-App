@@ -156,7 +156,7 @@ export class ArduinoDevice {
               let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${value}}`);
               this.store.dispatch(new Volumen(valSensorVolume));
               break;
-
+                
             case Sensor.PRESSURE:
               let valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${value}}`);
               this.store.dispatch(new Pressure(valSensorPressure));
@@ -171,6 +171,7 @@ export class ArduinoDevice {
               let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
               this.store.dispatch(new LeftValve(valSensorValveLeft));
               break;
+              
             case Sensor.SPEED:
               let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${value}}`);
               this.store.dispatch(new Speed(valSensorSpeed));

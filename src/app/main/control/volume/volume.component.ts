@@ -9,6 +9,8 @@ import { ToastController } from '@ionic/angular';
 import { ValveState, ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve } from '../../../core/state/valve.state';
 import { Select, Store } from '@ngxs/store';
 import { Observable } from 'rxjs';
+import { SensorState } from '../../../core/services/arduino/eventsSensors';
+
 // import { WebSocketClientService } from 'src/app/core/services/services';
 // import { Sensor, SocketEvent,config } from 'src/app/core/utils/global';
 @Injectable({
@@ -61,7 +63,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
 
   public alertaRecarga : boolean = false;
   toast: any; // Variable para almacenar el toast
-
+  volumen$: Observable<number>;
+  volumenAcumulado$: Observable<number>;
 
   distance: number = 0;
   distanceCalculo : number = 0;
@@ -95,9 +98,12 @@ export class VolumeComponent  implements OnInit,OnChanges {
     //this.setVolume(40);
     // this.animateWaves();
     // this.shouldBlink= true;
+    this.volumen$ = this.store.select(SensorState.volumen);
+    this.volumenAcumulado$ = this.store.select(SensorState.acumuladoVolumen);
     this.leftControlActive$ = this.store.select(ValveState.leftValveActive);
     this.rightControlActive$ = this.store.select(ValveState.rightValveActive);
     this.bothControlsActive$ = this.store.select(ValveState.bothValvesActive); // Debes definir this.bothValvesActive en el ValveState
+    
     this.localConfig = await this.dbService.getLocalConfig();
     let obtenerLabor = await this.dbService.getLastWorkExecution();
     let workListado = await this.dbService.getWorkData();
@@ -229,13 +235,12 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.store.selectOnce(ValveState.bothValvesActive).subscribe(isActive => {
       console.log("is active" , isActive);
       console.log("ARDUINO SERVICE IS RUNNING" , this.valorIsRunning);
-      if (isActive && this.banderaValvulas) {
+      if (isActive) {
         console.log("Entro a esta condiucion de desactivar");
         this.arduinoService.deactivateBothValves();
-      } else if(this.valorIsRunning) {
+      } else{
         console.log("Entro a esta condiucion de activar");
         this.arduinoService.activateBothValves();
-        this.banderaValvulas = true;
       }
     });
   }
