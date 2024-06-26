@@ -164,6 +164,13 @@ export class ArduinoService {
 
     }
 
+    //COMPONENTE
+    /* DISPARA */
+    //ACCION
+    /* MODIFICA O MUTA EL ESTADO */
+    //ESTADO
+    /* NOTIFICA AL COMPONENTE */
+
     if(this.isServiceRestarting){
       this.electronService.log("SE REINICIO EL APLICATIVO");
     }
@@ -172,7 +179,6 @@ export class ArduinoService {
       next: async (value) =>{
 
           let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
-
 
           // Evaluar los eventos
           let events: string[] = [];
@@ -228,16 +234,16 @@ export class ArduinoService {
               events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
           }
 
+          /* Evaulu */
           value.id_work_execution = currentWork.id;
           value.has_events = has_events;
           value.events = events.join(", ");
           value.time = value.time.startOf('seconds');
-
           
           if(currentWork && this.isRunning){
+            this.electronService.log("VALUE DEL SERVICE" , value);
             await this.databaseService.saveWorkExecutionDataDetail(value);
-          }
-          
+          } 
       },
 
     });

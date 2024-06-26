@@ -1,7 +1,7 @@
 <div class="water-flow-container">
   <h2 class="titulo"><strong>CAUDAL</strong>&nbsp;&nbsp;&nbsp;&nbsp;{{ teoric_water_flow }} L/min</h2>
   <div class="water-level-meter">
-    <div class="water-level" [style.height.%]="calcularAlturaCaudal(realWaterflow)"></div>
+    <div class="water-level" [style.height.%]="calcularAlturaCaudal(waterFlow$ | async)"></div>
     <p class="caudal-value"><strong>{{ waterFlow$ | async }}</strong></p>
     <p class="caudal-text">L/m</p>
   </div>

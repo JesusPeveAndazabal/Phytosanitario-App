@@ -1,5 +1,9 @@
+import { Observable } from 'rxjs';
 import { WorkExecution } from './../../../core/models/work-execution';
 import { Component, OnInit,OnChanges, SimpleChanges, Input } from '@angular/core';
+import { Select, Store } from '@ngxs/store';
+import { SensorState } from '../../../core/services/arduino/eventsSensors';
+import { ElectronService } from '../../../core/services';
 // import { WorkExecution } from 'src/app/core/models/work-execution';
 declare var d3 : any;
 declare var iopctrl : any;
@@ -18,6 +22,7 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
   svg : any;
   gauge : any;
   segDisplay : any;
+  speed$: Observable<number>;
 
   private maxSpeed : number = 10;
   private arduino : any;
@@ -28,9 +33,10 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
     g.append("path").attr("d", "M0 " + -0.25 * r + " L 0 " + -1.05 * r + "");
   };
 
-  constructor() { }
+  constructor(private store : Store , private electronService : ElectronService) { }
 
   ngOnChanges(changes: any): void {
+    console.log("velocidad" , this.gauge , this.segDisplay);
     if(this.gauge && changes['speed']){
       this.gauge.value(changes.speed.currentValue);
       this.segDisplay.value(changes.speed.currentValue);
@@ -45,6 +51,8 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
   }
 
   ngOnInit() {
+    this.speed$ = this.store.select(SensorState.speed);
+    this.electronService.log("VELOCIDAD" , this.speed$);
     let instance = this;
 
     this.svg = d3.select("#scale")
@@ -108,8 +116,14 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
     //   .attr('id', "img_icon_scale")
     //   .attr("xlink:href", "./assets/images/check.png");
 
-    instance.gauge.value(0.0);
-    instance.segDisplay.value(0.0);
+    let velocidad = this.store.select(SensorState.speed).subscribe({
+      next: async (value) => {
+        instance.gauge.value(value);
+        instance.segDisplay.value(value);
+      }
+    })
+
+
 
   }
 

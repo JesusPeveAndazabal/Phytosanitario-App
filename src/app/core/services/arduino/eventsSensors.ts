@@ -160,16 +160,17 @@ export class SensorState {
     
     @Selector([SensorState])
     static evaluarDispositivos(sensorState : SensorStateModel){
+
         //Retornar Valor de WorkExecutionDetail
         let realNow = moment();
         let currentSecond = realNow.format('seconds');
         let coordenadaInicial : number;
         let coordenadaFinal : number;
         let banderaDistancia : boolean = true;
-        sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-        
-
         let volumen = sensorState.data[`${Sensor.VOLUME}`];
+        sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
+
+        //PARA HALLAR LA DISTANCIA
 
         if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 1.5){
             // Registra las coordenadas GPS actuales
@@ -192,21 +193,23 @@ export class SensorState {
         }
         
         sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-        
+
+        //HALLAR EL VOLUMEN TOTAL
         if(volumen <= 1){
             sensorState.lastVolumen = sensorState.volumenAcumulado;
         }else{
             sensorState.volumenAcumulado = volumen + sensorState.lastVolumen;
         }
 
+        //SOLO ACUMULAR LOS VALORES MAYORES A 0 
         if(sensorState.volumenAcumulado > 0){
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
         
         //POR VERIFICAR EVALUACION O CONDICIONES 
-        if(sensorState.waterFlow && sensorState.gps && sensorState.lastProcessedSecond !== currentSecond){
+        if(sensorState.waterFlow && sensorState.gps){
              // Actualizar el último segundo procesado
-            sensorState.lastProcessedSecond = currentSecond;
+            //sensorState.lastProcessedSecond = currentSecond;
             let workDetail : WorkExecutionDetail = {
                 id_work_execution : 2,
                 data : JSON.stringify(sensorState.data),
@@ -220,20 +223,26 @@ export class SensorState {
             };
 
             //Evaluas los eventos
+            sensorState.waterFlow = false;
+            sensorState.volumen = false;
+            sensorState.pressure = false;
+            sensorState.leftValve = false;
+            sensorState.rightValve = false;
+            sensorState.gps = false;
+            sensorState.speed = false;
             return workDetail;
         }
 
         return null;
     }
-    
+
 
         @Action(WaterFlow)
         waterflow(ctx: StateContext<SensorStateModel>, action: WaterFlow){
             let actualState = ctx.getState();
             ctx.patchState({
                 ...actualState,
-                waterFlow: true,
-                
+                waterFlow: true,    
                 data: {
                     ...actualState.data,
                     ...action.value
