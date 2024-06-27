@@ -2,7 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { ModalController } from '@ionic/angular';
 import { WorkExecution } from '../../../core/models/work-execution';
 import { WorkExecutionOrder } from '../../../core/models/workExecutionOrder';
-import { DatabaseService } from '../../../core/services';
+import { DatabaseService, ElectronService } from '../../../core/services';
 import { Implement } from '../../../core/models/Implements';
 import * as moment from 'moment';
 import { Login } from '../../../core/models/login';
@@ -42,7 +42,8 @@ export class OrdenesTrabajoComponent implements OnInit {
   constructor(private modalCtrl:ModalController , 
     private dbService : DatabaseService , 
     private arduinoService : ArduinoService,
-    private router : Router){}
+    private router : Router,
+    private electronService : ElectronService){}
 
   async ngOnInit(){
     this.login = await this.dbService.getLogin();
@@ -76,9 +77,11 @@ export class OrdenesTrabajoComponent implements OnInit {
 
     // Almacenar las IDs de las ejecuciones de trabajo finalizadas
     this.finishedWorkExecutionIds = finishedWorkExecutions.map(execution => execution.weorder);
+    //this.electronService.log("FINISHED WORK EXECUTION" , this.finishedWorkExecutionIds);
 
     // Filtrar las órdenes de trabajo para mostrar solo las que no han sido finalizadas
     this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => !this.finishedWorkExecutionIds.includes(order.id));
+    //this.electronService.log("ORDENES DE TRABAJO " , this.ordenesTrabajoPorTipoImplemento);
     
     // Inicializar selectedDate con la fecha actual
     this.selectedDate = moment().format('YYYY-MM-DD');

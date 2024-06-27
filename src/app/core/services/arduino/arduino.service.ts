@@ -21,7 +21,7 @@ import { Store } from '@ngxs/store';
 import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve , ActivateBothValves, DeactivateBothValves } from '../../state/valve.state';
 import { getDistance} from 'geolib';
 import isOnline from 'is-online';
-import { SensorState } from './eventsSensors';
+import { AcumuladoVolumen, SensorState, UpdateCurrentTank , Volumen } from './eventsSensors';
 
 //Este se comporta como el device_manager
 
@@ -120,6 +120,7 @@ export class ArduinoService {
   volumenReinicio : boolean = false;
   ConsumoReal : number = 0;
   volumenTramo : number = 0;
+
   
   // Declarar una variable para almacenar el volumen anterior
   volumenAnterior = 0;
@@ -136,6 +137,11 @@ export class ArduinoService {
   lastRegulatedSpeed: number | null = null;
   speedThreshold: number = 1; // Define el umbral de diferencia de velocidad
 
+  volumenRecuperado : number = 0; // Variable global para almacenar
+  currentTankRecuperado : number = 0;
+  volumenTotalRecuperado : number = 0;
+  configWork;
+
 
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
 
@@ -148,11 +154,13 @@ export class ArduinoService {
     //this.getDistancia();
 
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
-
+      
       if(workExecution){
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       }
+
+      this.configWork = JSON.parse(workExecution.configuration);
 
     });
 
@@ -172,7 +180,30 @@ export class ArduinoService {
     /* NOTIFICA AL COMPONENTE */
 
     if(this.isServiceRestarting){
-      this.electronService.log("SE REINICIO EL APLICATIVO");
+      console.log("SE REINICIO EL APP" , this.databaseService.getLastWorkExecutionDetail2());
+      this.databaseService.getLastWorkExecutionDetail2().then((WorkExecutionDetail : WorkExecutionDetail) => {
+        
+        if(WorkExecutionDetail){
+          let dataValues = JSON.parse(WorkExecutionDetail.data);
+          this.volumenRecuperado = dataValues[`${Sensor.VOLUME}`];
+          this.currentTankRecuperado = dataValues[`${Sensor.CURRENT_TANK}`];
+          this.volumenTotalRecuperado = dataValues[`${Sensor.ACCUMULATED_CONSUMO}`];
+
+          //Actualiza el estado del volumen
+          this.store.dispatch(new Volumen ({ [`${Sensor.VOLUME}`]: this.volumenRecuperado }));
+          // Actualiza el estado del volumen acumulado
+          this.store.dispatch(new AcumuladoVolumen({ [`${Sensor.ACCUMULATED_CONSUMO}`]: this.volumenTotalRecuperado }));
+          // Actualiza el estado con los valores restaurados
+          this.store.dispatch(new UpdateCurrentTank(this.currentTankRecuperado, true));
+
+          this.regulatePressureWithBars(this.configWork.pressure);
+          console.log("REGULR PRESION GUARDAD" , this.configWork.pressure);
+        
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenRecuperado);
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.currentTankRecuperado);
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenTotalRecuperado);
+        }
+      })
     }
   
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
@@ -183,6 +214,7 @@ export class ArduinoService {
           // Evaluar los eventos
           let events: string[] = [];
           let has_events = false;
+
           let data = JSON.parse(value.data);
 
           //Para compara los eventos
@@ -241,7 +273,6 @@ export class ArduinoService {
           value.time = value.time.startOf('seconds');
           
           if(currentWork && this.isRunning){
-            this.electronService.log("VALUE DEL SERVICE" , value);
             await this.databaseService.saveWorkExecutionDataDetail(value);
           } 
       },
@@ -270,7 +301,6 @@ export class ArduinoService {
   }
 
 
-
   //Metodo para enviar el valor de presion que se le asignara
 
   public regulatePressureWithBars(bars: number): void {
@@ -295,16 +325,12 @@ export class ArduinoService {
 
   }
 
-
-
   //Metodo para resetear el volumen inicial y minimo
 
   public resetVolumenInit(): void {
     const command = 'B';
-    this.findBySensor(Sensor.VOLUME).sendCommand(command);
+    this.findBySensor(Sensor.WATER_FLOW).sendCommand(command);
   }
-
-
 
   public resetTanque(){
     this.volumenAcumulado = 0;
@@ -334,7 +360,13 @@ export class ArduinoService {
     this.initialVolume = inicial;
     console.log("initial arduino servie" , this.initialVolume);
 
+    // Despachar la acción para actualizar el campo currentTank y marcarlo como inicialización
+    this.store.dispatch(new UpdateCurrentTank(inicial, true));
+
     this.currentRealVolume = inicial;
+
+    // Despachar la acción para actualizar el campo currentTank
+    //this.store.dispatch(new UpdateCurrentTank(inicial));
 
     this.minVolume = minimo;
 

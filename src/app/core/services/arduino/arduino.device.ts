@@ -143,37 +143,44 @@ export class ArduinoDevice {
         if(sensorId == Sensor.GPS){
           numericValue = value.split(',').map(v => parseFloat(v));
           let valSensor = JSON.parse(`{"${Sensor.GPS}" : ${JSON.stringify(numericValue)}}`);
+          this.electronService.log("valSensor" , valSensor);
           this.store.dispatch(new Gps(valSensor));
         }
         else{
           switch (sensorId){
             case Sensor.WATER_FLOW:
               let valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${value}}`);
+              this.electronService.log("CAUDAL" , valSensorFlow);
               this.store.dispatch(new WaterFlow(valSensorFlow));
               break;
             
             case Sensor.VOLUME:
               let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${value}}`);
+              this.electronService.log("VOLUMEN" , valSensorVolume);
               this.store.dispatch(new Volumen(valSensorVolume));
               break;
                 
             case Sensor.PRESSURE:
               let valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${value}}`);
+              this.electronService.log("PRESSURE" , valSensorPressure);
               this.store.dispatch(new Pressure(valSensorPressure));
               break;
 
             case Sensor.VALVE_RIGHT:
               let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
+              this.electronService.log("valSensorValveRight" , valSensorValveRight);
               this.store.dispatch(new RightValve(valSensorValveRight));
               break;
 
             case Sensor.VALVE_LEFT:
               let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
+              this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
               this.store.dispatch(new LeftValve(valSensorValveLeft));
               break;
               
             case Sensor.SPEED:
               let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${value}}`);
+              this.electronService.log("valSensorSpeed" , valSensorSpeed);
               this.store.dispatch(new Speed(valSensorSpeed));
               break;
           }

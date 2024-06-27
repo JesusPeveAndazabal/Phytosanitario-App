@@ -5,6 +5,7 @@ import { Sensor } from '../../utils/global';
 import * as moment from 'moment';
 import { ElectronService } from '../electron/electron.service';
 import { getDistance} from 'geolib';
+import { DatabaseService } from '../database/database.service';
 
 
 
@@ -43,6 +44,15 @@ export class Speed {
     constructor(public value : {}) {}
 }
 
+export class UpdateCurrentTank {
+    static readonly type = '[Sensor] UpdateCurrentTank';
+    constructor(public value: number, public initial: boolean = false) {}
+}
+
+export class AcumuladoVolumen {
+    static readonly type = '[Sensor] acumuladoVolumen';
+    constructor(public value: {}) {}
+}
 
 export interface SensorStateModel {
     data : {
@@ -52,6 +62,7 @@ export interface SensorStateModel {
         4 : number,
         5 : number,
         13 : number,
+        19 : number,
         20 : number,
         21 : number,
         23 : number
@@ -66,7 +77,11 @@ export interface SensorStateModel {
     lastProcessedSecond: string; // Nuevo campo para el último segundo procesado
     volumenAcumulado: number; // Volumen acumulado
     lastVolumen: number | null; // Último volumen conocido
-    accumulated_distance : number
+    accumulated_distance : number,
+    initialVolume : number,
+    volumenRecuperado : number | null,
+    currentTankRecuperado : number | null,
+    volumenTotalRecuperado : number | null
 }
 
 @State<SensorStateModel>({
@@ -79,6 +94,7 @@ export interface SensorStateModel {
         4 : 0,
         5 : 0,
         13: 0,
+        19 : 0,
         20 : 0,
         21 : 0,
         23 : 0
@@ -92,14 +108,16 @@ export interface SensorStateModel {
     speed : false,
     lastProcessedSecond: '', // Inicializar con una cadena vacía
     volumenAcumulado: 0, // Inicializar volumen acumulado
-    lastVolumen: null, // Inicializar último volumen conocido como null
-    accumulated_distance :0
+    lastVolumen: 0, // Inicializar último volumen conocido como null
+    accumulated_distance :0,
+    initialVolume : 0,
+    volumenRecuperado : null,
+    currentTankRecuperado : null,
+    volumenTotalRecuperado : null
   }
 })
 
 export class SensorState {
-
-    accumulated_distance = 0;
 
     /* EVALUAR POR CADA SENSOR */
     //Selector Caudal 
@@ -157,6 +175,11 @@ export class SensorState {
         return sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`];
     }
 
+    @Selector()
+    static currentTank (sensorState : SensorStateModel) : number{
+        return sensorState.data[`${Sensor.CURRENT_TANK}`];
+    }
+
     
     @Selector([SensorState])
     static evaluarDispositivos(sensorState : SensorStateModel){
@@ -165,13 +188,12 @@ export class SensorState {
         let realNow = moment();
         let currentSecond = realNow.format('seconds');
         let coordenadaInicial : number;
-        let coordenadaFinal : number;
+        let coordenadaFinal : number;   
         let banderaDistancia : boolean = true;
         let volumen = sensorState.data[`${Sensor.VOLUME}`];
         sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-
-        //PARA HALLAR LA DISTANCIA
-
+                
+     //PARA HALLAR LA DISTANCIA
         if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 1.5){
             // Registra las coordenadas GPS actuales
             coordenadaInicial = sensorState.data[`${Sensor.GPS}`];
@@ -200,16 +222,18 @@ export class SensorState {
         }else{
             sensorState.volumenAcumulado = volumen + sensorState.lastVolumen;
         }
-
-        //SOLO ACUMULAR LOS VALORES MAYORES A 0 
+    
+        //SOLO ACUMULAR LOS VALORES MAYORES A 0  
         if(sensorState.volumenAcumulado > 0){
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
         
+        sensorState.data[`${Sensor.CURRENT_TANK}`] = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
+        
         //POR VERIFICAR EVALUACION O CONDICIONES 
-        if(sensorState.waterFlow && sensorState.gps){
+        if(sensorState.waterFlow && sensorState.gps && sensorState.lastProcessedSecond !== currentSecond){
              // Actualizar el último segundo procesado
-            //sensorState.lastProcessedSecond = currentSecond;
+            sensorState.lastProcessedSecond = currentSecond;
             let workDetail : WorkExecutionDetail = {
                 id_work_execution : 2,
                 data : JSON.stringify(sensorState.data),
@@ -235,7 +259,6 @@ export class SensorState {
 
         return null;
     }
-
 
         @Action(WaterFlow)
         waterflow(ctx: StateContext<SensorStateModel>, action: WaterFlow){
@@ -322,4 +345,25 @@ export class SensorState {
                 }
             });
         }
+
+        @Action(UpdateCurrentTank)
+        updateCurrentTank(ctx: StateContext<SensorStateModel>, action: UpdateCurrentTank) {
+            const state = ctx.getState();
+            const updatedData = {
+                ...state.data,
+                [Sensor.CURRENT_TANK]: action.value
+            };
+
+            if (action.initial) {
+                ctx.patchState({
+                    data: updatedData,
+                    initialVolume: action.value
+                });
+            } else {
+                ctx.patchState({
+                    data: updatedData
+                });
+            }
+        }
+
 }

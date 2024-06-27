@@ -18,9 +18,8 @@ import { LocalConf } from '../core/models/local_conf';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 import { VolumeComponent } from './control/volume/volume.component';
 import { ElectronService } from '../core/services';
-
-
-
+import { SensorState } from '../core/services/arduino/eventsSensors';
+import { Store } from '@ngxs/store';
 
 
 
@@ -87,7 +86,8 @@ export class MainComponent implements OnInit,AfterViewInit{
     private modalController: ModalController,
     public arduinoService : ArduinoService,
     public volumenCompont : VolumeComponent,
-    public electronService : ElectronService
+    public electronService : ElectronService,
+    public store : Store
     ) {
       // console.log(this.login, "main.component... constructor");
 
@@ -115,22 +115,20 @@ export class MainComponent implements OnInit,AfterViewInit{
 
   async openIfNotConnected(){
     await this.databaseService.openConnection();
-    const intervalObservable = interval(1000); // Puedes ajustar el intervalo según sea necesario
-/*     interval(1000).pipe(
-      startWith(0), // Emite un valor inicial para que comience inmediatamente
-      switchMap(() => this.arduinoService.getSensorObservable(Sensor.CURRENT_TANK))
-    ).subscribe((valorDelSensor: number) => {
-        this.electronService.log("SE EJECUTA ESTE INVERVALO");
-        this.valorTanque = valorDelSensor;  
-        console.log("VALOR INICIAL DE VOLUME" , this.valorTanque);
-        if(this.valorTanque > 0){
+    console.log("SE INICIO LA BD")
+    let currenttank$ = this.store.select(SensorState.currentTank).subscribe({
+      next : async (value) =>{
+        if(value > 0){
+          console.log("entro ala condicion");
           this.workStatus = WorkStatusChange.START;
           this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
           this.powerButtonOn = true;
           this.arduinoService.isRunning = true;
           this.someFunction();
         }
-    }); */
+      }
+    });
+    
   }
 
   async someFunction() {
@@ -141,7 +139,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     } catch (error) {
         console.error('Error fetching last water volume:', error);
     }
-}
+  }
 
   async ngAfterViewInit() {
 

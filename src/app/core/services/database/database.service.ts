@@ -1460,8 +1460,22 @@ export class DatabaseService extends ElectronService {
   async getLastWorkExecutionDetail(work: number): Promise<WorkExecutionDetail> {
     return new Promise<WorkExecutionDetail>((resolve, reject) => {
         let db = new this.sqlite.Database(this.file);
-        let sql = "SELECT * FROM work_execution_details WHERE id_work_execution = ? AND JSON_EXTRACT(data, '$.\"12\"') > 0 ORDER BY id DESC";
+        let sql = "SELECT * FROM work_execution_details ORDER BY id DESC";
         db.get(sql, [work], (err, rows: any) => {
+            if (err) {
+                process.nextTick(() => reject(err));
+            }
+            process.nextTick(() => resolve(rows));
+        });
+        db.close();
+    });
+  }
+
+  async getLastWorkExecutionDetail2():Promise<WorkExecutionDetail> {
+    return new Promise<WorkExecutionDetail>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql = "SELECT * FROM work_execution_details ORDER BY id DESC ";
+        db.get(sql, [], (err, rows: any) => {
             if (err) {
                 process.nextTick(() => reject(err));
             }

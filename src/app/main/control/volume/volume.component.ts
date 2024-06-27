@@ -64,6 +64,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   public alertaRecarga : boolean = false;
   toast: any; // Variable para almacenar el toast
   volumen$: Observable<number>;
+  currentTank$ : Observable<number>;
   volumenAcumulado$: Observable<number>;
 
   distance: number = 0;
@@ -99,6 +100,8 @@ export class VolumeComponent  implements OnInit,OnChanges {
     // this.animateWaves();
     // this.shouldBlink= true;
     this.volumen$ = this.store.select(SensorState.volumen);
+    this.currentTank$ = this.store.select(SensorState.currentTank);
+    //console.log("CURREN TANK DE LA VISTA" , this.currentTank$);
     this.volumenAcumulado$ = this.store.select(SensorState.acumuladoVolumen);
     this.leftControlActive$ = this.store.select(ValveState.leftValveActive);
     this.rightControlActive$ = this.store.select(ValveState.rightValveActive);
