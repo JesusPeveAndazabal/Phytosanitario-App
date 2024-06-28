@@ -21,7 +21,7 @@ import { Store } from '@ngxs/store';
 import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateRightValve , ActivateBothValves, DeactivateBothValves } from '../../state/valve.state';
 import { getDistance} from 'geolib';
 import isOnline from 'is-online';
-import { AcumuladoVolumen, SensorState, UpdateCurrentTank , Volumen } from './eventsSensors';
+import { AcumuladoRestaurar, AcumuladoVolumen, SensorState, SetResetApp, UpdateCurrentTank , Volumen } from './eventsSensors';
 
 //Este se comporta como el device_manager
 
@@ -160,8 +160,10 @@ export class ArduinoService {
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       }
 
-      this.configWork = JSON.parse(workExecution.configuration);
-
+      if(workExecution.configuration){
+        this.configWork = JSON.parse(workExecution.configuration);
+      }
+    
     });
 
     for(let i = 1; i <= Configuration.nDevices; i++){
@@ -180,101 +182,109 @@ export class ArduinoService {
     /* NOTIFICA AL COMPONENTE */
 
     if(this.isServiceRestarting){
-      console.log("SE REINICIO EL APP" , this.databaseService.getLastWorkExecutionDetail2());
+    
       this.databaseService.getLastWorkExecutionDetail2().then((WorkExecutionDetail : WorkExecutionDetail) => {
-        
+       
         if(WorkExecutionDetail){
+          this.store.dispatch(new SetResetApp (true));
+          console.log("ENTRO A ESTA CONDICION DEL REINICIO", WorkExecutionDetail.data);
           let dataValues = JSON.parse(WorkExecutionDetail.data);
           this.volumenRecuperado = dataValues[`${Sensor.VOLUME}`];
-          this.currentTankRecuperado = dataValues[`${Sensor.CURRENT_TANK}`];
           this.volumenTotalRecuperado = dataValues[`${Sensor.ACCUMULATED_CONSUMO}`];
+          this.currentTankRecuperado = dataValues[`${Sensor.CURRENT_TANK}`];
+
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenRecuperado);
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.currentTankRecuperado);
+          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenTotalRecuperado);
 
           //Actualiza el estado del volumen
           this.store.dispatch(new Volumen ({ [`${Sensor.VOLUME}`]: this.volumenRecuperado }));
           // Actualiza el estado del volumen acumulado
-          this.store.dispatch(new AcumuladoVolumen({ [`${Sensor.ACCUMULATED_CONSUMO}`]: this.volumenTotalRecuperado }));
+          this.store.dispatch(new AcumuladoRestaurar({ [`${Sensor.ACCUMULATED_RESTAURAR}`]: this.volumenTotalRecuperado }));
           // Actualiza el estado con los valores restaurados
           this.store.dispatch(new UpdateCurrentTank(this.currentTankRecuperado, true));
-
+          
           this.regulatePressureWithBars(this.configWork.pressure);
           console.log("REGULR PRESION GUARDAD" , this.configWork.pressure);
-        
-          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenRecuperado);
-          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.currentTankRecuperado);
-          console.log("EJECUCUON DE TRABAJO - VOLUMEN" , this.volumenTotalRecuperado);
+          this.store.dispatch(new SetResetApp (false));
         }
-      })
+      });
+      this.isServiceRestarting = false
     }
   
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
       next: async (value) =>{
 
-          let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
 
-          // Evaluar los eventos
-          let events: string[] = [];
-          let has_events = false;
+          if(value && value.data){
+            let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
 
-          let data = JSON.parse(value.data);
-
-          //Para compara los eventos
-          this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
-          this.info = JSON.parse(currentWork.configuration).pressure;
-          this.speedalert = JSON.parse(currentWork.configuration).speed;
-
-
-          //EVENTO DE CAUDAL
-          if (data[Sensor.WATER_FLOW] > this.caudalNominal * 0.90 && data[Sensor.WATER_FLOW] < this.caudalNominal * 1.1) {
-            // Caudal Verde
-            }else if ((data[Sensor.WATER_FLOW] > this.caudalNominal * 0.50 && data[Sensor.WATER_FLOW] < this.caudalNominal * 0.9) ||
-              (data[Sensor.WATER_FLOW] < this.caudalNominal * 1.5 && data[Sensor.WATER_FLOW] > this.caudalNominal * 1.1)) {
-              has_events = true;
-              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
-            } else {
-              has_events = true;
-              events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+            // Evaluar los eventos
+            let events: string[] = [];
+            let has_events = false;
+            
+            let data = JSON.parse(value.data);
+            
+            //Para compara los eventos
+            this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
+            this.info = JSON.parse(currentWork.configuration).pressure;
+            this.speedalert = JSON.parse(currentWork.configuration).speed;
+  
+  
+            //EVENTO DE CAUDAL
+            if (data[Sensor.WATER_FLOW] > this.caudalNominal * 0.90 && data[Sensor.WATER_FLOW] < this.caudalNominal * 1.1) {
+              // Caudal Verde
+              }else if ((data[Sensor.WATER_FLOW] > this.caudalNominal * 0.50 && data[Sensor.WATER_FLOW] < this.caudalNominal * 0.9) ||
+                (data[Sensor.WATER_FLOW] < this.caudalNominal * 1.5 && data[Sensor.WATER_FLOW] > this.caudalNominal * 1.1)) {
+                has_events = true;
+                events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+              } else {
+                has_events = true;
+                events.push("EL CAUDAL ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
+  
+            //EVENTO DE PRESION
+            if (data[Sensor.PRESSURE] > this.info * 0.90 && data[Sensor.PRESSURE] < this.info * 1.1) {
+              } else if ((data[Sensor.PRESSURE] > this.info * 0.50 && data[Sensor.PRESSURE] < this.info * 0.9) ||
+                (data[Sensor.PRESSURE] < this.info * 1.5 && data[Sensor.PRESSURE] > this.info * 1.1)) {
+                has_events = true;
+                events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+              } else {
+                has_events = true;
+                events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
+  
+            //EVENTO DE VELOCIDAD
+            if (data[Sensor.SPEED] > this.speedalert * 0.90 && data[Sensor.SPEED] < this.speedalert * 1.1) {
+              // Velocidad Verde
+              } else if ((data[Sensor.SPEED] > this.speedalert * 0.50 && data[Sensor.SPEED] < this.speedalert * 0.9) ||
+                (data[Sensor.SPEED] < this.speedalert * 1.5 && data[Sensor.SPEED] > this.speedalert * 1.1)) {
+                has_events = true;
+                events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+              } else {
+                has_events = true;
+                events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
+            }
+  
+            //EVENTOS DE CAUDAL - VELOCIDAD Y PRESION
+            if ((data[Sensor.PRESSURE] < this.info * 0.50 || data[Sensor.PRESSURE] > this.info * 1.5) ||
+                (data[Sensor.WATER_FLOW] < this.caudalNominal * 0.50 || data[Sensor.WATER_FLOW] > this.caudalNominal * 1.5) ||
+                (data[Sensor.SPEED] < this.speedalert * 0.50 || data[Sensor.SPEED] > this.speedalert * 1.5)) {
+                has_events = true;
+                events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
+            }
+  
+            /* Evaulu */
+            value.id_work_execution = currentWork.id;
+            value.has_events = has_events;
+            value.events = events.join(", ");
+            value.time = value.time.startOf('seconds');
+            
+            if(currentWork && this.isRunning){
+              await this.databaseService.saveWorkExecutionDataDetail(value);
+            } 
           }
-
-          //EVENTO DE PRESION
-          if (data[Sensor.PRESSURE] > this.info * 0.90 && data[Sensor.PRESSURE] < this.info * 1.1) {
-            } else if ((data[Sensor.PRESSURE] > this.info * 0.50 && data[Sensor.PRESSURE] < this.info * 0.9) ||
-              (data[Sensor.PRESSURE] < this.info * 1.5 && data[Sensor.PRESSURE] > this.info * 1.1)) {
-              has_events = true;
-              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
-            } else {
-              has_events = true;
-              events.push("LA PRESION ESTA FUERA DEL RANGO ESTABLECIDO");
-          }
-
-          //EVENTO DE VELOCIDAD
-          if (data[Sensor.SPEED] > this.speedalert * 0.90 && data[Sensor.SPEED] < this.speedalert * 1.1) {
-            // Velocidad Verde
-            } else if ((data[Sensor.SPEED] > this.speedalert * 0.50 && data[Sensor.SPEED] < this.speedalert * 0.9) ||
-              (data[Sensor.SPEED] < this.speedalert * 1.5 && data[Sensor.SPEED] > this.speedalert * 1.1)) {
-              has_events = true;
-              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
-            } else {
-              has_events = true;
-              events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
-          }
-
-          //EVENTOS DE CAUDAL - VELOCIDAD Y PRESION
-          if ((data[Sensor.PRESSURE] < this.info * 0.50 || data[Sensor.PRESSURE] > this.info * 1.5) ||
-              (data[Sensor.WATER_FLOW] < this.caudalNominal * 0.50 || data[Sensor.WATER_FLOW] > this.caudalNominal * 1.5) ||
-              (data[Sensor.SPEED] < this.speedalert * 0.50 || data[Sensor.SPEED] > this.speedalert * 1.5)) {
-              has_events = true;
-              events.push("AL MENOS UN SENSOR FUERA DEL RANGO DEL 50%");
-          }
-
-          /* Evaulu */
-          value.id_work_execution = currentWork.id;
-          value.has_events = has_events;
-          value.events = events.join(", ");
-          value.time = value.time.startOf('seconds');
           
-          if(currentWork && this.isRunning){
-            await this.databaseService.saveWorkExecutionDataDetail(value);
-          } 
       },
 
     });

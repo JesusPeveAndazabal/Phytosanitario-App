@@ -54,6 +54,17 @@ export class AcumuladoVolumen {
     constructor(public value: {}) {}
 }
 
+export class AcumuladoRestaurar {
+    static readonly type = '[Sensor] acumuladoRestaurar';
+    constructor(public value: {}) {}
+}
+
+export class SetResetApp {
+    static readonly type = '[Sensor] SetResetApp';
+    constructor(public value: boolean) {}
+}
+
+
 export interface SensorStateModel {
     data : {
         1 : number,
@@ -65,7 +76,8 @@ export interface SensorStateModel {
         19 : number,
         20 : number,
         21 : number,
-        23 : number
+        23 : number,
+        24 : number
     },
     waterFlow : boolean;
     volumen : boolean;
@@ -79,9 +91,10 @@ export interface SensorStateModel {
     lastVolumen: number | null; // Último volumen conocido
     accumulated_distance : number,
     initialVolume : number,
-    volumenRecuperado : number | null,
+    volumenRecuperado : number,
     currentTankRecuperado : number | null,
-    volumenTotalRecuperado : number | null
+    volumenTotalRecuperado : number | null,
+    resetApp : boolean,
 }
 
 @State<SensorStateModel>({
@@ -97,7 +110,8 @@ export interface SensorStateModel {
         19 : 0,
         20 : 0,
         21 : 0,
-        23 : 0
+        23 : 0,
+        24 : 0
     },
     waterFlow : false,
     volumen : false,
@@ -111,9 +125,10 @@ export interface SensorStateModel {
     lastVolumen: 0, // Inicializar último volumen conocido como null
     accumulated_distance :0,
     initialVolume : 0,
-    volumenRecuperado : null,
+    volumenRecuperado : 0,
     currentTankRecuperado : null,
-    volumenTotalRecuperado : null
+    volumenTotalRecuperado : null,
+    resetApp : false
   }
 })
 
@@ -131,13 +146,14 @@ export class SensorState {
     @Selector()
     static volumen (sensorState : SensorStateModel) : number
     {   
+        console.log("VOLUMEN" , sensorState.data[`${Sensor.VOLUME}`]);
         return sensorState.data[`${Sensor.VOLUME}`];
     }
 
     @Selector()
     static acumuladoVolumen (sensorState : SensorStateModel):number
-    {
-        return sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`]
+    {          
+            return sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`];
     }
 
     //Selector Pressure
@@ -180,6 +196,11 @@ export class SensorState {
         return sensorState.data[`${Sensor.CURRENT_TANK}`];
     }
 
+    @Selector()
+    static restaurarVolumen (sensorState : SensorStateModel) : number{
+        return sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
+    }
+
     
     @Selector([SensorState])
     static evaluarDispositivos(sensorState : SensorStateModel){
@@ -190,10 +211,11 @@ export class SensorState {
         let coordenadaInicial : number;
         let coordenadaFinal : number;   
         let banderaDistancia : boolean = true;
-        let volumen = sensorState.data[`${Sensor.VOLUME}`];
+        let volumen = sensorState.data[`${Sensor.VOLUME}`] + sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
+        //let restaurarVolumen = sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
         sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
                 
-     //PARA HALLAR LA DISTANCIA
+        //PARA HALLAR LA DISTANCIA
         if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 1.5){
             // Registra las coordenadas GPS actuales
             coordenadaInicial = sensorState.data[`${Sensor.GPS}`];
@@ -215,11 +237,16 @@ export class SensorState {
         }
         
         sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
+        console.log("reset app" , sensorState.resetApp);
 
         //HALLAR EL VOLUMEN TOTAL
+        console.log("VOLUMEN", volumen);
         if(volumen <= 1){
             sensorState.lastVolumen = sensorState.volumenAcumulado;
-        }else{
+            console.log("VOLUMEN ACUMULADO", sensorState.lastVolumen);
+        }else if (volumen > 1){
+            console.log("VOLUMEN ELSE" , volumen);
+            console.log("VOLUMEN LAS VOLUMEN" , sensorState.lastVolumen);
             sensorState.volumenAcumulado = volumen + sensorState.lastVolumen;
         }
     
@@ -228,10 +255,11 @@ export class SensorState {
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
         
-        sensorState.data[`${Sensor.CURRENT_TANK}`] = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
+        let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`]
+        sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
         
         //POR VERIFICAR EVALUACION O CONDICIONES 
-        if(sensorState.waterFlow && sensorState.gps && sensorState.lastProcessedSecond !== currentSecond){
+        if(sensorState.waterFlow && sensorState.lastProcessedSecond !== currentSecond){
              // Actualizar el último segundo procesado
             sensorState.lastProcessedSecond = currentSecond;
             let workDetail : WorkExecutionDetail = {
@@ -254,6 +282,7 @@ export class SensorState {
             sensorState.rightValve = false;
             sensorState.gps = false;
             sensorState.speed = false;
+            sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`] = 0;
             return workDetail;
         }
 
@@ -284,6 +313,28 @@ export class SensorState {
                     ...action.value
                 }
             });
+        }
+
+        @Action(AcumuladoVolumen)
+        volumenAcumulado(ctx: StateContext<SensorStateModel>, action: AcumuladoVolumen) {
+          const state = ctx.getState();
+          ctx.patchState({
+            data: {
+              ...state.data,
+              [Sensor.ACCUMULATED_CONSUMO]: action.value[Sensor.ACCUMULATED_CONSUMO]
+            }
+          });
+        }
+
+        @Action(AcumuladoRestaurar)
+        restaurarVolumen(ctx: StateContext<SensorStateModel>, action: AcumuladoRestaurar) {
+          const state = ctx.getState();
+          ctx.patchState({
+            data: {
+              ...state.data,
+              [Sensor.ACCUMULATED_RESTAURAR]: action.value[Sensor.ACCUMULATED_RESTAURAR]
+            }
+          });
         }
 
         @Action(Pressure)
@@ -364,6 +415,13 @@ export class SensorState {
                     data: updatedData
                 });
             }
+        }
+
+        @Action(SetResetApp)
+        setResetApp(ctx: StateContext<SensorStateModel>, action: SetResetApp) {
+            ctx.patchState({
+                resetApp: action.value
+            });
         }
 
 }
