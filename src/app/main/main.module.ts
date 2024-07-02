@@ -14,9 +14,10 @@ import { MainRoutingModule } from './main-routing.module';
 import { MainComponent } from './main.component';
 import { KeyboardModule } from '../custom-components/keyboard/keyboard.module';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
+import { ConfigNetComponent } from './config-net/config-net.component';
 
 @NgModule({
-  declarations: [MainComponent, ModalInicioAppComponent],
+  declarations: [MainComponent, ModalInicioAppComponent, ConfigNetComponent],
   providers:[],
   imports: [
     IonicModule,
