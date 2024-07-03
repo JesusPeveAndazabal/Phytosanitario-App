@@ -45,6 +45,7 @@ export class ArduinoDevice {
     private store: Store,
   ) {
       this.connectToDevice(path, baudrate,autoOpen);
+      this.sendCommand('RECONFIGURE');
       /* this.setupSensorSubjects(); */
   }
 
@@ -94,8 +95,6 @@ export class ArduinoDevice {
             instance.mode = parseInt(messageBuffer[1]);
             //console.log("MODO" , instance.mode);
             instance.sensors = messageBuffer[2].split(',').map((x: string) => parseInt(x, 10));
- 
-
             //console.log("SENSIRES" , instance.sensors);
             instance.port.write(Buffer.from('OK\n', 'utf-8'));
             instance.isRunning = true;
@@ -104,7 +103,7 @@ export class ArduinoDevice {
             instance.listenToDevice(parser);
             clearInterval(instance.messageInterval);
             //console.log("MENSAJE" , instance.messageInterval);
-          }else if(messageBuffer[0] >= '0'){
+          }/* else if(messageBuffer[0] >= '0'){
             instance.mode = 1;
             //console.log("MODO DE CAUDAL" , instance.mode);
             instance.sensors = [5,2];
@@ -116,7 +115,7 @@ export class ArduinoDevice {
             instance.listenToDevice(parser);
             clearInterval(instance.messageInterval);
             //console.log("MENSAJE DE CAUDAL" , instance.messageInterval);
-          }
+          } */
 
         }else if(instance.manualSetting){
           instance.isRunning = true;
@@ -132,7 +131,7 @@ export class ArduinoDevice {
       //console.log(data);
       const values = data.trim().split('|');
       // Assuming values represent sensor readings
-      //console.log(values);
+      this.electronService.log("VALORES DE VALUES " , values);
 
       
       values.forEach((value : string, index : number) => {
@@ -149,38 +148,50 @@ export class ArduinoDevice {
         else{
           switch (sensorId){
             case Sensor.WATER_FLOW:
-              let valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${value}}`);
-              this.electronService.log("CAUDAL" , valSensorFlow);
-              this.store.dispatch(new WaterFlow(valSensorFlow));
+              const flowValue = parseFloat(value);
+              if (!isNaN(flowValue)) {
+                let valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${flowValue}}`);
+                //this.electronService.log("CAUDAL", valSensorFlow);
+                this.store.dispatch(new WaterFlow(valSensorFlow));
+              } else {
+                this.port.write(Buffer.from('OK\n', 'utf-8'));
+                //this.electronService.log("ERROR", `Invalid value for WATER_FLOW: ${value}`);
+              }
               break;
             
-            case Sensor.VOLUME:
-              let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${value}}`);
-              this.electronService.log("VOLUMEN" , valSensorVolume);
-              this.store.dispatch(new Volumen(valSensorVolume));
-              break;
+              case Sensor.VOLUME:
+                const volumeValue = parseFloat(value);
+                if (!isNaN(volumeValue)) {
+                  let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${volumeValue}}`);
+                  //this.electronService.log("VOLUMEN", valSensorVolume);
+                  this.store.dispatch(new Volumen(valSensorVolume));
+                } else {
+                  this.port.write(Buffer.from('OK\n', 'utf-8'));
+                  //this.electronService.log("ERROR", `Invalid value for VOLUME: ${value}`);
+                }
+                break;
                 
             case Sensor.PRESSURE:
               let valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${value}}`);
-              this.electronService.log("PRESSURE" , valSensorPressure);
+              //this.electronService.log("PRESSURE" , valSensorPressure);
               this.store.dispatch(new Pressure(valSensorPressure));
               break;
 
             case Sensor.VALVE_RIGHT:
               let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
-              this.electronService.log("valSensorValveRight" , valSensorValveRight);
+              //this.electronService.log("valSensorValveRight" , valSensorValveRight);
               this.store.dispatch(new RightValve(valSensorValveRight));
               break;
 
             case Sensor.VALVE_LEFT:
               let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
-              this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
+              //this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
               this.store.dispatch(new LeftValve(valSensorValveLeft));
               break;
               
             case Sensor.SPEED:
               let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${value}}`);
-              this.electronService.log("valSensorSpeed" , valSensorSpeed);
+              //this.electronService.log("valSensorSpeed" , valSensorSpeed);
               this.store.dispatch(new Speed(valSensorSpeed));
               break;
           }

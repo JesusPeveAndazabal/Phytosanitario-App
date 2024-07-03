@@ -13,6 +13,7 @@ import { KeyboardComponent } from '../../../custom-components/keyboard/keyboard.
 
 import Swal from 'sweetalert2';
 import { ArduinoService } from '../../../core/services/arduino/arduino.service';
+import { Router } from '@angular/router';
 //import { SettingsComponent } from '../settings.component';
 // import { DialogService } from 'primeng/dynamicdialog';
 
@@ -70,7 +71,7 @@ export class ApplicationValuesComponent  implements OnInit {
   private invalid_rows = 0;
 
   constructor(private modalCtrl: ModalController, private dbService : DatabaseService,
-    private arduinoService:ArduinoService , private alertController : AlertController,private fb:FormBuilder) {
+    private arduinoService:ArduinoService , private alertController : AlertController,private fb:FormBuilder ,private router : Router) {
       this.formData = this.fb.group({
         volume: [0,[Validators.required,]],
         speed: ['',[Validators.required,Validators.min(0.01)]],
@@ -229,7 +230,10 @@ export class ApplicationValuesComponent  implements OnInit {
         await this.dbService.saveWorkExecutionData(wExecution)
         .then(async ()=>{
           config.lastWorkExecution = wExecution;
+          //Regresar al main
+          this.router.navigateByUrl('/main');
           return this.modalCtrl.dismiss(null, 'confirm','application-values-modal');
+          
 
         })
         .catch((error)=>{
@@ -242,6 +246,8 @@ export class ApplicationValuesComponent  implements OnInit {
         await this.dbService.updateWorkExecutionData(wExecution)
         .then(async()=>{
           config.lastWorkExecution = wExecution;
+          //Regresar al main  
+          this.router.navigateByUrl('/main');
           //this.arduinoService.regulatePressureWithBars(this.settingsComponent.info);
           return this.modalCtrl.dismiss(null, 'confirm','application-values-modal');
 

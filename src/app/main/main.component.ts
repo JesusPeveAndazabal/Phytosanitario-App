@@ -18,7 +18,7 @@ import { LocalConf } from '../core/models/local_conf';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 import { VolumeComponent } from './control/volume/volume.component';
 import { ElectronService } from '../core/services';
-import { SensorState } from '../core/services/arduino/eventsSensors';
+import { AcumuladoRestaurar, SensorState } from '../core/services/arduino/eventsSensors';
 import { Store } from '@ngxs/store';
 
 
@@ -289,6 +289,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
             this.arduinoService.resetVolumenInit();
+           
             //this.volumenCompont.apagarValvulas();
             // Tu lógica para guardar el volumen y realizar acciones con él
             //console.log("Volumen capturado:", volume);

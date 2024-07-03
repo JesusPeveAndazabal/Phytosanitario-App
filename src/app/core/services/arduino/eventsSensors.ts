@@ -64,6 +64,16 @@ export class SetResetApp {
     constructor(public value: boolean) {}
 }
 
+export class restaurarDistancia {
+    static readonly type = '[Sensor] restaurarDistancia';
+    constructor(public value: {}) {}
+}
+
+export class volumenRecuperado {
+    static readonly type = '[Sensor] volumenRecuperado';
+    constructor (public value: {}) {}
+}
+
 
 export interface SensorStateModel {
     data : {
@@ -72,12 +82,15 @@ export interface SensorStateModel {
         3 : number,
         4 : number,
         5 : number,
-        13 : number,
-        19 : number,
-        20 : number,
-        21 : number,
-        23 : number,
-        24 : number
+        12 : number, //este sera el consumo por tanque
+        13 : number, //distancia por linea / GETDISTANCE
+        15 : number, // Distancia recuperada
+        19 : number, // Cantidad del tanque - resta
+        20 : number, // valvula izquierda
+        21 : number, // valvula derecga
+        23 : number, // consumo total acumulado
+        24 : number, // resturacion del consumo acumulado
+        25 : number, // volumen recuperado para el consumo por tanque
     },
     waterFlow : boolean;
     volumen : boolean;
@@ -95,6 +108,7 @@ export interface SensorStateModel {
     currentTankRecuperado : number | null,
     volumenTotalRecuperado : number | null,
     resetApp : boolean,
+    banderaDistancia : boolean,
 }
 
 @State<SensorStateModel>({
@@ -106,12 +120,15 @@ export interface SensorStateModel {
         3 : 0,
         4 : 0,
         5 : 0,
+        12 : 0,
         13: 0,
+        15 : 0,
         19 : 0,
         20 : 0,
         21 : 0,
         23 : 0,
-        24 : 0
+        24 : 0,
+        25: 0
     },
     waterFlow : false,
     volumen : false,
@@ -120,15 +137,16 @@ export interface SensorStateModel {
     rightValve : false,
     gps : false,
     speed : false,
-    lastProcessedSecond: '', // Inicializar con una cadena vacía
-    volumenAcumulado: 0, // Inicializar volumen acumulado
-    lastVolumen: 0, // Inicializar último volumen conocido como null
+    lastProcessedSecond: '', 
+    volumenAcumulado: 0,
+    lastVolumen: 0, 
     accumulated_distance :0,
     initialVolume : 0,
     volumenRecuperado : 0,
     currentTankRecuperado : null,
     volumenTotalRecuperado : null,
-    resetApp : false
+    resetApp : false,
+    banderaDistancia : true
   }
 })
 
@@ -146,14 +164,13 @@ export class SensorState {
     @Selector()
     static volumen (sensorState : SensorStateModel) : number
     {   
-        console.log("VOLUMEN" , sensorState.data[`${Sensor.VOLUME}`]);
-        return sensorState.data[`${Sensor.VOLUME}`];
+        return sensorState.data[`${Sensor.VOLUME}`] ;
     }
 
     @Selector()
     static acumuladoVolumen (sensorState : SensorStateModel):number
     {          
-            return sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`];
+        return sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`];
     }
 
     //Selector Pressure
@@ -192,6 +209,11 @@ export class SensorState {
     }
 
     @Selector()
+    static distanciaRecuperada (sensorState : SensorStateModel) : number{
+        return sensorState.data[`${Sensor.ACCUMULATED_DISTANCE}`];
+    }
+
+    @Selector()
     static currentTank (sensorState : SensorStateModel) : number{
         return sensorState.data[`${Sensor.CURRENT_TANK}`];
     }
@@ -199,6 +221,16 @@ export class SensorState {
     @Selector()
     static restaurarVolumen (sensorState : SensorStateModel) : number{
         return sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
+    }
+
+    @Selector()
+    static volumenRecuperado (sensorState : SensorStateModel) : number{
+        return sensorState.data[`${Sensor.VOLUMEN_RECUPERADO}`];
+    }
+
+    @Selector()
+    static volumenTanque (sensorState : SensorStateModel) : number{
+        return sensorState.data[`${Sensor.ACCUMULATED_VOLUME}`];
     }
 
     
@@ -209,18 +241,20 @@ export class SensorState {
         let realNow = moment();
         let currentSecond = realNow.format('seconds');
         let coordenadaInicial : number;
-        let coordenadaFinal : number;   
-        let banderaDistancia : boolean = true;
+        let coordenadaFinal : number;
         let volumen = sensorState.data[`${Sensor.VOLUME}`] + sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
-        //let restaurarVolumen = sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
-        sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-                
+
+        //Variable para el consumo por tanque + el recuperado si se reinicia el aplucativo
+        let volumeTanque =  sensorState.data[`${Sensor.VOLUMEN_RECUPERADO}`] + sensorState.data[`${Sensor.VOLUME}`];
+
+        sensorState.data[`${Sensor.ACCUMULATED_VOLUME}`] = volumeTanque;
+            
         //PARA HALLAR LA DISTANCIA
-        if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 0 && sensorState.data[`${Sensor.SPEED}`] > 1.5){
+        if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.banderaDistancia &&  sensorState.data[`${Sensor.SPEED}`] > 0 && sensorState.data[`${Sensor.PRESSURE}`] > 1.5){
             // Registra las coordenadas GPS actuales
             coordenadaInicial = sensorState.data[`${Sensor.GPS}`];
-            banderaDistancia = false;
-        }else if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && sensorState.data[`${Sensor.PRESSURE}`] <= 1.5 && !banderaDistancia && sensorState.data[`${Sensor.SPEED}`] > 0){
+            sensorState.banderaDistancia = false;
+        }else if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && !sensorState.banderaDistancia && sensorState.data[`${Sensor.PRESSURE}`] <= 1.5 && sensorState.data[`${Sensor.SPEED}`] > 0){
 
             // Registra las coordenadas finales 
             coordenadaFinal = sensorState.data[`${Sensor.GPS}`];
@@ -231,22 +265,16 @@ export class SensorState {
             );
 
             //Se acumulara la distancia en caso hay recorrido productivo
-            sensorState.accumulated_distance += distanciaRecorridaMetros;
-            sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-            banderaDistancia = true;
+            sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] += parseFloat(distanciaRecorridaMetros.toFixed(2));
+            sensorState.banderaDistancia = true;
         }
         
-        sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.accumulated_distance;
-        console.log("reset app" , sensorState.resetApp);
+        sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] = sensorState.data[`${Sensor.ACCUMULATED_HECTARE}`] + sensorState.data[`${Sensor.ACCUMULATED_DISTANCE}`] 
 
         //HALLAR EL VOLUMEN TOTAL
-        console.log("VOLUMEN", volumen);
         if(volumen <= 1){
             sensorState.lastVolumen = sensorState.volumenAcumulado;
-            console.log("VOLUMEN ACUMULADO", sensorState.lastVolumen);
         }else if (volumen > 1){
-            console.log("VOLUMEN ELSE" , volumen);
-            console.log("VOLUMEN LAS VOLUMEN" , sensorState.lastVolumen);
             sensorState.volumenAcumulado = volumen + sensorState.lastVolumen;
         }
     
@@ -255,10 +283,10 @@ export class SensorState {
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
         
-        let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`]
+        let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
         sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
-        
-        //POR VERIFICAR EVALUACION O CONDICIONES 
+
+        //POR VERIFICAR EVALUACION O CONDICIONES - IDENTIFICAR LOS 3 SENSORES PARA QUE SE PUEDA GUARDAR EN LA BD
         if(sensorState.waterFlow && sensorState.lastProcessedSecond !== currentSecond){
              // Actualizar el último segundo procesado
             sensorState.lastProcessedSecond = currentSecond;
@@ -283,6 +311,8 @@ export class SensorState {
             sensorState.gps = false;
             sensorState.speed = false;
             sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`] = 0;
+            sensorState.data[`${Sensor.ACCUMULATED_DISTANCE}`] = 0;
+            //sensorState.data[`${Sensor.VOLUMEN_RECUPERADO}`] = 0;
             return workDetail;
         }
 
@@ -333,6 +363,28 @@ export class SensorState {
             data: {
               ...state.data,
               [Sensor.ACCUMULATED_RESTAURAR]: action.value[Sensor.ACCUMULATED_RESTAURAR]
+            }
+          });
+        }
+
+        @Action(volumenRecuperado)
+        volumenRecuperado(ctx: StateContext<SensorStateModel>, action: volumenRecuperado){
+            const state = ctx.getState();
+            ctx.patchState({
+                data : {
+                    ...state.data,
+                    [Sensor.VOLUMEN_RECUPERADO] : action.value[Sensor.VOLUMEN_RECUPERADO]
+                }
+            });
+        }
+
+        @Action(restaurarDistancia)
+        restaurarDistancia(ctx: StateContext<SensorStateModel>, action: restaurarDistancia) {
+          const state = ctx.getState();
+          ctx.patchState({
+            data: {
+              ...state.data,
+              [Sensor.ACCUMULATED_DISTANCE]: action.value[Sensor.ACCUMULATED_DISTANCE]
             }
           });
         }

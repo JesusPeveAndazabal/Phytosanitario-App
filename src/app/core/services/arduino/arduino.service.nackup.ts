@@ -331,8 +331,6 @@ export class ArduinoService {
             instance.data[Sensor.VALVE_RIGHT] = instance.valvulaDerecha;
             instance.data[Sensor.VALVE_LEFT] = instance.valvulaIzquierda;
           }
-  
-
         }, 1000);
 
       }

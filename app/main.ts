@@ -5,12 +5,17 @@ import * as url from 'url';
 import * as logger from 'electron-log';
 import * as unhandled from 'electron-unhandled';
 import * as electronInputMenu from 'electron-input-menu';
+/* import * as wifi from 'node-wifi'; */
 
 let win: BrowserWindow = null;
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
 
-
+/* // Inicializaciï¿½n de wifi
+wifi.init({
+  iface: null // Usa la interfaz por defecto (generalmente wlan0 en Pi)
+});
+ */
 
 function createWindow(): BrowserWindow {
   setupLogger();
@@ -52,6 +57,30 @@ function createWindow(): BrowserWindow {
       // Path when running electron in local folder
      pathIndex = '../dist/index.html';
    }
+
+   
+/*   // Escuchar solicitud de escaneo de redes WiFi
+  ipcMain.handle('scan-wifi', async (event, args) => {
+    try {
+      let networks = await wifi.scan();
+      return networks;
+    } catch (error) {
+      console.error('Error al escanear redes WiFi:', error);
+      return [];
+    }
+  });
+
+  // Manejar solicitud de conexiï¿½n a una red WiFi especï¿½fica
+  ipcMain.handle('connect-wifi', async (event, args) => {
+    const { ssid, password } = args;
+    try {
+      await wifi.connect({ ssid, password });
+      return { success: true };
+    } catch (error) {
+      console.error(`Error al conectar a la red WiFi ${ssid}:`, error);
+      return { success: false, error };
+    }
+  }); */
 
     win.loadURL(url.format({
       pathname: path.join(__dirname, pathIndex),
