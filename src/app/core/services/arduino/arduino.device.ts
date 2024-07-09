@@ -147,6 +147,7 @@ export class ArduinoDevice {
         }
         else{
           switch (sensorId){
+            
             case Sensor.WATER_FLOW:
               const flowValue = parseFloat(value);
               if (!isNaN(flowValue)) {
@@ -159,7 +160,7 @@ export class ArduinoDevice {
               }
               break;
             
-              case Sensor.VOLUME:
+            case Sensor.VOLUME:
                 const volumeValue = parseFloat(value);
                 if (!isNaN(volumeValue)) {
                   let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${volumeValue}}`);
@@ -196,6 +197,7 @@ export class ArduinoDevice {
               break;
           }
         }
+
         numericValue = parseFloat(value);
 
         //Sensor type = 2/5

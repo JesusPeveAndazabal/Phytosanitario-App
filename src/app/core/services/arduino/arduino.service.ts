@@ -4,7 +4,7 @@ import { SerialPort} from 'serialport';
 import { ReadlineParser } from '@serialport/parser-readline'
 import { ElectronService } from '../electron/electron.service';
 import { ArduinoDevice } from './arduino.device';
-import { Subject, Observable, PartialObserver, Observer } from 'rxjs';
+import { Subject, Observable, PartialObserver, Observer, windowWhen, windowCount, windowTime } from 'rxjs';
 import { Sensor, SocketEvent, WorkStatusChange } from '../../utils/global';
 import { DatabaseService  } from '../database/database.service';
 import { Chronos } from '../../utils/utils';
@@ -22,6 +22,8 @@ import { ActivateLeftValve, DeactivateLeftValve, ActivateRightValve, DeactivateR
 import { getDistance} from 'geolib';
 import isOnline from 'is-online';
 import { AcumuladoRestaurar, AcumuladoVolumen, SensorState, SetResetApp, UpdateCurrentTank , Volumen, restaurarDistancia, volumenRecuperado } from './eventsSensors';
+import { WindowMaximizeIcon } from 'primeng/icons/windowmaximize';
+import { waitForAsync } from '@angular/core/testing';
 
 //Este se comporta como el device_manager
 
@@ -236,8 +238,7 @@ export class ArduinoService {
                   this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
                   this.info = JSON.parse(currentWork.configuration).pressure;
                   this.speedalert = JSON.parse(currentWork.configuration).speed;
-
-    
+                  
                   if( data[Sensor.WATER_FLOW] > 0){
                     this.tiempoProductivo.start();
                     this.tiempoImproductivo.stop();
@@ -285,7 +286,7 @@ export class ArduinoService {
                     has_events = true;
                     events.push("LA VELOCIDAD ESTA FUERA DEL RANGO ESTABLECIDO");
                 }
-      
+                
                 //EVENTOS DE CAUDAL - VELOCIDAD Y PRESION
                 if ((data[Sensor.PRESSURE] < this.info * 0.50 || data[Sensor.PRESSURE] > this.info * 1.5) ||
                     (data[Sensor.WATER_FLOW] < this.caudalNominal * 0.50 || data[Sensor.WATER_FLOW] > this.caudalNominal * 1.5) ||
@@ -354,7 +355,7 @@ export class ArduinoService {
 
 
     this.electronService.log("Comando Regulador" , `${regulatorId}|${barPressure}`);
-
+    
   }
 
   //Metodo para resetear el volumen inicial y minimo
@@ -362,7 +363,7 @@ export class ArduinoService {
   public resetVolumenInit(): void {
     const command = 'B';
     this.findBySensor(Sensor.WATER_FLOW).sendCommand(command);
-
+    
     //envia 0 al volumen recuperado para reiniciarlo
     this.store.dispatch(new volumenRecuperado({ [`${Sensor.VOLUMEN_RECUPERADO}`]: 0 }));
   }

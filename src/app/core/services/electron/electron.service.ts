@@ -15,6 +15,7 @@ import * as logger from 'electron-log';
   providedIn: 'root'
 })
 export class ElectronService {
+
   ipcRenderer: typeof ipcRenderer;
   webFrame: typeof webFrame;
   childProcess: typeof childProcess;
@@ -98,4 +99,5 @@ export class ElectronService {
     this.logger.log(params);
     console.log(params);
   }
+
 }

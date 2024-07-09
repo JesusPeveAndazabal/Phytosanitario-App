@@ -235,7 +235,8 @@ export class SensorState {
 
     
     @Selector([SensorState])
-    static evaluarDispositivos(sensorState : SensorStateModel){
+    static evaluarDispositivos(sensorState : SensorStateModel)
+    {
 
         //Retornar Valor de WorkExecutionDetail
         let realNow = moment();
@@ -254,7 +255,7 @@ export class SensorState {
             // Registra las coordenadas GPS actuales
             coordenadaInicial = sensorState.data[`${Sensor.GPS}`];
             sensorState.banderaDistancia = false;
-        }else if(sensorState.data[`${Sensor.WATER_FLOW}`] > 0 && !sensorState.banderaDistancia && sensorState.data[`${Sensor.PRESSURE}`] <= 1.5 && sensorState.data[`${Sensor.SPEED}`] > 0){
+        }else if(sensorState.data[`${Sensor.WATER_FLOW}`] >= 0 && !sensorState.banderaDistancia && sensorState.data[`${Sensor.PRESSURE}`] <= 1.5 && sensorState.data[`${Sensor.SPEED}`] > 0){
 
             // Registra las coordenadas finales 
             coordenadaFinal = sensorState.data[`${Sensor.GPS}`];
@@ -282,14 +283,16 @@ export class SensorState {
         if(sensorState.volumenAcumulado > 0){
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
-        
+            
         let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
         sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
 
         //POR VERIFICAR EVALUACION O CONDICIONES - IDENTIFICAR LOS 3 SENSORES PARA QUE SE PUEDA GUARDAR EN LA BD
-        if(sensorState.waterFlow && sensorState.lastProcessedSecond !== currentSecond){
+        if( sensorState.waterFlow || realNow.diff(sensorState.lastProcessedSecond, 'seconds') >= 1) {
              // Actualizar el último segundo procesado
             sensorState.lastProcessedSecond = currentSecond;
+            
+            //Creacion la bd 
             let workDetail : WorkExecutionDetail = {
                 id_work_execution : 2,
                 data : JSON.stringify(sensorState.data),
@@ -343,6 +346,8 @@ export class SensorState {
                     ...action.value
                 }
             });
+
+          
         }
 
         @Action(AcumuladoVolumen)
