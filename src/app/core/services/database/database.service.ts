@@ -1529,43 +1529,50 @@ export class DatabaseService extends ElectronService {
 
   async saveWorkExecutionDataDetail(o: WorkExecutionDetail): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
-      let db = new this.sqlite.Database(this.file);
-      let insertSql =
-        "INSERT INTO work_execution_details (id_work_execution , time , sended, data , precision , gps , has_events , events) VALUES (?,?,?,?,?,?,?,?);";
-
-      // Ejecutar la inserción en la tabla 'work_execution'
-      db.run(
-        insertSql,
-        [
-          o.id_work_execution,
-          o.time.format("YYYY-MM-DD H:mm:ss"),
-          0,
-          o.data,
-          o.precision,
-          o.gps,
-          o.has_events,
-          o.events,
-        ],
-        (err: Error | null) => {
-          if (err) {
-            console.error("SQLITE INSERT error", err);
-            reject(err);
-          } else {
-            //console.log("Inserción exitosa");
-            resolve(true);
-          }
-
-          // Cerrar la base de datos después de la operación
-          db.close((closeErr: Error | null) => {
-            if (closeErr) {
-              console.error("Error al cerrar la base de datos", closeErr);
+      try {
+        let db = new this.sqlite.Database(this.file);
+        let insertSql =
+          "INSERT INTO work_execution_details (id_work_execution , time , sended, data , precision , gps , has_events , events) VALUES (?,?,?,?,?,?,?,?);";
+  
+        // Ejecutar la inserción en la tabla 'work_execution'
+        db.run(
+          insertSql,
+          [
+            o.id_work_execution,
+            o.time.format("YYYY-MM-DD H:mm:ss"),
+            0,
+            o.data,
+            o.precision,
+            o.gps,
+            o.has_events,
+            o.events,
+          ],
+          (err: Error | null) => {
+            if (err) {
+              this.error("ERROR DE BASE DE DATOS", err);
+              console.error("SQLITE INSERT error", err);
+              reject(err);
+            } else {
+              // Inserción exitosa
+              resolve(true);
             }
-          });
-        }
-      );
+  
+            // Cerrar la base de datos después de la operación
+            db.close((closeErr: Error | null) => {
+              if (closeErr) {
+                console.error("Error al cerrar la base de datos", closeErr);
+              }
+            });
+          }
+        );
+      } catch (error) {
+        this.error("ERROR DE BASE DE DATOS", error);
+        console.error("Error general en saveWorkExecutionDataDetail:", error);
+        reject(error);
+      }
     });
   }
-
+  
   async updateWorkExecutionDataDetail(o: WorkExecutionDetail): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);

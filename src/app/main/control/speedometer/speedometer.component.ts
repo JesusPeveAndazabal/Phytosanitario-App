@@ -36,7 +36,7 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
   constructor(private store : Store , private electronService : ElectronService) { }
 
   ngOnChanges(changes: any): void {
-    console.log("velocidad" , this.gauge , this.segDisplay);
+    //console.log("velocidad" , this.gauge , this.segDisplay);
     if(this.gauge && changes['speed']){
       this.gauge.value(changes.speed.currentValue);
       this.segDisplay.value(changes.speed.currentValue);
@@ -52,7 +52,7 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
 
   ngOnInit() {
     this.speed$ = this.store.select(SensorState.speed);
-    this.electronService.log("VELOCIDAD" , this.speed$);
+    //this.electronService.log("VELOCIDAD" , this.speed$);
     let instance = this;
 
     this.svg = d3.select("#scale")

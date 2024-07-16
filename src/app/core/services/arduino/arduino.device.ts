@@ -140,10 +140,11 @@ export class ArduinoDevice {
         //El valor de cada sensor
         let numericValue : number | number[];
         if(sensorId == Sensor.GPS){
-          numericValue = value.split(',').map(v => parseFloat(v));
-          let valSensor = JSON.parse(`{"${Sensor.GPS}" : ${JSON.stringify(numericValue)}}`);
-          this.electronService.log("valSensor" , valSensor);
-          this.store.dispatch(new Gps(valSensor));
+            numericValue = value.split(',').map(v => parseFloat(v));
+            let valSensor = JSON.parse(`{"${Sensor.GPS}" : ${JSON.stringify(numericValue)}}`);
+            this.electronService.log("valSensor" , valSensor);
+            this.store.dispatch(new Gps(valSensor));
+            this.port.write(Buffer.from('OK\n', 'utf-8'));
         }
         else{
           switch (sensorId){
@@ -191,9 +192,13 @@ export class ArduinoDevice {
               break;
               
             case Sensor.SPEED:
-              let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${value}}`);
-              //this.electronService.log("valSensorSpeed" , valSensorSpeed);
-              this.store.dispatch(new Speed(valSensorSpeed));
+              const valorSpeed = parseFloat(value)
+              if(!isNaN(valorSpeed)){
+                let valSensorSpeed = JSON.parse(`{"${Sensor.SPEED}" : ${valorSpeed}}`);
+                //this.electronService.log("valSensorSpeed" , valSensorSpeed);
+                this.store.dispatch(new Speed(valSensorSpeed));
+              }
+
               break;
           }
         }

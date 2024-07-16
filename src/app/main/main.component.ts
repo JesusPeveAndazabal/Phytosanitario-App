@@ -115,13 +115,13 @@ export class MainComponent implements OnInit,AfterViewInit{
 
   async openIfNotConnected(){
     await this.databaseService.openConnection();
-    console.log("SE INICIO LA BD")
+    //console.log("SE INICIO LA BD")
     let currenttank$ = this.store.select(SensorState.currentTank).subscribe({
       next : async (value) =>{
         if(value > 0){
           //Valor de trabajo del valor del tanque
           this.workStatus = this.valorTanque;
-          console.log("Se repite tantas veces entro ala condicion");
+          //console.log("Se repite tantas veces entro ala condicion");
           this.workStatus = WorkStatusChange.START;
           this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
           this.powerButtonOn = true;
@@ -135,11 +135,12 @@ export class MainComponent implements OnInit,AfterViewInit{
 
   async someFunction() {
     try {
-        console.log("Entro a esta funcion");
-        const waterVolumes = await this.databaseService.getLastWaterVolume(this.lastWorkExecution.id);
-        const inicialVolume = waterVolumes.volume; // Extraer la propiedad `volume`
-        this.arduinoService.initialVolume = inicialVolume;
-
+        //console.log("Entro a esta funcion");
+        if(this.lastWorkExecution){
+          const waterVolumes = await this.databaseService.getLastWaterVolume(this.lastWorkExecution.id);
+          const inicialVolume = waterVolumes.volume; // Extraer la propiedad `volume`
+          this.arduinoService.initialVolume = inicialVolume;
+        }
     } catch (error) {
         console.error('Error fetching last water volume:', error);
     }

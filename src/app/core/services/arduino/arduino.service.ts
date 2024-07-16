@@ -24,6 +24,9 @@ import isOnline from 'is-online';
 import { AcumuladoRestaurar, AcumuladoVolumen, SensorState, SetResetApp, UpdateCurrentTank , Volumen, restaurarDistancia, volumenRecuperado } from './eventsSensors';
 import { WindowMaximizeIcon } from 'primeng/icons/windowmaximize';
 import { waitForAsync } from '@angular/core/testing';
+import { RedisService } from './redis.service';
+import { Subscription } from 'rxjs';
+
 
 //Este se comporta como el device_manager
 
@@ -147,12 +150,16 @@ export class ArduinoService {
   banderaPresion : boolean = false;
   configWork;
 
+  sensorValues: string[] = [];
+  private commandSubscription: Subscription;
+  currentWork: WorkExecution;
+
 
   // private sensorSubjectMap: Map<Sensor, Subject<Sensor>> = new Map();
 
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
-  constructor( private electronService: ElectronService , private databaseService : DatabaseService , private store: Store) {
+  constructor( private electronService: ElectronService , private databaseService : DatabaseService , private store: Store, private redisService : RedisService) {
 
     this.setupSensorSubjects();
     this.checkInternetConnection();
@@ -161,6 +168,8 @@ export class ArduinoService {
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
       
       if(workExecution){
+        this.currentWork = workExecution;
+        this.electronService.log("CURRENTWORK" , this.currentWork);
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       }      
@@ -194,7 +203,7 @@ export class ArduinoService {
           this.currentTankRecuperado = dataValues[`${Sensor.CURRENT_TANK}`];
           this.accumulated_distance = dataValues[`${Sensor.ACCUMULATED_HECTARE}`];
 
-          console.log("VOLUMEN RECUPERADO" , this.volumenRecuperado); 
+          //console.log("VOLUMEN RECUPERADO" , this.volumenRecuperado); 
 
           //Actualiza el estado del volumen
           this.store.dispatch(new volumenRecuperado ({ [`${Sensor.VOLUMEN_RECUPERADO}`]: this.volumenRecuperado }));
@@ -214,12 +223,15 @@ export class ArduinoService {
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
       next: async (value) =>{
 
+        try {
           if(value && value.data){
-            let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
+        
+            //OBTENER LA HORA ACTUAL PARA GUARDAR LOS SEGUNDOS
+            this.reealNow =  moment();
 
             //Para poder regular la presion a la configurada anteriormente
             if(!this.banderaPresion){
-              let presion = JSON.parse(currentWork.configuration).pressure;
+              let presion = JSON.parse(this.currentWork.configuration).pressure;
               this.regulatePressureWithBars(presion);
               this.activateRightValve();        
               this.activateLeftValve();
@@ -233,24 +245,26 @@ export class ArduinoService {
             
             let data = JSON.parse(value.data);
             
-            if(currentWork && currentWork.configuration){
+            if(this.currentWork && this.currentWork.configuration){
                   //Para compara los eventos
-                  this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
-                  this.info = JSON.parse(currentWork.configuration).pressure;
-                  this.speedalert = JSON.parse(currentWork.configuration).speed;
+                  this.caudalNominal = JSON.parse(this.currentWork.configuration).water_flow;
+                  this.info = JSON.parse(this.currentWork.configuration).pressure;
+                  this.speedalert = JSON.parse(this.currentWork.configuration).speed;
                   
                   if( data[Sensor.WATER_FLOW] > 0){
                     this.tiempoProductivo.start();
                     this.tiempoImproductivo.stop();
+                    this.tiempocondicion = 1;
                   }else{
                     this.tiempoImproductivo.start();
                     this.tiempoProductivo.stop();
+                    this.tiempocondicion = 4;
                   }
 
-                  currentWork.downtime = this.tiempoImproductivo.time();
-                  currentWork.working_time = this.tiempoProductivo.time();
+                  this.currentWork.downtime = this.tiempoImproductivo.time();
+                  this.currentWork.working_time = this.tiempoProductivo.time();
       
-                  await this.databaseService.updateTimeExecution(currentWork);
+                  await this.databaseService.updateTimeExecution(this.currentWork);
               
                 //EVENTO DE CAUDAL
                 if (data[Sensor.WATER_FLOW] > this.caudalNominal * 0.90 && data[Sensor.WATER_FLOW] < this.caudalNominal * 1.1) {
@@ -296,18 +310,28 @@ export class ArduinoService {
                 }
       
                 /* Evaulu */
-                value.id_work_execution = currentWork.id;
+                value.id_work_execution = this.currentWork.id;
                 value.has_events = has_events;
                 value.events = events.join(", ");
                 value.time = value.time.startOf('seconds');
             
             }
+            
+            if (this.reealNow.diff(this.now, 'seconds') >= this.tiempocondicion) {
+              this.now = this.reealNow;
+              //instance.electronService.log("SEGUNDO QUE SE EJECUTA" , instance.now.format('HH:mm:ss'));
+              this.electronService.log("ENTRO A ESTA FUNCION");
+              if(this.currentWork && this.isRunning){
+                await this.databaseService.saveWorkExecutionDataDetail(value);
+              } 
+            }
+
            
-            if(currentWork && this.isRunning){
-              await this.databaseService.saveWorkExecutionDataDetail(value);
-            } 
-          }
-          
+          } 
+        } catch (error) {
+            this.electronService.log("ERROR ARDUINO SERVICE" , error);
+        }
+ 
       },
 
     });
@@ -319,6 +343,7 @@ export class ArduinoService {
     return this.listArduinos.find(p => p.sensors.some(x => x == sensor))!;
 
   }
+  
 
 
   public mapToObject(map: Map<any, any>): { [key: string]: any } {
@@ -350,7 +375,7 @@ export class ArduinoService {
 
     // AquÃ­ deberÃ­as incluir la lÃ³gica para enviar el comando al dispositivo, por ejemplo:
 
-    this.findBySensor(regulatorId).sendCommand(`${regulatorId}|${barPressure}`);
+/*     this.redisService.sendCommand(`${regulatorId}|${barPressure}`); */
 
 
 
@@ -361,9 +386,11 @@ export class ArduinoService {
   //Metodo para resetear el volumen inicial y minimo
 
   public resetVolumenInit(): void {
-    const command = 'B';
-    this.findBySensor(Sensor.WATER_FLOW).sendCommand(command);
-    
+ 
+    const command = JSON.stringify({ 5 : 'B' }); // Formato del comando según tu requerimiento
+    this.redisService.sendCommand(command);
+
+
     //envia 0 al volumen recuperado para reiniciarlo
     this.store.dispatch(new volumenRecuperado({ [`${Sensor.VOLUMEN_RECUPERADO}`]: 0 }));
   }
@@ -538,11 +565,11 @@ export class ArduinoService {
 
     //this.electronService.log("IZQUIERDA ACTIVADA" , this.izquierdaActivada);
 
-    const command = Sensor.VALVE_LEFT + '|1\n'; // Comando para activar la vÃ¡lvula izquierda
+    const command = Sensor.VALVE_LEFT + '|1'; // Comando para activar la vÃ¡lvula izquierda
 
     //this.electronService.log("Comand" , command);
 
-    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
+  /*   this.redisService.sendCommand(command); */
 
   }
 
@@ -558,11 +585,11 @@ export class ArduinoService {
 
     this.electronService.log("IZQUIERDA DESACTIVADA" , this.izquierdaActivada);
 
-    const command = Sensor.VALVE_LEFT  + '|0\n'; // Comando para desactivar la vÃ¡lvula izquierda
+    const command = Sensor.VALVE_LEFT  + '|0'; // Comando para desactivar la vÃ¡lvula izquierda
 
     this.electronService.log("Comand" , command);
 
-    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(command);
+   /*  this.redisService.sendCommand(command); */
 
     //this.electronService.log("Comando desactivar valvula izquierda", command);
 
@@ -580,13 +607,13 @@ export class ArduinoService {
 
     this.electronService.log("DERECHA ACTIVADA" , this.derechaActivada);
 
-    const command = Sensor.VALVE_RIGHT + '|1\n'; // Comando para activar la vÃ¡lvula derecha
+    const command = Sensor.VALVE_RIGHT + '|1'; // Comando para activar la vÃ¡lvula derecha
 
     this.electronService.log("Comand" , command);
 
     //this.electronService.log(command, "comand");
 
-    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
+  /*   this.redisService.sendCommand(command); */
 
   }
 
@@ -602,11 +629,11 @@ export class ArduinoService {
 
     this.electronService.log("DERECHA DESCAACTIVADA" , this.derechaActivada);
 
-    const command = Sensor.VALVE_RIGHT + '|0\n'; // Comando para desactivar la vÃ¡lvula derecha
+    const command = Sensor.VALVE_RIGHT + '|0'; // Comando para desactivar la vÃ¡lvula derecha
 
     this.electronService.log("Comand" , command);
 
-    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(command);
+  /*   this.redisService.sendCommand(command); */
 
     //this.electronService.log("Comando desactivar valvula derecha", command);
 
@@ -618,13 +645,13 @@ export class ArduinoService {
 
     this.store.dispatch(new ActivateBothValves());
 
-    const commandLeft = Sensor.VALVE_LEFT + '|1\n';
+    const commandLeft = Sensor.VALVE_LEFT + '|1';
 
-    const commandRight = Sensor.VALVE_RIGHT + '|1\n';
+    const commandRight = Sensor.VALVE_RIGHT + '|1';
 
-    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(commandLeft);
+  /*   this.redisService.sendCommand(commandLeft);
 
-    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
+    this.redisService.sendCommand(commandRight); */
 
   }
 
@@ -634,13 +661,13 @@ export class ArduinoService {
 
     this.store.dispatch(new DeactivateBothValves());
 
-    const commandLeft = Sensor.VALVE_LEFT + '|0\n';
+    const commandLeft = Sensor.VALVE_LEFT + '|0';
 
-    const commandRight = Sensor.VALVE_RIGHT + '|0\n';
+    const commandRight = Sensor.VALVE_RIGHT + '|0';
 
-    this.findBySensor(Sensor.VALVE_LEFT).sendCommand(commandLeft);
+    /* this.redisService.sendCommand(commandLeft);
 
-    this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
+    this.redisService.sendCommand(commandRight); */
 
   }
 

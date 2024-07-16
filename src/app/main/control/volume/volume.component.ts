@@ -195,7 +195,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.volume = parseFloat(volume.toFixed(2));
     this.percentVolume = isNaN(this.percentVolume) ? 0 : this.percentVolume;
     this.container.xAxis = this.map(this.volume, 0, this.maxCurrentVolume, this.container.canvas.height, 0);
-    console.log(this.container.xAxis);
+    //console.log(this.container.xAxis);
     this.container.update();
   }
 

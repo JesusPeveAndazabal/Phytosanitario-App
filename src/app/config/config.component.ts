@@ -36,7 +36,7 @@ export class ConfigComponent implements OnInit {
 
     this.formData = this.fb.group({
       // ws_server: ['',[Validators.required,Validators.pattern('(?:(?:(?:ht|f)tp)s?://)|(ws?s)?[\\w_-]+(?:\\.[\\w_-]+)+([\\w.,@?^=%&:/~+#-]*[\\w@?^=%&/~+#-])?')]],
-      api_server: 'https://ps-test.fitosatbeta.com',
+      api_server: 'http://192.168.149.209:8000',
       vol_alert_on: '40',
     });
    }

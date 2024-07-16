@@ -156,7 +156,7 @@ export class SensorState {
     //Selector Caudal 
     @Selector()
     static waterFlow (sensorState : SensorStateModel) : number
-    {
+    { 
         return sensorState.data[`${Sensor.WATER_FLOW}`];
     }
 
@@ -278,7 +278,7 @@ export class SensorState {
         }else if (volumen > 1){
             sensorState.volumenAcumulado = volumen + sensorState.lastVolumen;
         }
-    
+        
         //SOLO ACUMULAR LOS VALORES MAYORES A 0  
         if(sensorState.volumenAcumulado > 0){
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
@@ -287,37 +287,38 @@ export class SensorState {
         let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
         sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
 
+        //console.log("WAATTERFLOW" , sensorState.data[`${Sensor.WATER_FLOW}`] , sensorState.waterFlow , sensorState.volumen);
         //POR VERIFICAR EVALUACION O CONDICIONES - IDENTIFICAR LOS 3 SENSORES PARA QUE SE PUEDA GUARDAR EN LA BD
         if( sensorState.waterFlow || realNow.diff(sensorState.lastProcessedSecond, 'seconds') >= 1) {
-             // Actualizar el último segundo procesado
-            sensorState.lastProcessedSecond = currentSecond;
-            
-            //Creacion la bd 
-            let workDetail : WorkExecutionDetail = {
-                id_work_execution : 2,
-                data : JSON.stringify(sensorState.data),
-                time : realNow,
-                sended : false,
-                precision : '',
-                gps :  JSON.stringify(sensorState.data[4]),
-                has_events : false,
-                events : 'NO HAY EVENTOS',
-                id : 0,
-            };
+            // Actualizar el último segundo procesado
+           sensorState.lastProcessedSecond = currentSecond;
+           
+           //Creacion la bd 
+           let workDetail : WorkExecutionDetail = {
+               id_work_execution : 2,
+               data : JSON.stringify(sensorState.data),
+               time : realNow,
+               sended : false,
+               precision : '',
+               gps :  JSON.stringify(sensorState.data[4]),
+               has_events : false,
+               events : 'NO HAY  EVENTOS',
+               id : 0,
+           };
 
-            //Evaluas los eventos
-            sensorState.waterFlow = false;
-            sensorState.volumen = false;
-            sensorState.pressure = false;
-            sensorState.leftValve = false;
-            sensorState.rightValve = false;
-            sensorState.gps = false;
-            sensorState.speed = false;
-            sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`] = 0;
-            sensorState.data[`${Sensor.ACCUMULATED_DISTANCE}`] = 0;
-            //sensorState.data[`${Sensor.VOLUMEN_RECUPERADO}`] = 0;
-            return workDetail;
-        }
+           //Evaluas los eventos
+           sensorState.waterFlow = false;
+           sensorState.volumen = false;
+           sensorState.pressure = false;
+           sensorState.leftValve = false;
+           sensorState.rightValve = false;
+           sensorState.gps = false;
+           sensorState.speed = false;
+           sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`] = 0;
+           sensorState.data[`${Sensor.ACCUMULATED_DISTANCE}`] = 0;
+           //sensorState.data[`${Sensor.VOLUMEN_RECUPERADO}`] = 0;
+           return workDetail;
+       }
 
         return null;
     }

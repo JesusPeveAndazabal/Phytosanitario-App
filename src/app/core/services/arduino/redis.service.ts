@@ -1,0 +1,186 @@
+import { Injectable } from '@angular/core';
+import Redis from 'ioredis';
+import { Observable, Subject } from 'rxjs';
+import { Sensor } from '../../utils/global';
+import { ElectronService } from '../electron/electron.service';
+import { Store } from '@ngxs/store';
+import { WaterFlow , Volumen , Pressure , RightValve , LeftValve , Gps , Speed } from './eventsSensors';
+
+@Injectable({
+  providedIn: 'root'
+})
+export class RedisService {
+  private subscriberClient: Redis;
+  private publisherClient: Redis;
+  private isConnected: boolean = false;
+  private commandSubject: Subject<string> = new Subject<string>();
+  sensors: number[] = [];
+  mode: number = 0;
+  private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
+  public message_from_device: Map<Sensor, number|number[]> = new Map();
+
+  constructor(private store: Store, private electronService: ElectronService) {
+    this.connectToRedis();
+  }
+
+  private connectToRedis(): void {
+    const redisOptions = {
+      host: '192.168.109.127',
+      port: 6379,
+      maxRetriesPerRequest: 30,
+      connectTimeout: 10000,  // 10 segundos
+    };
+
+    this.subscriberClient = new Redis(redisOptions);
+    this.publisherClient = new Redis(redisOptions);
+
+    this.subscriberClient.on('connect', () => {
+      console.log('Connected to Redis subscriber');
+      this.isConnected = true;
+      this.subscribeToCommands();
+      this.subscribeToResponses();
+    });
+
+    this.publisherClient.on('error', (err) => {
+      console.error('Error connecting to Redis publisher:', err);
+    });
+
+    this.subscriberClient.on('error', (err) => {
+      console.error('Error connecting to Redis subscriber:', err);
+    });
+  }
+
+  private subscribeToCommands(): void {
+    if (!this.isConnected) {
+      return;
+    }
+
+    this.subscriberClient.subscribe('commands');
+
+    this.subscriberClient.on('message', (channel, message) => {
+      this.processCommand(message);
+    });
+  }
+
+  private subscribeToResponses(): void {
+    if (!this.isConnected) {
+      return;
+    }
+
+    this.subscriberClient.subscribe('responses');
+
+    this.subscriberClient.on('message', (channel, message) => {
+      console.log(message);
+      this.processResponse(message);
+    });
+  }
+
+  private processCommand(command: string): void {
+    let commands = command.split('|');
+    if (commands[0] === 'C') {
+      this.sensors = commands[1].split(',').map((x: string) => parseInt(x, 10));
+      console.log("SENSORES", this.sensors);
+      console.log('Sending OK to Redis...');
+
+      const response = 'OK';
+
+      this.publisherClient.publish('responses', response, (err, res) => {
+        if (err) {
+          console.error('Error publishing response to Redis:', err);
+        } else {
+          console.log('Response published to Redis:', res);
+        }
+      });
+    }
+  }
+
+  private processResponse(response: string): void {
+    console.log(response);
+  
+      try {
+        const parsedResponse = JSON.parse(response);
+    
+        for (const sensorId in parsedResponse) {
+          if (parsedResponse.hasOwnProperty(sensorId)) {
+            const value = parsedResponse[sensorId];
+            this.commandSubject.next(`${sensorId}: ${value}`);
+    
+            let numericValue: number | null = null;
+    
+            if (typeof value === 'number' && !isNaN(value)) {
+              numericValue = value;
+            }
+    
+            switch (parseInt(sensorId, 10)) {
+              case Sensor.WATER_FLOW:
+                if (numericValue !== null) {
+                  const valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${numericValue}}`);
+                  this.electronService.log("CAUDAL", valSensorFlow);
+                  this.store.dispatch(new WaterFlow(valSensorFlow));
+                }
+                break;
+    
+              case Sensor.VOLUME:
+                if (numericValue !== null) {
+                  const valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${numericValue}}`);
+                  this.electronService.log("VOLUMEN", valSensorVolume);
+                  this.store.dispatch(new Volumen(valSensorVolume));
+                }
+                break;
+
+              case Sensor.PRESSURE:
+                if (numericValue !== null) {
+                  const valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${numericValue}}`);
+                  this.electronService.log("PRESION", valSensorPressure);
+                  this.store.dispatch(new Pressure(valSensorPressure));
+                }
+                break;
+    
+              // Agregar otros casos según sea necesario
+    
+              default:
+                console.log(`Sensor ID ${sensorId} no reconocido`);
+                break;
+            }
+          }
+        }
+      } catch (error) {
+        console.error('Error parsing JSON:', error);
+        // Maneja el error según sea necesario
+      }
+  }
+  
+
+  public sendCommand(command: string): void {
+    if (!this.isConnected) {
+      console.error('Not connected to Redis');
+      return;
+    }
+
+    this.publisherClient.publish('commands', command, (err, res) => {
+      if (err) {
+        console.error('Error publishing command to Redis:', err);
+      } else {
+        console.log('Command published to Redis:', res);
+      }
+    });
+  }
+
+  public getCommandObservable(): Observable<string> {
+    return this.commandSubject.asObservable();
+  }
+
+  public isConnectedToRedis(): boolean {
+    return this.isConnected;
+  }
+
+  public disconnect(): void {
+    if (this.subscriberClient) {
+      this.subscriberClient.disconnect();
+    }
+    if (this.publisherClient) {
+      this.publisherClient.disconnect();
+    }
+    this.isConnected = false;
+  }
+}
