@@ -70,20 +70,17 @@ Puede deshabilitar "Herramientas de desarrollador" comentando `win.webContents.o
 
 ### Configuración importante 
 
-Para los diversos modos de trabajo existe una configuración en los archivos `src/environments/` que tienen la estructura:
+Para los diversos modos de trabajo existe una configuración en los archivos `bd/conf.env/` que tienen la estructura:
 
 ```
-export const APP_CONFIG = {
-  production: false,
-  environment: 'LOCAL',
-  analog_mode: true, //true si es para usar el component FALCOT , false si es para usar el componente BETA
-  with_clamshell : false, //true si el modo de trabajo es clamshell
-
-  // Las siguientes configuraciones deben ser establecidas si en caso se usa el modo web (Solo para propósitos de desarrollo)
-  ws_test: "ws://192.168.42.200:8001/ws/balanza-ws/",
-  token: "c7f14f4e4339dd99b0ef31e118f722e94fbd1012d8045eb7bab291d12eb4ce85a0",
-  planta: 1,
-};
+TOKEN=c7f14f4e4339dd99b0ef31e118f722e94fbd1012d8045eb7bab291d12eb4ce85a0
+URL_REST=https://ps-test.fitosatbeta.com
+N_DEVICES=4
+DEVICE_1=COM4
+DEVICE_2=COM29
+DEVICE_3=COM6
+DEVICE_4=COM36
+    
 ```
 
 Estas configuraciones deben ser establecidas antes de empezar el desarrollo o la construcción de la aplicación.
