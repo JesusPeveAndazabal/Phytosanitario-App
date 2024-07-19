@@ -70,10 +70,10 @@ export class LoginComponent implements OnInit {
     this.implementOrder = await this.dbService.getWorkExecutionOrder();
    
     //Tabala ordenes de trabajo
-    console.log(this.implementOrder, "Implementos");
+    //console.log(this.implementOrder, "Implementos");
     
     //Tabala implementos
-    console.log("ImplementData", this.implementData);
+    //console.log("ImplementData", this.implementData);
 
     // Obtén el conjunto de todos los type_implement en implementOrder
     const typeImplements = new Set(this.implementOrder.map(order => order.type_implement));
@@ -81,7 +81,7 @@ export class LoginComponent implements OnInit {
     // Filtra implementData para incluir solo implementos con type_implement presentes en typeImplements
     this.filterImplemento = this.implementData.filter(implement => typeImplements.has(implement.typeImplement));
 
-    console.log("FILTRADO",this.filterImplemento);
+    //console.log("FILTRADO",this.filterImplemento);
 
   }
 
@@ -111,7 +111,7 @@ export class LoginComponent implements OnInit {
         || person.document == this.formData.value.code) && person.type == PersonType.OPERADOR))
       {
         this.implemento = this.formData.value.implement;
-        console.log("TIPOIMPLEMENTOLOGIN" , this.implemento);
+        //console.log("TIPOIMPLEMENTOLOGIN" , this.implemento);
         await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
         this.router.navigateByUrl('/main');
         
@@ -123,10 +123,10 @@ export class LoginComponent implements OnInit {
   }
 
   async syncPrimaryTables() : Promise<boolean>{
-    console.log("SINCRONIZANDO DATOS ............................")
+    //console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
-      console.log("EMNTRO AL TRY");
+      //console.log("EMNTRO AL TRY");
       // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());

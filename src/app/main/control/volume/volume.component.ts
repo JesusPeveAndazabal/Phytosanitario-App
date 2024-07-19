@@ -191,14 +191,17 @@ export class VolumeComponent  implements OnInit,OnChanges {
     return this.percentVolume;
   }
 
-  setVolume(volume: number){
-    this.volume = parseFloat(volume.toFixed(2));
+  setVolume(o) {
+    this.volume = parseFloat(o.toFixed(2));
     this.percentVolume = isNaN(this.percentVolume) ? 0 : this.percentVolume;
-    this.container.xAxis = this.map(this.volume, 0, this.maxCurrentVolume, this.container.canvas.height, 0);
-    //console.log(this.container.xAxis);
-    this.container.update();
+    
+    if (this.container && this.container.canvas) {
+        this.container.xAxis = this.map(this.volume, 0, this.maxCurrentVolume, this.container.canvas.height, 0);
+        this.container.update();
+    } else {
+        console.error('this.container or this.container.canvas is not defined');
+    }
   }
-
   // toggleValvulaDerecha($event : any):void{
   //   this.arduinoService.toggleValvulaDerecha();
   // }

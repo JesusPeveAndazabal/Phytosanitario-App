@@ -104,10 +104,10 @@ export class ConfigComponent implements OnInit {
    * The data will be used to settings the work executions.
    */
   async syncPrimaryTables() : Promise<boolean>{
-    console.log("SINCRONIZANDO DATOS ............................")
+    //console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
-      console.log("EMNTRO AL TRY");
+      //console.log("EMNTRO AL TRY");
       // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
@@ -121,7 +121,7 @@ export class ConfigComponent implements OnInit {
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
       // const we = await firstValueFrom(this.apiService.getWE());
-      console.log("preople", people);
+      //console.log("preople", people);
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 

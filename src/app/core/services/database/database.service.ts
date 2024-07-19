@@ -785,7 +785,7 @@ export class DatabaseService extends ElectronService {
       db = db.run(sql,[1,wExecution.id_from_server,wExecution.id],
         (err : Error)=>{
           if(err){
-            console.log("SQLITE UPDATE error", err);
+            //console.log("SQLITE UPDATE error", err);
             process.nextTick(() => reject(err));
           }
           process.nextTick(() => resolve(true));
@@ -941,7 +941,7 @@ export class DatabaseService extends ElectronService {
           db = db.run(sql,[1,wExecutionDetail.id],
             (err : Error)=>{
               if(err){
-                console.log("SQLITE UPDATE error", err);
+                //console.log("SQLITE UPDATE error", err);
                 process.nextTick(() => reject(err));
               }
               process.nextTick(() => resolve(true));

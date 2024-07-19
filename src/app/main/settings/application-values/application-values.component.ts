@@ -199,8 +199,8 @@ export class ApplicationValuesComponent  implements OnInit {
       //console.log("Deberria regular" ,this.weConfiguration?.pressure);
       //*************Esto es para mandar el comando de regulacion desde el confirmar del boton y apagar las valvulas
       this.arduinoService.regulatePressureWithBars(this.weConfiguration?.pressure);
-      this.arduinoService.deactivateLeftValve();
-      this.arduinoService.deactivateRightValve();
+      //this.arduinoService.deactivateLeftValve();
+      //this.arduinoService.deactivateRightValve();
      
 
       let wExecution : WorkExecution ={

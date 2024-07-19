@@ -14,7 +14,7 @@ export class RedisService {
   private publisherClient: Redis;
   private isConnected: boolean = false;
   private commandSubject: Subject<string> = new Subject<string>();
-  sensors: number[] = [];
+  sensors: number[] = []; //Array para guardar los sensores
   mode: number = 0;
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
   public message_from_device: Map<Sensor, number|number[]> = new Map();
@@ -23,33 +23,40 @@ export class RedisService {
     this.connectToRedis();
   }
 
+  //Conexion para las instancias de Redis - Sub y Pub
   private connectToRedis(): void {
     const redisOptions = {
-      host: '192.168.109.127',
-      port: 6379,
-      maxRetriesPerRequest: 30,
+      host: '192.168.183.127', //Host  - cambiar la ip si se conectara a otra red
+      //host : 'localhost',
+      port: 6379, //Puerto predeterminado de redis
+      maxRetriesPerRequest: 30, //Intentos para volver a conectarse
       connectTimeout: 10000,  // 10 segundos
     };
 
     this.subscriberClient = new Redis(redisOptions);
     this.publisherClient = new Redis(redisOptions);
 
+    //Subscribirte al Cliente 
     this.subscriberClient.on('connect', () => {
-      console.log('Connected to Redis subscriber');
+      console.log('Conectaoo y suscrito a redis');
+      
+      //Variable booleana para determinar si se conecto el app con Redis
       this.isConnected = true;
       this.subscribeToCommands();
       this.subscribeToResponses();
     });
 
+    //Controlador de error , en caso hubiera algun error al subscribirse o publicar
     this.publisherClient.on('error', (err) => {
-      console.error('Error connecting to Redis publisher:', err);
+      console.error('Error al conectar a Redis - publisher:', err);
     });
 
     this.subscriberClient.on('error', (err) => {
-      console.error('Error connecting to Redis subscriber:', err);
+      console.error('Error al conectar a Redis - subscriber:', err);
     });
   }
 
+  //Funcion para subscribirse al canala de 'commands'
   private subscribeToCommands(): void {
     if (!this.isConnected) {
       return;
@@ -62,11 +69,13 @@ export class RedisService {
     });
   }
 
+  //Funcion para subscribirse al canal de responses
   private subscribeToResponses(): void {
     if (!this.isConnected) {
       return;
     }
 
+    //Subscribirse a la instancia de redis y al anal responses
     this.subscriberClient.subscribe('responses');
 
     this.subscriberClient.on('message', (channel, message) => {
@@ -75,6 +84,7 @@ export class RedisService {
     });
   }
 
+  //Funcion para procesar los Comandos recibidos , no esta en funcionamiento actualmente   
   private processCommand(command: string): void {
     let commands = command.split('|');
     if (commands[0] === 'C') {
@@ -94,24 +104,27 @@ export class RedisService {
     }
   }
 
+  //Funcion para procesar las respuestas y/o valores que te envia el script de Python
   private processResponse(response: string): void {
     console.log(response);
-  
+    this.electronService.log("RESPONSES" , response);
       try {
+
         const parsedResponse = JSON.parse(response);
     
         for (const sensorId in parsedResponse) {
           if (parsedResponse.hasOwnProperty(sensorId)) {
             const value = parsedResponse[sensorId];
             this.commandSubject.next(`${sensorId}: ${value}`);
-    
+              
             let numericValue: number | null = null;
     
             if (typeof value === 'number' && !isNaN(value)) {
               numericValue = value;
             }
-    
-            switch (parseInt(sensorId, 10)) {
+            //Se separa por tipos de sensores para disparar el evento y actualize el estado de cada sensor en el archivo eventsSensors.ts
+            switch (parseInt(sensorId ,10)) {
+              
               case Sensor.WATER_FLOW:
                 if (numericValue !== null) {
                   const valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${numericValue}}`);
@@ -135,6 +148,18 @@ export class RedisService {
                   this.store.dispatch(new Pressure(valSensorPressure));
                 }
                 break;
+ 
+              case Sensor.VALVE_RIGHT:
+                let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
+                this.electronService.log("valSensorValveRight" , valSensorValveRight);
+                this.store.dispatch(new RightValve(valSensorValveRight));
+                break;
+
+              case Sensor.VALVE_LEFT:
+                let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
+                this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
+                this.store.dispatch(new LeftValve(valSensorValveLeft));
+                break;
     
               // Agregar otros casos según sea necesario
     
@@ -145,35 +170,38 @@ export class RedisService {
           }
         }
       } catch (error) {
-        console.error('Error parsing JSON:', error);
+        console.error('Error en el parseo de  JSON:', error);
         // Maneja el error según sea necesario
       }
   }
   
-
+  //Funcion para enviar comandos al script de Python - En el arduino Service se hace uso de este metodo 
   public sendCommand(command: string): void {
     if (!this.isConnected) {
-      console.error('Not connected to Redis');
+      console.error('No se encuentra conectado a Redis');
       return;
     }
 
     this.publisherClient.publish('commands', command, (err, res) => {
       if (err) {
-        console.error('Error publishing command to Redis:', err);
+        console.error('Error publicando comando a Redis:', err);
       } else {
-        console.log('Command published to Redis:', res);
+        console.log('Comando publicado a Redis:', res);
       }
     });
   }
 
+  //Funcion para obtener los comandos por medio de un Observable
   public getCommandObservable(): Observable<string> {
     return this.commandSubject.asObservable();
   }
 
+  //Funcion para retornar el estado de la conexion de redis
   public isConnectedToRedis(): boolean {
     return this.isConnected;
   }
 
+  //Funcion para controlar la desconexion de redis
   public disconnect(): void {
     if (this.subscriberClient) {
       this.subscriberClient.disconnect();

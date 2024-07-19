@@ -33,7 +33,7 @@ export class ConfigNetComponent {
     ipcRenderer.invoke('connect-wifi', { ssid: this.selectedNetwork.ssid, password: this.password })
       .then((response: any) => {
         if (response.success) {
-          console.log(`Conectado exitosamente a la red WiFi ${this.selectedNetwork.ssid}`);
+          //console.log(`Conectado exitosamente a la red WiFi ${this.selectedNetwork.ssid}`);
           // Aquï¿½ puedes implementar lï¿½gica adicional despuï¿½s de la conexiï¿½n exitosa
         } else {
           console.error(`Error al conectar a la red WiFi ${this.selectedNetwork.ssid}:`, response.error);

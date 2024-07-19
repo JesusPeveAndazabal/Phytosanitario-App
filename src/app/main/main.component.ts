@@ -167,7 +167,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     })
     .catch((error) => {
       this.alerta.mostrarAlertaChica("<p>Hubo un error al cargar el último trabajo configurado.</p>")
-      console.log(error);
+      //console.log(error);
     });
 
     //  ------------------------------------------------------------------
@@ -287,7 +287,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
             //Configurar el volumen mínimo e inicial en el servicio.
             //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
-            console.log("INCIIAL VOLUMEN" , this.volumenTanque , this.localConfig.vol_alert_on);  
+            //console.log("INCIIAL VOLUMEN" , this.volumenTanque , this.localConfig.vol_alert_on);  
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on); 
          
             this.workStatus = WorkStatusChange.START;

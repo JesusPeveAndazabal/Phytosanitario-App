@@ -60,7 +60,7 @@ export class ArduinoDevice {
         if (!this.isReconnecting) {
           this.isReconnecting = true;  
           this.isConnected = false;
-          console.log('Arduino disconnected. Reconnecting...' , this.isReconnecting);
+          //console.log('Arduino disconnected. Reconnecting...' , this.isReconnecting);
 
           // Intentar reconectar después de un breve período
           setTimeout(() => {
@@ -103,19 +103,7 @@ export class ArduinoDevice {
             instance.listenToDevice(parser);
             clearInterval(instance.messageInterval);
             //console.log("MENSAJE" , instance.messageInterval);
-          }/* else if(messageBuffer[0] >= '0'){
-            instance.mode = 1;
-            //console.log("MODO DE CAUDAL" , instance.mode);
-            instance.sensors = [5,2];
-            //console.log("SENSIRES DE CAUDAL" , instance.sensors);
-            instance.port.write(Buffer.from('OK\n', 'utf-8'));
-            instance.isRunning = true;
-            const parser = instance.port.pipe(new ReadlineParser({ delimiter: '\r\n' }));
-            //console.log("PARSER DE CAUDAL" , parser);
-            instance.listenToDevice(parser);
-            clearInterval(instance.messageInterval);
-            //console.log("MENSAJE DE CAUDAL" , instance.messageInterval);
-          } */
+          }
 
         }else if(instance.manualSetting){
           instance.isRunning = true;
@@ -258,7 +246,7 @@ export class ArduinoDevice {
         if (error) {
           console.error('Error closing connection:', error);
         } else {
-          console.log('Disconnected from Arduino');
+          //console.log('Disconnected from Arduino');
           this.isConnected = false;
           /* this.restoreSavedValues(); */
         }
