@@ -277,7 +277,7 @@ export class SensorState {
         if(sensorState.volumenAcumulado > 0){
             sensorState.data[`${Sensor.ACCUMULATED_CONSUMO}`] = parseFloat(sensorState.volumenAcumulado.toFixed(2)); 
         }
-            
+                 
         //Para hallar lo que queda en el tanque 
         let tanqueActual = sensorState.initialVolume - sensorState.data[`${Sensor.VOLUME}`];
         sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
