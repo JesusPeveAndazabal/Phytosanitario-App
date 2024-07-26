@@ -15,6 +15,7 @@ export enum Mode{
     READ_WRITE = 3,
 }
 
+//Interfaz para la cantidad de Sensores o enumeradores que necesites
 export enum Sensor{
     SPEED = 1,
     WATER_FLOW = 2, //Valor del caudal

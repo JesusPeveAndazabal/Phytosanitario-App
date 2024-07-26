@@ -14,6 +14,8 @@ import * as logger from 'electron-log';
 @Injectable({
   providedIn: 'root'
 })
+
+//Clase de ElectronService
 export class ElectronService {
 
   ipcRenderer: typeof ipcRenderer;
@@ -79,6 +81,8 @@ export class ElectronService {
     // set existed file stream
     //logger.transports.file.stream = fs.createWriteStream('log.log');
   }
+
+  //Metodos para el control de errores - errores , precauciones , informaciones , etc 
 
   info(...params : any[]){
     this.logger.info(params);

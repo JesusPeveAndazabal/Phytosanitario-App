@@ -27,23 +27,26 @@ export class PressureComponent  implements OnChanges,AfterViewInit {
   efficiency_pressure: any = { value : 0.00, unit: "%"};
   pressure: any = { value : 0, unit: "bar"};
 
-  // leftControlActive : boolean = false;
-  // rightControlActive : boolean = false;
-
-  pressure$: Observable<number>;
+  pressure$: Observable<number>; //Variable para poder mostrar el valor de la presion del sensor
 
   private wConfig : WorkExecutionConfiguration | undefined;
 
   constructor(private volume:VolumeComponent, public  arduinoService: ArduinoService, private dbService:DatabaseService , private store : Store) { }
 
   ngOnInit(){
+    
+    //Guardar en la variable el valor del sensor 
     this.pressure$ = this.store.select(SensorState.pressure);
+
   }
     
 
   ngAfterViewInit() {
     if(this.wExecution){
+      //Parsear la ejecucion de trabajo para la configuracion
       this.wConfig = JSON.parse(this.wExecution.configuration);
+
+      //Obtener la presion teorica
       this.teoric_pressure = {
         value : convertPressureUnit(this.wConfig!.pressure,UnitPressureEnum.BAR,this.wConfig!.unit),
         unit : UnitPressure.find(p => p.value == this.wConfig!.unit)?.name

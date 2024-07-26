@@ -35,7 +35,6 @@ export class VolumeComponent  implements OnInit,OnChanges {
   @Input("latitudGPS") latitudGPS : number = 0;
   @Input("longitudGPS") longitudGPS : number = 0;
 
-
     // Output
   // @Output() leftControlActiveChange: EventEmitter<boolean> = new EventEmitter<boolean>();
   // @Output() rightControlActiveChange: EventEmitter<boolean> = new EventEmitter<boolean>();
@@ -96,12 +95,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
   }
 
   async ngOnInit() {
-    //this.setVolume(40);
-    // this.animateWaves();
-    // this.shouldBlink= true;
+
     this.volumen$ = this.store.select(SensorState.volumen);
     this.currentTank$ = this.store.select(SensorState.currentTank);
-    //console.log("CURREN TANK DE LA VISTA" , this.currentTank$);
     this.volumenAcumulado$ = this.store.select(SensorState.acumuladoVolumen);
     this.leftControlActive$ = this.store.select(ValveState.leftValveActive);
     this.rightControlActive$ = this.store.select(ValveState.rightValveActive);
@@ -145,9 +141,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
         //this.recargarTanque = true;
         this.arduinoService.previousAccumulatedVolume = 0;
         if (!this.valvulasApagadas) {
-          //COMENTADO POR AHORA
-        /*   this.toggleAmbasValvulas();
-          this.valvulasApagadas = true;  // Marca las válvulas como apagadas */
+          //Descomentar esto si en caso se apagarian las valvulas si llegara al minimo
+          //this.toggleAmbasValvulas();
+          //this.valvulasApagadas = true;  // Marca las válvulas como apagadas
         }
       } else if (this.volume >= this.minVolume) {
         this.shouldBlink = false;
@@ -205,6 +201,9 @@ export class VolumeComponent  implements OnInit,OnChanges {
   // toggleValvulaDerecha($event : any):void{
   //   this.arduinoService.toggleValvulaDerecha();
   // }
+
+
+  //Manejar la valulv derecha
   toggleValvulaDerecha():void{
     this.store.selectOnce(ValveState.rightValveActive).subscribe(isActive => {
       if (isActive) {
@@ -227,6 +226,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     //this.changeDetectorRef.detectChanges();
   }
 
+  //Manejar la valvula izquierda
   toggleValvulaIzquierda():void{
     this.store.selectOnce(ValveState.leftValveActive).subscribe(isActive => {
       if (isActive) {
@@ -237,6 +237,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
     });
   }
 
+  //Manejar lass ambas valvulas
   toggleAmbasValvulas(): void {
     this.store.selectOnce(ValveState.bothValvesActive).subscribe(isActive => {
       console.log("is active" , isActive);
@@ -256,7 +257,7 @@ export class VolumeComponent  implements OnInit,OnChanges {
   }
 }
 
-
+//Clase Wafe par ala animacion de el agua del tanque
 class Wave {
   unit: any;
   info: any;

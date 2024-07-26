@@ -572,27 +572,11 @@ export class ArduinoService {
     }, 200);
   }
 
-
-
   findBySensor(sensor : number): ArduinoDevice{
 
     return this.listArduinos.find(p => p.sensors.some(x => x == sensor))!;
 
   }
-
-
-
-/*   getDistancia(){
-
-    //this.electronService.log(this.distance, "RETORNO DE DISTANCIA")
-
-    return this.distance;
-
-  }
-
- */
-
-
 
   public mapToObject(map: Map<any, any>): { [key: string]: any } {
 
@@ -612,10 +596,7 @@ export class ArduinoService {
 
   }
 
-
-
   //Metodo para enviar el valor de presion que se le asignara
-
   public regulatePressureWithBars(bars: number): void {
 
     const regulatorId = Sensor.PRESSURE_REGULATOR;
@@ -638,10 +619,7 @@ export class ArduinoService {
 
   }
 
-
-
   //Metodo para resetear el volumen inicial y minimo
-
   public resetVolumenInit(): void {
 
     const command = 'B';
@@ -656,17 +634,12 @@ export class ArduinoService {
 
   }
 
-
-
   public resetTanque(){
     this.volumenAcumulado = 0;
     //this.electronService.log("VOLUMEN QUE DEBE RESETEARSE" , this.volumenAcumulado);
   }
 
-
-
   //Metodo para poder saber si un Arduino/Sensor esta conectado o no
-
   public isSensorConnected(sensor: Sensor): boolean {
 
     // Encuentra el Arduino que contiene el sensor
@@ -678,8 +651,6 @@ export class ArduinoService {
     return !!arduino && arduino.isConnected;
 
   }
-
-
 
   inicializarContenedor(inicial: number, minimo: number): void {
 
@@ -693,10 +664,7 @@ export class ArduinoService {
 
   }
 
-
-
   //Metodo para resetear la pression inicial y minimo
-
   public resetPressure(): void {
 
     const command = 'B';
@@ -755,10 +723,6 @@ export class ArduinoService {
     }
   }
 
-
-
-  //
-
   public conteoPressure(): void {
 
     const command = 'E';
@@ -811,10 +775,7 @@ export class ArduinoService {
       return presionInterpolada;
     }
 
-
-
   // MÃ©todo para activar la vÃ¡lvula izquierda
-
   public activateLeftValve(): void {
 
     this.izquierdaActivada = true;
@@ -831,10 +792,7 @@ export class ArduinoService {
 
   }
 
-
-
   // MÃ©todo para desactivar la vÃ¡lvula izquierda
-
   public deactivateLeftValve(): void {
 
     this.izquierdaActivada = false;
@@ -853,10 +811,7 @@ export class ArduinoService {
 
   }
 
-
-
   // MÃ©todo para activar la vÃ¡lvula derecha
-
   public activateRightValve(): void {
 
     this.derechaActivada = true;
@@ -875,10 +830,7 @@ export class ArduinoService {
 
   }
 
-
-
   // MÃ©todo para desactivar la vÃ¡lvula derecha
-
   public deactivateRightValve(): void {
 
     this.derechaActivada = false;
@@ -897,8 +849,6 @@ export class ArduinoService {
 
   }
 
-
-
   public activateBothValves(): void {
 
     this.store.dispatch(new ActivateBothValves());
@@ -912,8 +862,6 @@ export class ArduinoService {
     this.findBySensor(Sensor.VALVE_RIGHT).sendCommand(commandRight);
 
   }
-
-  
 
   public deactivateBothValves(): void {
 
@@ -929,10 +877,7 @@ export class ArduinoService {
 
   }
 
-
-
   // FunciÃ³n para calcular la presiÃ³n en funciÃ³n de la velocidad
-
   public calcularPresion(velocidad) {
 
     // AquÃ­ debes establecer la relaciÃ³n entre la velocidad y la presiÃ³n en tu sistema
@@ -960,47 +905,7 @@ export class ArduinoService {
     return presion;
 
   }
-
     
-
-/* 
-
-  getDistance(coord1, coord2) {
-
-    const R = 6371; // Radio de la Tierra en kilÃ³metros
-
-    const dLat = this.deg2rad(coord2.latitude - coord1.latitude);
-
-    const dLon = this.deg2rad(coord2.longitude - coord1.longitude);
-
-    const a =
-
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-
-        Math.cos(this.deg2rad(coord1.latitude)) * Math.cos(this.deg2rad(coord2.latitude)) *
-
-        Math.sin(dLon / 2) * Math.sin(dLon / 2);
-
-    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-
-    const distanceInKm = R * c; // Distancia en kilÃ³metros
-
-    const distanceInMeters = distanceInKm * 1000; // Convertir a metros
-
-    return distanceInMeters;
-
-  } */
-
-
-
-/*   deg2rad(deg) {
-
-      return deg * (Math.PI / 180);
-
-  }
-
- */
-
   async checkInternetConnection() {
 
     try {
@@ -1029,12 +934,7 @@ export class ArduinoService {
 
   } 
 
-
-
-
-
   //Este es el encargado de generar y emitir eventos de actualizaciÃ³n
-
   private setupSensorSubjects(): void {
 
       // Crear Subject para cada tipo de sensor
@@ -1053,20 +953,14 @@ export class ArduinoService {
 
   }
 
-
-
   //Observa los eventos emitidos por el subject
-
   public getSensorObservable(sensorType: Sensor): Observable<number|number[]> {
 
       return this.sensorSubjectMap.get(sensorType)!.asObservable();
 
   }
 
-
-
   //Notifica si cambio el valor de los sensores
-
   public notifySensorValue(sensorType: Sensor, value: number|number[]): void {
 
     const tiempoActual = Date.now();

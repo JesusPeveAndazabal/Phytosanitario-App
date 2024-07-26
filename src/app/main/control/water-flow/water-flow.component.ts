@@ -17,7 +17,7 @@ export class WaterFlowComponent  implements OnInit {
   @Input("wExecution") wExecution! : WorkExecution;
   @Input("realWaterflow") realWaterflow : number = 0;
 
-  waterFlow$: Observable<number>;
+  waterFlow$: Observable<number>; //Variabvle de tipo observable para mostrarlo en la interfaz
 
   private duration = 500;
   private animationDuration = 1500;
@@ -37,24 +37,21 @@ export class WaterFlowComponent  implements OnInit {
   constructor(public arduinoService: ArduinoService,private store : Store) { }
 
   async ngOnInit() {
-    //this.drawDonutChart("#efficiency-water-flow",0,".35em");
-// Asigna el valor de connectedCaudal según la lógica de tu aplicaciónMINIMO VOLUMEN
-    this.waterFlow$ = this.store.select(SensorState.waterFlow);  
-    this.setRealWaterflow(0);
-
-    
+    this.waterFlow$ = this.store.select(SensorState.waterFlow); // Obtener el valor del caudal
+    this.setRealWaterflow(0); //Inicializarlo en 0
   }
+
 
   ngOnChanges(changes: SimpleChanges) {
     if(this.wExecution && changes['wExecution']){
       let wConfig : WorkExecutionConfiguration = JSON.parse(this.wExecution.configuration);
-      this.teoric_water_flow = +wConfig.water_flow.toFixed(1);
+      this.teoric_water_flow = +wConfig.water_flow.toFixed(1); //Redondear a un decimal el valor teorico del caudal
       //this.drawDonutChart("#teoric-water-flow",wConfig.water_flow,".35em");
     }
     else if(changes['realWaterflow']){
       let currentFlow : number = changes['realWaterflow'].currentValue;
 
-      this.setRealWaterflow(currentFlow);
+      this.setRealWaterflow(currentFlow); //Asignar el currentFlow a la funcion setRealWaterflow
 
       //Se calcula el error relativo en porcentaje
       let relativeError : number = Math.abs((this.teoric_water_flow - currentFlow) / this.teoric_water_flow * 100);
@@ -63,6 +60,7 @@ export class WaterFlowComponent  implements OnInit {
       this.efficiency = (100 - (isNaN(relativeError)? 100 :relativeError)).toFixed(2);
     }
   }
+
 
   setRealWaterflow(value: number) {
     this.realWaterflow = value;
@@ -138,6 +136,7 @@ export class WaterFlowComponent  implements OnInit {
     return [percent, 100-percent];
   }
 
+  //Fucnion para realizar la animacion de la salida del caudal
   calcularAlturaCaudal(caudal: number): number {
     // Aquí debes implementar la lógica para calcular la altura del caudal
     // Por ejemplo, podrías escalar el caudal dentro de un rango específico y convertirlo a porcentaje

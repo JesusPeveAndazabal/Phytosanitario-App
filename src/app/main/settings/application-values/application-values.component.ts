@@ -8,9 +8,6 @@ import { UnitPressure, UnitPressureEnum,config,convertPressureUnit , calcular_ca
 import { FormBuilder, FormGroup, Validators } from '@angular/forms';
 import * as moment from 'moment';
 import { KeyboardComponent } from '../../../custom-components/keyboard/keyboard.component';
-
-
-
 import Swal from 'sweetalert2';
 import { ArduinoService } from '../../../core/services/arduino/arduino.service';
 import { Router } from '@angular/router';
@@ -72,6 +69,7 @@ export class ApplicationValuesComponent  implements OnInit {
 
   constructor(private modalCtrl: ModalController, private dbService : DatabaseService,
     private arduinoService:ArduinoService , private alertController : AlertController,private fb:FormBuilder ,private router : Router) {
+      //Atributos del formulario
       this.formData = this.fb.group({
         volume: [0,[Validators.required,]],
         speed: ['',[Validators.required,Validators.min(0.01)]],
@@ -83,32 +81,22 @@ export class ApplicationValuesComponent  implements OnInit {
     }
 
   async ngOnInit() {
+
+    //Abrimos la conexion a la base de datos
     await this.dbService.openConnection();
+    
+    //Consultas a la base de datos
     this.nozzleColors = await this.dbService.getNozzleColorData();
     this.nozzleTypes = await this.dbService.getNozzleTypeData();
     this.nozzles = await this.dbService.getNozzlesData();
     this.updateSummary(null);
-
-    //console.log("NOZZLES" , this.nozzles);
-
-
-
-/*     //Esto sirve para buscar en la tabla añadida
-    this.pressure_values = this.nozzles.map(p => { return  {pressure : p.pressure, pressure_unit : p.pressure_unit }})
-      .filter((obj, index, self) =>
-        index === self.findIndex((o) => (
-          o.pressure === obj.pressure && o.pressure_unit === obj.pressure_unit
-        ))
-    ); */
-
-    
-    //console.log(this.pressure_values, "filtro de nozzles");
-
     this.currentWorkExecution = await this.dbService.getLastWorkExecution();
 
-    //condicion para validar que el primer formulario este lleno
+    //condicion para validar que el primer formulario este completado
     if(this.currentWorkExecution){
       if(this.currentWorkExecution.configuration != ""){
+
+        //Parseamos a Json la configuracion de la ejecucion de trabajo
         this.weConfiguration = await JSON.parse(this.currentWorkExecution.configuration);
         this.nozzleConfig = this.weConfiguration!.nozzles;
         this.formData.setValue({
@@ -127,39 +115,22 @@ export class ApplicationValuesComponent  implements OnInit {
     }
   }
 
-
-/*   async openModal(){
-    const modal = await this.modalCtrl.create({
-      component: KeyboardComponent,
-      cssClass : 'keyboard-modal'
-    });
-    modal.onDidDismiss().then((data) => {
-      // Procesar datos del modal si es necesario
-    });
-
-    // Obtener la altura del teclado si es necesario
-    const keyboardHeight = 300; // Aquí deberías obtener la altura real del teclado
-
-    // Establecer la altura del modal
-    modal.style.height = keyboardHeight + 'px';
-
-    return await modal.present();
-  } */
-
   set items(items: NozzlesConfiguration[]){
     this.nozzleConfig = items;
-    //setTimeout(() => this.updateSummary(null),200);
   }
 
+  //Obtener la unidad de Presion
   get unitsPressure(){
     setTimeout(() => this.updateSummary(null),200);
     return UnitPressure;
   }
   // unitsPressure : any = UnitPressure;
     
+  //FUncion para cerrar el modal si en caso se presione Cancelar
   cancel() {
     return this.modalCtrl.dismiss(null, 'cancel','application-values-modal');
   }
+
 
   handleError(controlName : string,errorType : string) : boolean{
     if(this.formData.controls[controlName].errors)
@@ -170,22 +141,29 @@ export class ApplicationValuesComponent  implements OnInit {
     return false;
   }
 
+  //Metodo para la logica al presionar Confirmar al modal 
   async confirm() {
     this.isSubmitted = true;
+
+    //Verificamos que el fomulario sea valido
     if(this.formData.valid){
 
+      //Condicionamos en casono haya ningun registro de boquillas
       if(this.nozzleConfig.length == 0){
 
+        //Returnamos false en caso sea asi
         return false;
       }
+      //Verificamos si hay filas invalidas
       else if(this.invalid_rows > 0)
       {
-
+        //Retornamos false en caoo sea asi 
         return false;
       }
 
-      //this.arduinoService.regulatePressureWithBars()
+      //Obtenemos la configuracion de las boquiilas
       this.nozzleConfig = this.nozzleConfig.map(p => {return { type : p.type, number : p.number, color : parseInt(p.color.toString()) }});
+      //Guardamos los valores dentro de la configuracion
       this.weConfiguration = {
         nozzles : this.nozzleConfig,
         water_flow : this.total,
@@ -196,13 +174,15 @@ export class ApplicationValuesComponent  implements OnInit {
         ...this.formData.value
       }
 
-      //console.log("Deberria regular" ,this.weConfiguration?.pressure);
       //*************Esto es para mandar el comando de regulacion desde el confirmar del boton y apagar las valvulas
       this.arduinoService.regulatePressureWithBars(this.weConfiguration?.pressure);
+
+      /* Descomentar en caso se requiera cerrar las 2 electrovalvulas */
       //this.arduinoService.deactivateLeftValve();
       //this.arduinoService.deactivateRightValve();
      
 
+      //Creamos la estructura para guardar en la base de datos
       let wExecution : WorkExecution ={
         id: this.currentWorkExecution ? this.currentWorkExecution.id : 0,
         weorder : this.currentWorkExecution ? this.currentWorkExecution.weorder : 0,
@@ -226,6 +206,7 @@ export class ApplicationValuesComponent  implements OnInit {
         min_volume: 0,
       };
 
+      //Guardamos en la base de datos de acuerdo que se cumpla la condicion adecuada
       if(!this.currentWorkExecution){
         await this.dbService.saveWorkExecutionData(wExecution)
         .then(async ()=>{
@@ -242,6 +223,7 @@ export class ApplicationValuesComponent  implements OnInit {
         });
 
       }
+      //En caso contrario actualizamos el registro
       else{
         await this.dbService.updateWorkExecutionData(wExecution)
         .then(async()=>{
@@ -261,31 +243,35 @@ export class ApplicationValuesComponent  implements OnInit {
     return false;
   }
 
+  //Funcion para hallar la velocidad
   calculoVelocidad(){
-    let tiempoRecorrido;
-    let largo;
+
+    let tiempoRecorrido; //Variable para almacenar el tiempo recorrido
+    let largo; //Variable para hallar el largo del camino
     this.updateSummary(null);
 
+    //Contiene la division de el consumo entre el total de la suma de las boquillas
     tiempoRecorrido = ((this.formData.value.consume / this.total)/60).toFixed(3);
+    //Contiene la diviision de el ancho entre 10000 y lo dividimos entre 1000
     largo = ((10000 / this.formData.value.width) / 1000).toFixed(3);
 
+    //Verificamos que el consumo y el ancho no esten vacios
     if(this.formData.value.consume == "" || this.formData.value.width == ""){
+      //Si esta vacio la veloidad estaria en 0
       this.velocidadReal = 0;
     }else{
+      //En caso contrario se divide el largo entre el tiempo recorrido
       this.velocidadReal = parseFloat((largo / tiempoRecorrido).toFixed(2));
     }
   }
 
-  // Función para mostrar u ocultar el teclado
-/*   toggleKeyboard(show: boolean) {
-    this.showKeyboard = show;
-  }
- */
+  //Obtener los colores por el codigo
   getColorCode(id: number): string {
     this.color = this.nozzleColors.find(c => c.id === id);
     return this.color ? this.color.code : 'transparent'; // Devuelve el código del color si se encuentra, de lo contrario, devuelve 'transparent'
   }
 
+  //Obtener el nombre y color de las boquillas
   getColorName(colorId: number): string {
     const color = this.nozzleColors.find(c => c.id === colorId);
     return color ? color.name : '';
@@ -296,21 +282,7 @@ export class ApplicationValuesComponent  implements OnInit {
     this.nozzleConfig.forEach((item,index) => { item.number = index +1; });
   }
 
- /*  addNozzles() {
-    if (!this.quantity || !this.type || !this.selectedColor) {
-      return;
-    }
-  
-    for (let i = 0; i < this.quantity; i++) {
-      this.nozzleConfig.push({
-        number: this.nozzleConfig.length + 1,
-        type: this.type,
-        color: this.selectedColor
-      });
-    }
-    console.log("NOZZLECONFIG" , this.nozzleConfig)
-  } */
-
+  //Funcion para manejar que se generen las boquillas de acuerdo a la cantidad y tipo que se ingrese
   addNozzles(){
     if(!this.quantity)
       return;
@@ -325,76 +297,67 @@ export class ApplicationValuesComponent  implements OnInit {
       setTimeout(() => this.updateSummary(null),200);
   }
 
+  //Fucion para calcular el consumo de acuerdo a la presion y los rangos que se maneje
+  calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, quantity: number) {
+    this.updateSummary(null);
 
+    //Creacion de variables
+    let previousItem: Nozzles | null = null;
+    let currentItem: Nozzles | null = null;
+    let nextItem: Nozzles | null = null;
+    let nextNextItem: Nozzles | null = null;
+    let nextNextItem3: Nozzles | null = null;
+    let nextNextItem4: Nozzles | null = null;
 
-calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, quantity: number) {
-  this.updateSummary(null);
-  //console.log("Se entro a esta funcion");
-  let previousItem: Nozzles | null = null;
-  let currentItem: Nozzles | null = null;
-  let nextItem: Nozzles | null = null;
-  let nextNextItem: Nozzles | null = null;
-  let nextNextItem3: Nozzles | null = null;
-  let nextNextItem4: Nozzles | null = null;
+    const unitNozzle = this.formData.value.unit;
+    let encontrado = false; // Bandera para verificar si se ha encontrado un resultado
 
-  const unitNozzle = this.formData.value.unit;
-  //console.log("COLOR SELECCIONADO", colorSeleccionado);
-  //console.log("TYPE NOZZLE", typeNozzle);
- //console.log("UNIDAD SELECCIONADO", unitNozzle);
-  let encontrado = false; // Bandera para verificar si se ha encontrado un resultado
+    //Recorremos las boquillas que se han cargado por la Orden de Trabajo elegida
+    this.nozzles.forEach((item: Nozzles, index: number, array: Nozzles[]) => {
+        if (colorSeleccionado == item.color && !encontrado && typeNozzle == item.type) {
+            currentItem = item;
+            if (previousItem && nextItem && nextNextItem && nextNextItem3 && nextNextItem4) {
+                let presionConvertida: number;
+                if (typeNozzle == 1) {
+                    presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.PSI);
+                } else {
+                    presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.BAR);
+                }
+                
+                //Condicion para obtener los valores de los rangos para realizar el calculo del caudal total
+                if (index > 0 && index < array.length - 3) {
+                    let caudalTemporal = 0; // Variable temporal para almacenar el caudal objetivo calculado
+                    if (presionConvertida >= previousItem.pressure && presionConvertida <= nextItem.pressure) {
+                        caudalTemporal = calcular_caudal_objetivo(previousItem.flow, presionConvertida, previousItem.pressure, nextItem.pressure, nextItem.flow);
+                        encontrado = true;
 
-  this.nozzles.forEach((item: Nozzles, index: number, array: Nozzles[]) => {
-      if (colorSeleccionado == item.color && !encontrado && typeNozzle == item.type) {
-          currentItem = item;
-          //console.log("previousItem", currentItem, "nextItem", nextItem, "nextNextItem", nextNextItem, "nextNextItem3", nextNextItem3, "nextNextItem4", nextNextItem4);
-          if (previousItem && nextItem && nextNextItem && nextNextItem3 && nextNextItem4) {
-              let presionConvertida: number;
-              if (typeNozzle == 1) {
-                  presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.PSI);
-                  //console.log("PresionConvertida", presionConvertida);
-              } else {
-                  presionConvertida = convertPressureUnit(presion, UnitPressureEnum.BAR, UnitPressureEnum.BAR);
-                  //console.log("PresionConvertida", presionConvertida);
-              }
+                    } else if (presionConvertida > nextItem.pressure && presionConvertida <= nextNextItem.pressure) {
+                        caudalTemporal = calcular_caudal_objetivo(nextItem.flow, presionConvertida, nextItem.pressure, nextNextItem.pressure, nextNextItem.flow);
+                        encontrado = true;
 
-              if (index > 0 && index < array.length - 3) {
-                  let caudalTemporal = 0; // Variable temporal para almacenar el caudal objetivo calculado
-                  if (presionConvertida >= previousItem.pressure && presionConvertida <= nextItem.pressure) {
-                      caudalTemporal = calcular_caudal_objetivo(previousItem.flow, presionConvertida, previousItem.pressure, nextItem.pressure, nextItem.flow);
-                      //console.log("CAUDAL 1 ", caudalTemporal);
-                      encontrado = true;
+                    } else if (presionConvertida > nextNextItem.pressure && presionConvertida <= nextNextItem3.pressure) {
+                        caudalTemporal = calcular_caudal_objetivo(nextNextItem.flow, presionConvertida, nextNextItem.pressure, nextNextItem3.pressure, nextNextItem3.flow);
+                        encontrado = true;
 
-                  } else if (presionConvertida > nextItem.pressure && presionConvertida <= nextNextItem.pressure) {
-                      caudalTemporal = calcular_caudal_objetivo(nextItem.flow, presionConvertida, nextItem.pressure, nextNextItem.pressure, nextNextItem.flow);
-                      //console.log("CAUDAL 2 ", caudalTemporal);
-                      encontrado = true;
+                    } else if (presionConvertida > nextNextItem3.pressure && presionConvertida <= nextNextItem4.pressure) {
+                        caudalTemporal = calcular_caudal_objetivo(nextNextItem3.flow, presionConvertida, nextNextItem3.pressure, nextNextItem4.pressure, nextNextItem4.flow);
+                        encontrado = true;
+                    }
 
-                  } else if (presionConvertida > nextNextItem.pressure && presionConvertida <= nextNextItem3.pressure) {
-                      caudalTemporal = calcular_caudal_objetivo(nextNextItem.flow, presionConvertida, nextNextItem.pressure, nextNextItem3.pressure, nextNextItem3.flow);
-                      //console.log("CAUDAL 3 ", caudalTemporal);
-                      encontrado = true;
+                    // Acumular el caudal objetivo temporal al total
+                    this.caudalObjetivo += caudalTemporal * quantity;
+                }
+            }
+            previousItem = currentItem;
+            nextItem = array[index + 1];
+            nextNextItem = array[index + 2];
+            nextNextItem3 = array[index + 3];
+            nextNextItem4 = array[index + 4];
+        }
+    });
+  }
 
-                  } else if (presionConvertida > nextNextItem3.pressure && presionConvertida <= nextNextItem4.pressure) {
-                      caudalTemporal = calcular_caudal_objetivo(nextNextItem3.flow, presionConvertida, nextNextItem3.pressure, nextNextItem4.pressure, nextNextItem4.flow);
-                      //console.log("CAUDAL 4 ", caudalTemporal);
-                      encontrado = true;
-                  }
-
-                  // Acumular el caudal objetivo temporal al total
-                  this.caudalObjetivo += caudalTemporal * quantity;
-                  //console.log("CAUDAL SUMADO", this.caudalObjetivo);
-              }
-          }
-          previousItem = currentItem;
-          nextItem = array[index + 1];
-          nextNextItem = array[index + 2];
-          nextNextItem3 = array[index + 3];
-          nextNextItem4 = array[index + 4];
-      }
-  });
-}
-
-
+  //Funcion para recalcular el caudal objetivo
   recalcularCaudalObjetivo() {
     this.caudalObjetivo = 0;  // Reiniciar caudalObjetivo a 0 al inicio de la función
     const presion = this.formData.value.pressure;
@@ -423,12 +386,9 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
             this.calculoConsumo(presion, colorSeleccionado, typeNozzle, quantity);
         }
     }
+    //Llamamos a la funcion de calculoVelocidad para actualizar el valor en caso haya algun cambio
     this.calculoVelocidad();
-}
-
-
-
-
+  }
 
   /**
    * This function is responsible for removing a specific nozzle from the nozzle configuration.
@@ -437,6 +397,8 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
    * If the user cancels, nothing happens.
    * @param nozzleNumber
    */
+
+  //Funcion para remover las boquillas seleccionadas
   removeNozzle(nozzleNumber : number){
     this.alertController.create({
       header: '¡Atención!',
@@ -467,6 +429,7 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
     });
   }
 
+  //Metodo para identificar las boquillas no ingresadas correctamente
   isNullOrNaN(value: number | undefined, nonNullValue: number, item: number): number {
     if (isNaN(value!)) {
       this.invalid_rows++;
@@ -484,7 +447,9 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
     return !isNaN(value!) ? value! : nonNullValue;
   }
 
-    updateCaudalObjetivoTotal() {
+  //Actualizar el total del caudal objetivo
+  updateCaudalObjetivoTotal() {
+    
     // Sumar todos los caudales objetivos de las boquillas
     this.total =  this.caudalObjetivo;
 
@@ -503,6 +468,8 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
    * Any nozzle with a null or NaN value is replaced with 0. The mapped values are then summed up using the reduce method and displayed as a string with the label "L/min".
    * @param _event
    */
+
+  //Actualizar suma
   updateSummary(_event : any){
     this.invalid_rows = 0;
     if(this.nozzleConfig.length > 0) {
@@ -521,21 +488,4 @@ calculoConsumo(presion: number, colorSeleccionado: number, typeNozzle: number, q
     this.totalLabel = `${this.total.toFixed(2)} L/min`;
   }
 
-
-
-
-
-  /* changeUnit($event : any){
-    // console.log("cambio de item");
-    this.pressures_items = [];
-    this.pressure_values.forEach((item : any) =>{
-      let original = UnitPressure.find(p => p.value == item.pressure_unit);
-      let convert_unit = UnitPressure.find(p => p.value == $event.value);
-      let converted = parseFloat(convertPressureUnit(item.pressure,item.pressure_unit,$event.value).toFixed(2));
-      this.pressures_items.push({label: `${converted} ${convert_unit!.name} (${item.pressure} ${original!.name})`,value : item.pressure})
-      console.log("original" , original);
-      console.log("original" , convert_unit);
-      console.log("original" , converted);
-    });
-  } */
 }

@@ -58,6 +58,7 @@ export class ThermometerComponent  implements OnInit,AfterViewInit,OnChanges {
       //   };
       // }
 
+  
       let weConfiguration : WorkExecutionConfiguration = JSON.parse(this.wExecution.configuration);
       if(!weConfiguration.humidity || !weConfiguration.temperature){
         this.generalService.getCurrentWeather(this.currentLocation).subscribe({

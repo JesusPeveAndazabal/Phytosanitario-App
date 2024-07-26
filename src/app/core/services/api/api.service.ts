@@ -61,6 +61,8 @@ export class ApiService {
  * @param wExecution - Objeto BaseRegistroPeso que contiene la información del registro de peso.
  * @returns Observable<BaseRegistroPeso> - Observable que emite el objeto BaseRegistroPeso enviado.
  */
+
+  //Funcion para obtener los registros de la ejecucion de trabajo que no se han enviado al servidor
   public sendRegistroAsyncExecution(wExecution: WorkExecution): Observable<WorkExecution> {
     let httpOptions = {
       headers: new HttpHeaders({
@@ -71,6 +73,7 @@ export class ApiService {
     return this.http.post<WorkExecution>(`${Configuration.urlRest}/api/work-execution-app/` , wExecution, httpOptions);
   }
 
+  //Funcion para obtener los registros del detalle de la ejecucion de trabajo que no han sido enviados
   public sendRegistroAsyncExecutionDetail(wExecutionDetail: WorkExecutionDetail[]): Observable<WorkExecutionDetail> {
     let httpOptions = {
       headers: new HttpHeaders({
@@ -81,7 +84,7 @@ export class ApiService {
     return this.http.post<WorkExecutionDetail>(`${Configuration.urlRest}/api/work-execution-data-app/` , wExecutionDetail, httpOptions);
   }
 
-  //Metodo para actualizar en el server
+  //Metodo para actualizar la ejecucion de trabajo
   public sendUpdateExecution(wExecution: WorkExecution): Observable<WorkExecution>{
     let httpOptions = {
       headers : new HttpHeaders({

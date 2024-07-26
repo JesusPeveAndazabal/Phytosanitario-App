@@ -77,7 +77,6 @@ export class GpsComponent  implements OnInit,AfterViewInit,OnChanges {
     }
   }
 
-
   ngAfterViewInit(){
     if (!navigator.onLine){
       this.alerta.mostrarAlertaChica("<p>¡No hay conexión a internet!</p>")

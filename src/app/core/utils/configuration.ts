@@ -1,3 +1,4 @@
+//Interfaz para las instancias de los dispositivos seriales y el numero de dispositivos
 export const Configuration ={
     token : "",
     urlRest : "",

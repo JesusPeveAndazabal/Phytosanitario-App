@@ -26,7 +26,7 @@ export class RedisService {
   //Conexion para las instancias de Redis - Sub y Pub
   private connectToRedis(): void {
     const redisOptions = {
-      host: '192.168.183.127', //Host  - cambiar la ip si se conectara a otra red
+      host: '192.168.160.136', //Host  - cambiar la ip si se conectara a otra red
       //host : 'localhost',
       port: 6379, //Puerto predeterminado de redis
       maxRetriesPerRequest: 30, //Intentos para volver a conectarse
@@ -38,7 +38,7 @@ export class RedisService {
 
     //Subscribirte al Cliente 
     this.subscriberClient.on('connect', () => {
-      console.log('Conectaoo y suscrito a redis');
+      console.log('Conectado y suscrito a redis');
       
       //Variable booleana para determinar si se conecto el app con Redis
       this.isConnected = true;
@@ -56,7 +56,7 @@ export class RedisService {
     });
   }
 
-  //Funcion para subscribirse al canala de 'commands'
+  //Funcion para subscribirse al canal de 'commands'
   private subscribeToCommands(): void {
     if (!this.isConnected) {
       return;
@@ -105,76 +105,98 @@ export class RedisService {
   }
 
   //Funcion para procesar las respuestas y/o valores que te envia el script de Python
+//Funcion para procesar las respuestas y/o valores que te envia el script de Python
   private processResponse(response: string): void {
     console.log(response);
-    this.electronService.log("RESPONSES" , response);
-      try {
+    this.electronService.log("RESPONSES", response);
+    try {
+      //Parsear el response
+      const parsedResponse = JSON.parse(response);
+      
+      //Recorrer por el sensorId y el response
+      for (const sensorId in parsedResponse) {
+        //Devuelve un booleado undicando si el objeto tiene la propiedad especificada
+        if (parsedResponse.hasOwnProperty(sensorId)) {
+          const value = parsedResponse[sensorId];
+          this.commandSubject.next(`${sensorId}: ${value}`);
 
-        const parsedResponse = JSON.parse(response);
-    
-        for (const sensorId in parsedResponse) {
-          if (parsedResponse.hasOwnProperty(sensorId)) {
-            const value = parsedResponse[sensorId];
-            this.commandSubject.next(`${sensorId}: ${value}`);
+          let numericValue: number | number[] | null = null;
+          
+          if (typeof value === 'string' && sensorId == Sensor.GPS.toString()) {
+            // Procesar el valor como coordenadas GPS
+            numericValue = value.split(',').map(v => parseFloat(v.trim()));
+          } else if (typeof value === 'number' && !isNaN(value)) {
+            numericValue = value;
+          }
+
+          //Se separa por tipos de sensores para disparar el evento y actualize el estado de cada sensor en el archivo eventsSensors.ts
+          switch (parseInt(sensorId, 10)) {
+            
+            //Caso para el GPS
+            case Sensor.GPS:
+              if (Array.isArray(numericValue) && numericValue.length === 2) {
+                const valSensor = JSON.parse(`{"${Sensor.GPS}": ${JSON.stringify(numericValue)}}`);
+                this.electronService.log("valSensorGPS", valSensor);
+                this.store.dispatch(new Gps(valSensor));
+              }
+              break;
+
+            //Caso para el caudal
+            case Sensor.WATER_FLOW:
+              if (numericValue !== null && typeof numericValue === 'number') {
+                const valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}": ${numericValue}}`);
+                this.electronService.log("CAUDAL", valSensorFlow);
+                this.store.dispatch(new WaterFlow(valSensorFlow));
+              }
+              break;
               
-            let numericValue: number | null = null;
-    
-            if (typeof value === 'number' && !isNaN(value)) {
-              numericValue = value;
-            }
-            //Se separa por tipos de sensores para disparar el evento y actualize el estado de cada sensor en el archivo eventsSensors.ts
-            switch (parseInt(sensorId ,10)) {
+            //Caso para el volumen
+            case Sensor.VOLUME:
+              if (numericValue !== null && typeof numericValue === 'number') {
+                const valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}": ${numericValue}}`);
+                this.electronService.log("VOLUMEN", valSensorVolume);
+                this.store.dispatch(new Volumen(valSensorVolume));
+              }
+              break;
+
+            //Caso para la presión
+            case Sensor.PRESSURE:
+              if (numericValue !== null && typeof numericValue === 'number') {
+                const valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}": ${numericValue}}`);
+                this.electronService.log("PRESION", valSensorPressure);
+                this.store.dispatch(new Pressure(valSensorPressure));
+              }
+              break; 
               
-              case Sensor.WATER_FLOW:
-                if (numericValue !== null) {
-                  const valSensorFlow = JSON.parse(`{"${Sensor.WATER_FLOW}" : ${numericValue}}`);
-                  this.electronService.log("CAUDAL", valSensorFlow);
-                  this.store.dispatch(new WaterFlow(valSensorFlow));
-                }
-                break;
-    
-              case Sensor.VOLUME:
-                if (numericValue !== null) {
-                  const valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${numericValue}}`);
-                  this.electronService.log("VOLUMEN", valSensorVolume);
-                  this.store.dispatch(new Volumen(valSensorVolume));
-                }
-                break;
+            //Caso para valvula izquierda
+            case Sensor.VALVE_LEFT:
+              const valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}": ${value}}`);
+              this.electronService.log("valSensorValveLeft", valSensorValveLeft);
+              this.store.dispatch(new LeftValve(valSensorValveLeft));
+              break;
 
-              case Sensor.PRESSURE:
-                if (numericValue !== null) {
-                  const valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${numericValue}}`);
-                  this.electronService.log("PRESION", valSensorPressure);
-                  this.store.dispatch(new Pressure(valSensorPressure));
-                }
-                break;
- 
-              case Sensor.VALVE_RIGHT:
-                let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
-                this.electronService.log("valSensorValveRight" , valSensorValveRight);
-                this.store.dispatch(new RightValve(valSensorValveRight));
-                break;
+            //Caso para la valvula derecha
+            case Sensor.VALVE_RIGHT:
+              const valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}": ${value}}`);
+              this.electronService.log("valSensorValveRight", valSensorValveRight);
+              this.store.dispatch(new RightValve(valSensorValveRight));
+              break;
 
-              case Sensor.VALVE_LEFT:
-                let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
-                this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
-                this.store.dispatch(new LeftValve(valSensorValveLeft));
-                break;
-    
-              // Agregar otros casos según sea necesario
-    
-              default:
-                console.log(`Sensor ID ${sensorId} no reconocido`);
-                break;
-            }
+            // Agregar otros casos según sea necesario
+            
+            //En caso que ni un sensor se haya reconocido
+            default:
+              console.log(`Sensor ID ${sensorId} no reconocido`);
+              break;
           }
         }
-      } catch (error) {
-        console.error('Error en el parseo de  JSON:', error);
-        // Maneja el error según sea necesario
       }
+    } catch (error) {
+      console.error('Error en el parseo de JSON:', error);
+      // Maneja el error según sea necesario
+    }
   }
-  
+
   //Funcion para enviar comandos al script de Python - En el arduino Service se hace uso de este metodo 
   public sendCommand(command: string): void {
     if (!this.isConnected) {

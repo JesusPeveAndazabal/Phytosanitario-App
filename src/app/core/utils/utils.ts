@@ -1,5 +1,6 @@
 import * as moment from 'moment';
 
+//Clase para manejar el Tiempo produuctivo e Improductivo
 export class Chronos {
     private _name: string | null;
     private _start: boolean;

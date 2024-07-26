@@ -94,9 +94,10 @@ export class MainComponent implements OnInit,AfterViewInit{
      }
 
   async ngOnInit() {
+    //Abrir la conexion a la base de datos
     await this.databaseService.openConnection();
-    
 
+    //Consultas a la base de datos
     this.login = await this.databaseService.getLogin();
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
 
@@ -113,6 +114,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     this.localConfig = await this.databaseService.getLocalConfig();
   }
 
+  //Funcion para abrir la base de datos y validar que el voluemn Inicial sea mayor a 0 para restablecer los valores del aplicativo
   async openIfNotConnected(){
     await this.databaseService.openConnection();
     //console.log("SE INICIO LA BD")
@@ -126,14 +128,15 @@ export class MainComponent implements OnInit,AfterViewInit{
           this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
           this.powerButtonOn = true;
           this.arduinoService.isRunning = true;
-          this.someFunction();
+          this.obtenerVolumenInicial();
         }
       }
     });
     
   }
 
-  async someFunction() {
+  //Funcion para consultar a la base de datos y verificar que haya un registro de un volumen configurado
+  async obtenerVolumenInicial() {
     try {
         //console.log("Entro a esta funcion");
         if(this.lastWorkExecution){
@@ -146,6 +149,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     }
   }
 
+  //Funcion para verificar las configuraciones
   async ngAfterViewInit() {
 
     this.loadPersonValues();
@@ -156,8 +160,10 @@ export class MainComponent implements OnInit,AfterViewInit{
     }
   }
 
+  //Funcion para cargar los valores de las personas
   async loadPersonValues(){
 
+    //Abrir la conexion a la base de datos
     await this.openIfNotConnected();
 
     await this.databaseService.getLastWorkExecution()
@@ -179,40 +185,26 @@ export class MainComponent implements OnInit,AfterViewInit{
     .catch((error)=>{
       console.log(error);
     });
-
-    // if(this.cookieService.check("session"))
-    // {
-    //   this.login = this.peopleData.find(p => p.id == parseInt(this.cookieService.get("session")))!;
-    // }
-    // else if(this.lastWorkExecution)
-    // {
-    //   this.workerData = this.peopleData.find(p => p.id == this.lastWorkExecution?.worker)!;
-    // }
-
-
-    // if(this.cookieService.check("supervisor")){
-    //   this.supervisorData = this.peopleData.find(p => p.id == parseInt(this.cookieService.get("supervisor")))!;
-    // }
-
-    // await this.databaseService.closeConnection(environment.dbName, false);
   }
 
+  //Obtener el url de las rutas
   get currentRoute(): string{
     return this.router.url;
   }
 
-  changeStatusExecution(){
-
-  }
-
+  //Funcion para cerrar sesion
   cerrarSesion(){
+
+    //Dejar activada la valvula derecha para el lavado del tractor
     this.arduinoService.activateRightValve();
     this.volumenCompont.rightControlActive = true;
+    //Reiniciar el volumen total
     this.arduinoService.resetVolumenInit();
     //this.arduinoService.volumenAcumulado = 0;
     this.arduinoService.currentRealVolume = 0;
     this.arduinoService.initialVolume = 0;
     this.arduinoService.datosCaudal = 0;
+    //Redireccionar al login 
     this.router.navigate(['/','login']);
   }
 
@@ -221,11 +213,11 @@ export class MainComponent implements OnInit,AfterViewInit{
     this.listenTime = moment();
   }
   
+  //Funcion que se dispara en caso el boton para llenar el tanque sea llenado y confirmado
   async onClickPower(){
-    //this.arduinoService.volumenAcumulado = 0;
+    //Consultar a la base de datos si hay alguna ejecucion siendo utilizada
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
-    //console.log(this.lastWorkExecution, "dio click al boton verde");
-    // console.log(this.loadPersonValues, "person values");
+
     if(!this.lastWorkExecution)
       this.loadPersonValues();
       let command : SocketData = {
@@ -235,16 +227,13 @@ export class MainComponent implements OnInit,AfterViewInit{
       };
 
       command.data.id = (await this.databaseService.getLastWorkExecution()).id;
-      //console.log(command, "array de socket data");
-      //console.log(command.data.id, "id");
 
       // Start/Pause
       command.type = this.workStatus == WorkStatusChange.STOP || WorkStatusChange.FINISH ? WorkStatusChange.START : WorkStatusChange.STOP;
-      //console.log(command.type, "command type");
 
-    /*In this case the pause option will not be enabled, it will pause only when the volume of water in the tank is close to empty,
-    then it will be the moment when the operator finishes the work application or fills the tank again, if so, once the tank is filled,
-    the new volume of water in the tank must be entered.*/
+    /*En este caso la opción de pausa no estará habilitada, se pausará solo cuando el volumen de agua en el tanque esté casi vacío,
+    entonces será el momento en que el operador finalice la aplicación de trabajo o llene nuevamente el tanque, de ser así, una vez lleno el tanque,
+    Se debe ingresar el nuevo volumen de agua en el tanque.*/
 
     if (command.type == WorkStatusChange.START){
       const modal = await this.modalController.create({
@@ -257,47 +246,38 @@ export class MainComponent implements OnInit,AfterViewInit{
 
       modal.onDidDismiss().then(async (data) => {
         if (data && data.data) {
-          //this.arduinoService.resetTanque();
-
-          //this.arduinoService.restaurarConsumoTotal = 0;
-          //this.arduinoService.previousAccumulatedVolume = 0;
           this.volumenTanque = parseFloat(data.data);
           if (!isNaN(this.volumenTanque)) {
             this.localConfig = await this.databaseService.getLocalConfig();
             //console.log("GETLOCALCONFIG" , this.localConfig);
             this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
+            //Aqui llamamos a la funcion : 
             await this.openIfNotConnected();
-            //console.log("GETLASTWORK" , this.lastWorkExecution);
+
+            //Volumen de tipo WaterVolumen por el id
             let volume : WaterVolumes = { id :0 ,volume: this.volumenTanque,work_exec_id : this.lastWorkExecution!.id };
-            //console.log(volume, "volume");
+
+            //Parseamos la configuracion del traba
             let conf = JSON.parse(this.lastWorkExecution!.configuration) as WorkExecutionConfiguration;
-            //console.log("CONF.VOLUMEN" , conf.volume);
-            //console.log("VAL" ,this.volumenTanque);
+
+            //Guardamos la resta para obtener el tanque actual
             conf.volume = this.volumenTanque - this.arduinoService.currentRealVolume;
-            //this.arduinoService.resetVolumenInit();
-            //console.log(volume, this.lastWorkExecution!, "info a guardar");
-            // console.log(this.lastWorkExecution!, "this.lastWorkExecution!.configuration");
             this.lastWorkExecution!.configuration = JSON.stringify(conf);
+
+            //Guardamos el volume obtenido 
             await this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!);
-            // console.log(this.databaseService.saveWaterVolumes(volume,this.lastWorkExecution!));
-            // await this.databaseService.closeDB();
+
             command.data.current_volume = this.volumenTanque;
 
-            //Regular la presión cada vez que se configure el volumen del tanque
-            //this.arduinoService.regulatePressureWithBars(parseFloat(`${conf.pressure}`));
-            //Configurar el volumen mínimo e inicial en el servicio.
-            //console.log(this.localConfig.vol_alert_on, "this.localConfig.vol_alert_on");
-            //console.log("INCIIAL VOLUMEN" , this.volumenTanque , this.localConfig.vol_alert_on);  
+            //Pasar la funcion de inciialzar Contenedor para iniciar el trabajo
             this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on); 
-         
+            
+            //Actualizar el estado de la aplicacion , aca se ha iniciado 
             this.workStatus = WorkStatusChange.START;
             this.powerButtonOn = true;
             this.classButtonPower = this.workStatus == WorkStatusChange.START  ? "power-button-on" : "power-button-off";
             this.arduinoService.resetVolumenInit();
            
-            //this.volumenCompont.apagarValvulas();
-            // Tu lógica para guardar el volumen y realizar acciones con él
-            //console.log("Volumen capturado:", volume);
           }
         }
       });
@@ -306,7 +286,9 @@ export class MainComponent implements OnInit,AfterViewInit{
     }
   }
 
+  //Funcion para finalizar la aplicacion
   async onEndListenPower($event: any){
+    //Consultar si hay algun tranajo en ejecucion
     this.lastWorkExecution = await this.databaseService.getLastWorkExecution();
     let command : SocketData = {
       event:SocketEvent.WORK_STATUS_CHANGES,
@@ -322,11 +304,6 @@ export class MainComponent implements OnInit,AfterViewInit{
           {
             text: 'Si',
             handler: () => {
-              // console.log(event, "evento apagar")
-              // this.loading_message = 'Finalizando aplicación...';
-              // this.loader.present();
-              // console.log(command.type, "1");
-              // const LastWorkExecution = this.databaseService.getLastWorkExecution;
 
               let id : WorkExecution = this.lastWorkExecution;
               this.databaseService.finishWorkExecution(id);
@@ -340,10 +317,8 @@ export class MainComponent implements OnInit,AfterViewInit{
               this.arduinoService.currentRealVolume = 0;
               this.arduinoService.initialVolume = 0;
               this.arduinoService.datosCaudal = 0;
-              this.volumenCompont.apagarValvulas();
-              this.router.navigate(['/','main','settings']);
-              //Se dejara la valvula derecha activada
-              // console.log(finalizar, "finalizar");
+              this.volumenCompont.apagarValvulas(); //Apagamos las electrovalvulas
+              this.router.navigate(['/','main','settings']); //Redireccionamos hacia las configuraciones iniciales
             }
           },
           {

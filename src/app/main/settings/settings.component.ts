@@ -31,6 +31,7 @@ export class SettingsComponent  implements OnInit {
     private dbService : DatabaseService,private apiService : GeneralService) { }
 
   async ngOnInit() {
+    //Obtener la consulta a la base de datos
     this.dbService.getLocalConfig();
     let wExecution = await this.dbService.getLastWorkExecution();
     if(wExecution){
@@ -39,6 +40,7 @@ export class SettingsComponent  implements OnInit {
     }
   }
 
+  //Funcion para alertas 
   public mostrarAlertaChica(html: string){
     Swal.fire({
       width: 500,
@@ -54,16 +56,18 @@ export class SettingsComponent  implements OnInit {
     });
   }
 
+  //Metodo asincronico para crear el modal para Application-values
   async openAplicationValues() {
     const modal = await this.modalCtrl.create({
-      component: ApplicationValuesComponent,
+      component: ApplicationValuesComponent, //Se define el nombre del componente 
       id: 'application-values-modal',
-      backdropDismiss:false,
+      backdropDismiss:false, //Esta opcion es para evitar que el modal se cierre en caso se presione fuera de este 
     });
     modal.present();
     const { data, role } = await modal.onWillDismiss();
   }
   
+  //metodo asyncrono para crear el modal para Application-data
   async openAplicationData() {
     const modal = await this.modalCtrl.create({
       component: ApplicationDataComponent,
@@ -76,6 +80,7 @@ export class SettingsComponent  implements OnInit {
     const { data, role } = await modal.onWillDismiss();
   }
 
+  //Metodo para crear el modal para las ordenes de trabajo
   async openOrdenesTrabajo(){
     const modal = await this.modalCtrl.create({
       component : OrdenesTrabajoComponent,
@@ -90,12 +95,9 @@ export class SettingsComponent  implements OnInit {
    * The data will be used to settings the work executions.
    */
 
+  //Funcion para sincronizar las tablas de mi base de datos con lo consumido en el Api del servidor
   async syncPrimaryTables() : Promise<boolean>{
-    console.log("SINCRONIZANDO DATOS ............................")
-    //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
-      console.log("EMNTRO AL TRY");
-      // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
       const farms = await firstValueFrom(this.apiService.getFarm());
@@ -107,20 +109,18 @@ export class SettingsComponent  implements OnInit {
       const works = await firstValueFrom(this.apiService.getWorks());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
-      // const we = await firstValueFrom(this.apiService.getWE());
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
-      // await this.dbService.syncPersonData(people);
+      //Sincronizar Personas
       for (const person of people) {
         const existingPerson = await this.dbService.getRecordById('person', person.id);
-        // console.log(existingPerson, "person");
         if (!existingPerson) {
           await this.dbService.syncPersonData([person]);
         }
       }
 
-      // await this.dbService.syncCultivationData(cultivations);
+      //Sincronizar cultivos
       for (const cultivation of cultivations) {
         const existingCultivation = await this.dbService.getRecordById('cultivation', cultivation.id);
         if (!existingCultivation) {
@@ -128,7 +128,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncFarmData(farms);
+      //Sincronizar fundos
       for (const farm of farms) {
         const existingFarm = await this.dbService.getRecordById('farm', farm.id);
         if (!existingFarm) {
@@ -136,7 +136,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncLotsData(lots);
+      //Sincronizar lotes
       for (const lot of lots) {
         const existingLot = await this.dbService.getRecordById('lot', lot.id);
         if (!existingLot) {
@@ -144,7 +144,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzleColorData(nozzleColors);
+      //Sincronizar los colores de boquillas
       for (const nozzleColor of nozzleColors) {
         const existingNozzleColor = await this.dbService.getRecordById('nozzle_color', nozzleColor.id);
         if (!existingNozzleColor) {
@@ -152,7 +152,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzleTypeData(nozzleTypes);
+      //Sincronizar los tipos de boquillas
       for (const nozzleType of nozzleTypes) {
         const existingNozzleType = await this.dbService.getRecordById('nozzle_type', nozzleType.id);
         if (!existingNozzleType) {
@@ -160,7 +160,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzlesData(nozzles);
+      //Sinronizar las boquillas
       for (const nozzle of nozzles) {
         const existingNozzle = await this.dbService.getRecordById('nozzles', nozzle.id);
         if (!existingNozzle) {
@@ -168,7 +168,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncProductData(products);
+      //Sincronizar los productos
       for (const product of products) {
         const existingProduct = await this.dbService.getRecordById('product', product.id);
         if (!existingProduct) {
@@ -176,7 +176,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
-      // await this.dbService.syncWorkData(works);
+      //Sincronizar las labores
       for (const work of works) {
         const existingWork = await this.dbService.getRecordById('work', work.id);
         if (!existingWork) {
@@ -184,6 +184,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
+      //Sincronizar las ordenes de trabajo
       for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
@@ -199,6 +200,7 @@ export class SettingsComponent  implements OnInit {
         }
       }
 
+      //Sincronizar los implementos
       for (const implement of implementss) {
         const existingImplement = await this.dbService.getRecordById('implement', implement.id);
         if (!existingImplement) {
@@ -217,6 +219,7 @@ export class SettingsComponent  implements OnInit {
     }
   }
   
+  //Funcion para redireccionar al /config
   async generalSettings(){
     this.router.navigate(['/config'], { state: { update : true } });
   }

@@ -46,10 +46,12 @@ export class OrdenesTrabajoComponent implements OnInit {
     private electronService : ElectronService){}
 
   async ngOnInit(){
+
+    //Consultas a la base de datos
+
     this.login = await this.dbService.getLogin();
     this.implementData = await this.dbService.getImplemenData();
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
-    //Obtiene las ejecuciones de trabajo 
     this.ejecucionesTrabajo = await this.dbService.getLastWorkExecutionOrder();
     this.obtenerEjecuciones = await this.dbService.getWorkExecution();
     this.implementOrder = await this.dbService.getWorkExecutionOrder();
@@ -88,31 +90,37 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.filterByDate();
   }
 
+
+  //Funcion para ordenar por fecha y hora las ordenes de trabajo
   filterByDate() {
     const fechaFiltrada = moment(this.selectedDate).format('YYYY-MM-DD');
     this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaFiltrada);
   }
   
-  
+  //Funcion para cerrar el modal en caso se elija Cancelar
   cancel() {
     return this.modalCtrl.dismiss(null, 'cancel','ordenes-trabajo');
   }
 
+
+  //Funcion para obtener la orden que se ha seleccionado
   selectOrder(order: WorkExecutionOrder) {
     this.selectedWorkOrder = order;
     this.configExecution = JSON.parse(this.selectedWorkOrder.configuration);
     console.log("THISCONFIG" , this.configExecution.nozzles);
   }
 
+  //Funcion para onbtener las ordenes que han sido finalizadas
   isOrderFinished(order: WorkExecutionOrder): boolean {
     return this.finishedWorkExecutionIds.includes(order.id);
   }
 
+  //Obtener los tipos de boquillas
   getNozzleType(id: number): NozzleType | undefined {
-    //console.log("GETNOZZLETYPE" , this.nozzleType.find(type => type.id === id));
     return this.nozzleType.find(type => type.id === id);
   }
 
+  //Obtener el color de las boquillas
   getNozzleColor(id: number): NozzleColor | undefined {
     //console.log("NOZZLECOLOR", this.nozzleColor.find(color => color.id === id));
     return this.nozzleColor.find(color => color.id === id);
@@ -133,9 +141,13 @@ export class OrdenesTrabajoComponent implements OnInit {
     return formattedDate;
   }
 
+  //Funcion para confirmar la orden seleccionada
   async confirm(){
+    //Parsear a Json ña configuracion de la orden
     let configExecution = JSON.parse(this.selectedWorkOrder.configuration);
+    //Verificamos que haya una orden seleccionada
     if (this.selectedWorkOrder) {
+      //Estructuramos los datos para guardar en la base de datos
       let workExecution: WorkExecution = {
         id :1,
         weorder : this.selectedWorkOrder ? this.selectedWorkOrder.id : 0,
@@ -161,12 +173,10 @@ export class OrdenesTrabajoComponent implements OnInit {
 
       /* Descomentar en prubeas para regular la presion */
       this.arduinoService.regulatePressureWithBars(configExecution.pressure);
-      console.log("REGULADOR ORDEN" , configExecution.pressure);
       //this.arduinoService.resetVolumenInit();
       this.arduinoService.isRunning = false;
       this.arduinoService.datosCaudal = 0;
       this.arduinoService.dataCurrent = 0;
-      //this.arduinoService.volumenAcumulado = 0;
       this.arduinoService.currentRealVolume = 0;
       this.arduinoService.initialVolume = 0;
       this.arduinoService.deactivateLeftValve();
@@ -181,12 +191,17 @@ export class OrdenesTrabajoComponent implements OnInit {
       await this.modalCtrl.dismiss(this.selectedWorkOrder, 'confirm', 'ordenes-trabajo');
       //Guardamos la ejecucion de Trabajo
       await this.dbService.saveWorkExecutionData(workExecution);
+
+      //Esto es para dar acceso a las botones
       this.lastWorkExecution = await this.dbService.getLastWorkExecution();
       config.lastWorkExecution = this.lastWorkExecution;
+
+      //Redireccionar al main
       this.router.navigateByUrl('/main');
     }
   }
 
+  //Obtener un valor booleado en caso haya una configuracion valida o no
   get canStart(): boolean{
     if(config.lastWorkExecution){
       return config.lastWorkExecution.configuration != "";

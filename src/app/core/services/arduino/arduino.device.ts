@@ -45,10 +45,12 @@ export class ArduinoDevice {
     private store: Store,
   ) {
       this.connectToDevice(path, baudrate,autoOpen);
+
+      //Enviar este comando para requerir de nuevo que el dispositivo serial te mande de nuevo 'C|1|"Sensores"'
       this.sendCommand('RECONFIGURE');
-      /* this.setupSensorSubjects(); */
   }
 
+  //Metodo para conectarse con los dispositivo seriales - Ojo solo sirve esta logica si se trabaja con Arduinos o con los pines TX y RX
   private connectToDevice(port: string, baudrate: number,autoOpen : boolean): void {
     try {
       this.port = new this.electronService.serialPort.SerialPort({ path: port , baudRate: baudrate,autoOpen : autoOpen});
@@ -114,19 +116,23 @@ export class ArduinoDevice {
     }
   }
 
+  //Metodo para obtener los valores que llegan de los arduinos
   private listenToDevice(parser: any): void {
     parser.on('data', (data: string) => {
-      //console.log(data);
-      const values = data.trim().split('|');
-      // Assuming values represent sensor readings
-      this.electronService.log("VALORES DE VALUES " , values);
-
       
+      //Guardar en data y darle un split
+      const values = data.trim().split('|');
+      
+      //Recorrer el valor y pasarle los parametros value y index que seri el indicador del sensor
       values.forEach((value : string, index : number) => {
-        //Sensor id es igual a sensor type
+        
+        //Guardar en una constante el indice de cada sensor guardadoe en el array de Sensores
         const sensorId = this.sensors[index];
-        //El valor de cada sensor
+
+        //Crear array numerica de los valores
         let numericValue : number | number[];
+
+        //Condicion para formatear la longitud - latitud para obtener las coordenadas del GPS
         if(sensorId == Sensor.GPS){
             numericValue = value.split(',').map(v => parseFloat(v));
             let valSensor = JSON.parse(`{"${Sensor.GPS}" : ${JSON.stringify(numericValue)}}`);
@@ -135,8 +141,10 @@ export class ArduinoDevice {
             this.port.write(Buffer.from('OK\n', 'utf-8'));
         }
         else{
+          //Switch para evaluar cada caso de acuerdo al indice de cada Sensor conectado
           switch (sensorId){
             
+            //Caso para el Caudal
             case Sensor.WATER_FLOW:
               const flowValue = parseFloat(value);
               if (!isNaN(flowValue)) {
@@ -147,8 +155,10 @@ export class ArduinoDevice {
                 this.port.write(Buffer.from('OK\n', 'utf-8'));
                 //this.electronService.log("ERROR", `Invalid value for WATER_FLOW: ${value}`);
               }
+              
               break;
             
+            //Caso para el Volumen
             case Sensor.VOLUME:
                 const volumeValue = parseFloat(value);
                 if (!isNaN(volumeValue)) {
@@ -161,24 +171,28 @@ export class ArduinoDevice {
                 }
                 break;
                 
+            //Caso para la presion
             case Sensor.PRESSURE:
               let valSensorPressure = JSON.parse(`{"${Sensor.PRESSURE}" : ${value}}`);
               //this.electronService.log("PRESSURE" , valSensorPressure);
               this.store.dispatch(new Pressure(valSensorPressure));
               break;
 
+            //Caso para la valvula Derecha
             case Sensor.VALVE_RIGHT:
               let valSensorValveRight = JSON.parse(`{"${Sensor.VALVE_RIGHT}" : ${value}}`);
               //this.electronService.log("valSensorValveRight" , valSensorValveRight);
               this.store.dispatch(new RightValve(valSensorValveRight));
               break;
 
+            //Caso para la valvula Izquierda
             case Sensor.VALVE_LEFT:
               let valSensorValveLeft = JSON.parse(`{"${Sensor.VALVE_LEFT}" : ${value}}`);
               //this.electronService.log("valSensorValveLeft" , valSensorValveLeft);
               this.store.dispatch(new LeftValve(valSensorValveLeft));
               break;
-              
+            
+            //Caso para la velocidads
             case Sensor.SPEED:
               const valorSpeed = parseFloat(value)
               if(!isNaN(valorSpeed)){
@@ -191,9 +205,9 @@ export class ArduinoDevice {
           }
         }
 
+        //Guardar en la variable el valor parseado a Float de 'value'
         numericValue = parseFloat(value);
 
-        //Sensor type = 2/5
         const sensorType = sensorId;
 
         if(this.sensorSubjectMap.has(sensorType)){
@@ -209,25 +223,14 @@ export class ArduinoDevice {
     });
   }
 
+  /* METODO SIN USAR - ELIMINAR SI LO REQUIERA */
   private saveCurrentValues(): void {
     // Guardar los valores actuales de los sensores
     this.savedValues = new Map(this.message_from_device);
     //console.log("GUARDADO" , this.savedValues);
   }
 
-/*   private restoreSavedValues(): void {
-   // Verifica si hay valores guardados para restaurar
-  if (this.savedValues.size > 0) {
-    // Itera sobre los valores guardados y los envía al dispositivo Arduino nuevamente
-    this.savedValues.forEach((SensorType, numericValue) => {
-      // Envía el valor al dispositivo Arduino utilizando el servicio adecuado
-      this.message_from_device.set(SensorType, numericValue);
-    });
-    // Limpia los valores guardados después de restaurarlos
-    this.savedValues.clear();
-    }
-  } */
-
+  //Metodo para enviar comandos de la aplicacion a Dispositivo Serial
   public sendCommand(command: string): void {
     if (this.port && this.port.writable) {
       this.port.write(`${command}\n`, 'utf-8', (error : any) => {
@@ -240,6 +243,7 @@ export class ArduinoDevice {
     }
   }
 
+  //Metodo para manejar la desconexion
   public disconnect(): void {
     if (this.port) {
       this.port.close((error : any) => {
@@ -254,7 +258,7 @@ export class ArduinoDevice {
     }
   }
 
-
+  /* METODO SIN USAR - ELIMINAR SI LO REQUIERA */
   public  mapToObject(map: Map<any, any>): { [key: string]: any } {
     const obj: { [key: string]: any } = {};
     map.forEach((value, key) => {

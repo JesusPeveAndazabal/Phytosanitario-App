@@ -51,6 +51,7 @@ export class DatabaseService extends ElectronService {
    * @returns SQLiteConnection
    */
 
+  //Funcion para abrir la conexion , crear el archivo de la base de datos y  crear las tablas
   public openConnection(){
     let instance = this;
 
@@ -64,7 +65,7 @@ export class DatabaseService extends ElectronService {
           instance.fs.openSync(instance.file, "w");
           let db = new instance.sqlite.Database(instance.file);
           db.run('PRAGMA foreign_keys = ON;');
-          //Creating schema
+          //Creacinn del esquema de las tablas
           let sql = "	CREATE TABLE IF NOT EXISTS login( \n"
                 + "	operador INTEGER, \n"
                 + " implement INTEGER, \n"
@@ -255,6 +256,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+
   async closeDB(): Promise<void> {
     let instance = this;
     let db = new instance.sqlite.Database(instance.file);
@@ -292,6 +294,7 @@ export class DatabaseService extends ElectronService {
    * @returns
    */
 
+  //Funcion para obtener el nombre de las tablas
   async getTableNames(): Promise<any[]> {
     return new Promise<any[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -310,6 +313,8 @@ export class DatabaseService extends ElectronService {
    * Get the Person's data from the database
    * @returns Array of Person class
    */
+  
+  //Obtener los datos de la persona
   async getPersonData(): Promise<Person[]> {
     return new Promise<Person[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -330,6 +335,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los datos de la persona 
   async syncPersonData(data: Array<Person>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -364,6 +370,8 @@ export class DatabaseService extends ElectronService {
    * Get the Lot's data from the database
    * @returns Array of Person class
    */
+
+  //Obtener los datos de lotes 
   async getLotData(): Promise<Lot[]> {
     return new Promise<Lot[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -384,6 +392,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar el dato de los lotes
   async syncLotsData(data: Array<Lot>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -418,6 +427,8 @@ export class DatabaseService extends ElectronService {
    * Get the Nozzle's color data from the database
    * @returns Array of NozzleColor class
    */
+
+  //Obtener el color de las boquillas
   async getNozzleColorData(): Promise<NozzleColor[]> {
     return new Promise<NozzleColor[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -438,6 +449,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los datos de los colores de boquilla
   async syncNozzleColorData(data: Array<NozzleColor>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -472,6 +484,8 @@ export class DatabaseService extends ElectronService {
    * Get the Nozzle's type data from the database
    * @returns Array of NozzleType class
    */
+
+  //Obtener los tipos de boquillas
   async getNozzleTypeData(): Promise<NozzleType[]> {
     return new Promise<NozzleType[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -492,6 +506,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar ñps datps de os tipos de boquillas
   async syncNozzleTypeData(data: Array<NozzleType>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -527,6 +542,7 @@ export class DatabaseService extends ElectronService {
    * Get the Nozzle's data from the database
    * @returns Array of Nozzle class
    */
+
   async getNozzlesData(): Promise<Nozzles[]> {
     return new Promise<Nozzles[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -547,6 +563,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los datos de las boquillas
   async syncNozzlesData(data: Array<Nozzles>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -582,6 +599,7 @@ export class DatabaseService extends ElectronService {
    * @returns Array of WorkExecution class
    */
 
+  //Obtener los datos de la ejecucion de trabajo
   async getWorkExecution(): Promise<WorkExecution[]> {
     return new Promise<WorkExecution[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
@@ -596,7 +614,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-  
+  //Obtener los trabajos finalizados
   async getWorkExecutionFinished(): Promise<WorkExecution[]> {
     return new Promise<WorkExecution[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
@@ -611,6 +629,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener la orden de trabajo
   async getWorkExecutionOrder(): Promise<WorkExecutionOrder[]> {
     return new Promise<WorkExecutionOrder[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
@@ -630,6 +649,8 @@ export class DatabaseService extends ElectronService {
    * Get the WorkExecution's data from the database
    * @returns Array of WorkExecution class
    */
+
+  //Obtener la ejecucion de trabajo que se esta ejecutando
   async getLastWorkExecution(): Promise<WorkExecution> {
     return new Promise<WorkExecution>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -652,6 +673,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener la ordenes de trabajo
   async getLastWorkExecutionOrder(): Promise<WorkExecution> {
     return new Promise<WorkExecution>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -678,6 +700,8 @@ export class DatabaseService extends ElectronService {
    * Get the WorkExecution's data from the database
    * @returns Array of WorkExecution class
    */
+
+  //Obtener el valor del volumen Actual
   async getLastWaterVolume(work : number): Promise<WaterVolumes> {
     return new Promise<WaterVolumes>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -713,6 +737,7 @@ export class DatabaseService extends ElectronService {
   //   });
   // }
 
+  //Guardar la ejecucion de trabajo con todos los parametros que se pide
   async saveWorkExecutionData(o: WorkExecution): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -761,6 +786,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener los datos de las ejecucione que no se han enviado al servidor por el campo 'sended'
   async getNotSendedExecution() : Promise<WorkExecution[]>{
     return new Promise<WorkExecution[]>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
@@ -777,6 +803,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Actualizar el campo 'sended' para poder identificar los registros que han sido enviados al servidor
   async updateExecutionSended(wExecution : WorkExecution){
     return new Promise<boolean>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
@@ -825,6 +852,7 @@ export class DatabaseService extends ElectronService {
   //   });
   // }
 
+  //Guardar el registro del volumen que se configura por cada tancada
   async saveWaterVolumes(o: WaterVolumes, work: WorkExecution): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -860,15 +888,13 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-
-
-
   /**
    * Save WorkExecution's data from server to local db for offline case uses
    * @param data Array of WorkExecution class
    * @returns void
    */
 
+  //Actualizar los datos de la ejecucion de trabajo
   async updateWorkExecutionData(o: WorkExecution): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -901,30 +927,35 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+ //Actualizar el tiempo productivo e improductivo
   async updateTimeExecution(o: WorkExecution): Promise<boolean> {
-    return new Promise<boolean>((resolve, reject) => {
-      let db = new this.sqlite.Database(this.file);
-      let sql =
-        "UPDATE work_execution SET working_time = ? , downtime = ? WHERE id = ?;";
-
-      // Ejecutar la actualización en la tabla 'work_execution'
-      db.run(sql, [o.working_time.format('H:mm:ss') , o.downtime.format('H:mm:ss') , o.id], (err: Error | null) => {
-        if (err) {
-          console.error("SQLITE UPDATE error", err);
-          reject(err);
-        } else {
-          // console.log("Actualización exitosa");
-          resolve(true);
-        }
-
-        // Cerrar la base de datos después de la operación
-        db.close((closeErr: Error | null) => {
-          if (closeErr) {
-            console.error("Error al cerrar la base de datos", closeErr);
+    try {
+      return new Promise<boolean>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql =
+          "UPDATE work_execution SET working_time = ? , downtime = ? WHERE id = ?;";
+  
+        // Ejecutar la actualización en la tabla 'work_execution'
+        db.run(sql, [o.working_time.format('H:mm:ss') , o.downtime.format('H:mm:ss') , o.id], (err: Error | null) => {
+          if (err) {
+            console.error("SQLITE UPDATE error", err);
+            reject(err);
+          } else {
+            // console.log("Actualización exitosa");
+            resolve(true);
           }
+          // Cerrar la base de datos después de la operación
+          db.close((closeErr: Error | null) => {
+            if (closeErr) {
+              console.error("Error al cerrar la base de datos", closeErr);
+            }
+          });
         });
       });
-    });
+    } catch (error) {
+      this.error("Error en actualizar tiempos Prod e Improd" , error);
+    }
+  
   }
 
  /**
@@ -933,6 +964,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Acttualizar el campo 'sended' de el detalle de trabajo para identificar si ha sido enviado al servidor
   async updateExecutionSendedDetail(wExecutionDetail : WorkExecutionDetail){
         return new Promise<boolean>((resolve,reject)=>{
           let db = new this.sqlite.Database(this.file);
@@ -956,6 +988,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Obtener los implementos de trabajo
   async getWorkImplement(type_implement : number) : Promise<WorkExecutionOrder>{
     return new Promise<WorkExecutionOrder>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
@@ -970,6 +1003,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener los registros de los detalles de trabajo que no han sido enviados
   async getNotSendedExecutionDetail(id_work_execution : number) : Promise<WorkExecutionDetail[]>{
     return new Promise<WorkExecutionDetail[]>((resolve,reject)=>{
       let db = new this.sqlite.Database(this.file);
@@ -984,14 +1018,13 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-
-
   /**
    * Save WorkExecution's data from server to local db for offline case uses
    * @param data Array of WorkExecution class
    * @returns void
    */
 
+  //Actualizar el valor del sended que ya ha sido enviado al servidor
   async confirmWorkExecSavedOnServer(o: WorkExecution): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1023,6 +1056,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Cambiar el campo finished para identificar si el registro o la ejecucion de trabajo a sido finalizada
   async finishWorkExecution(o: WorkExecution): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1053,6 +1087,8 @@ export class DatabaseService extends ElectronService {
    * Get the Work's data from the database
    * @returns Array of Work class
    */
+
+  //Obtener las labores
   async getWorkData(): Promise<Work[]> {
     return new Promise<Work[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1073,6 +1109,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar las labores 
   async syncWorkData(data: Array<Work>): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1108,6 +1145,8 @@ export class DatabaseService extends ElectronService {
    * Get the Cultivation's data from the database
    * @returns Array of Cultivation class
    */
+
+  //Obtener los datos de los cultivos
   async getCultivationData(): Promise<Cultivation[]> {
     return new Promise<Cultivation[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1128,6 +1167,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los datos de los cultivos
   async syncCultivationData(data: Array<Cultivation>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1160,6 +1200,7 @@ export class DatabaseService extends ElectronService {
    * Get the Farm's data from the database
    * @returns Array of Farm class
    */
+  //Obtener los datos de los fundos
   async getFarmData(): Promise<Farm[]> {
     return new Promise<Farm[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1180,6 +1221,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los fundos on el api del Servidor
   async syncFarmData(data: Array<Farm>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1208,6 +1250,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Sincronizar las ordenes de trabajo
   async syncWorkOrder(data: Array<WorkExecutionOrder>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1238,6 +1281,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Sincronizar los atomizadores
   async syncAtomizer(data: Array<Atomizer>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1266,6 +1310,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Sicronizar los datos de los implementos
   async syncImplement(data: Array<Implement>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1298,25 +1343,29 @@ export class DatabaseService extends ElectronService {
    * Get the Person's data from the database
    * @returns Array of Person class
    */
-    async getImplemenData(): Promise<Implement[]> {
-      return new Promise<Implement[]>((resolve, reject) => {
-        let db = new this.sqlite.Database(this.file);
-        let sql = "SELECT * from implement";
-        db.all(sql,[ ],(err,rows : Implement[])=>{
-          if(err){
-            process.nextTick(() => reject(err));
-          }
-          process.nextTick(() => resolve(rows));
-        });
-        db.close();
+
+  //Obtener datos del implemento
+  async getImplemenData(): Promise<Implement[]> {
+    return new Promise<Implement[]>((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = "SELECT * from implement";
+      db.all(sql,[ ],(err,rows : Implement[])=>{
+        if(err){
+          process.nextTick(() => reject(err));
+        }
+        process.nextTick(() => resolve(rows));
       });
-    }
+      db.close();
+    });
+  }
 
 
   /**
    * Get the Farm's data from the database
    * @returns Array of Farm class
    */
+
+  //Obtener los datos de productos
   async getProductData(): Promise<Product[]> {
     return new Promise<Product[]>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1337,6 +1386,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Sincronizar los datos de los productos
   async syncProductData(data: Array<Product>): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1372,6 +1422,7 @@ export class DatabaseService extends ElectronService {
    * @returns Array of WorkExecution class
    */
 
+  //Obtener la configuracion local
   async getLocalConfig(): Promise<LocalConf> {
     return new Promise<LocalConf>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1392,6 +1443,7 @@ export class DatabaseService extends ElectronService {
    * @returns void
    */
 
+  //Guardar la configuracion local
   async saveLocalConfig(o : LocalConf): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1426,6 +1478,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Guardar el registro del Login
   async saveLogin(operador: number, implement: number): Promise<boolean> {
     return new Promise((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1442,6 +1495,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener un registro de un inicio de sesion
   async getLogin(): Promise<Login> {
     return new Promise<Login>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);
@@ -1471,6 +1525,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Obtener el detalle de trabajo 
   async getLastWorkExecutionDetail2():Promise<WorkExecutionDetail> {
     return new Promise<WorkExecutionDetail>((resolve, reject) => {
         let db = new this.sqlite.Database(this.file);
@@ -1485,34 +1540,33 @@ export class DatabaseService extends ElectronService {
     });
   }
 
-    //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
-    // Función para obtener el registro del detalle de ejecuciones de trabajo
-    // Función para obtener el último registro del detalle de ejecuciones de trabajo
-    async getLastWorkExecutionCurrent(work: number): Promise<WorkExecutionDetail> {
-      return new Promise<WorkExecutionDetail>((resolve, reject) => {
-        let db = new this.sqlite.Database(this.file);
-        let sql = `
-          SELECT * FROM work_execution_details 
-          WHERE id_work_execution = ? 
-            AND CAST(JSON_EXTRACT(data, '$."19"') AS DECIMAL) > 0
-          ORDER BY id DESC 
-          LIMIT 1;
-        `;
+  //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
+  // Función para obtener el registro del detalle de ejecuciones de trabajo
+  // Función para obtener el último registro del detalle de ejecuciones de trabajo
+  async getLastWorkExecutionCurrent(work: number): Promise<WorkExecutionDetail> {
+    return new Promise<WorkExecutionDetail>((resolve, reject) => {
+      let db = new this.sqlite.Database(this.file);
+      let sql = `
+        SELECT * FROM work_execution_details 
+        WHERE id_work_execution = ? 
+          AND CAST(JSON_EXTRACT(data, '$."19"') AS DECIMAL) > 0
+        ORDER BY id DESC 
+        LIMIT 1;
+      `;
 
-        db.get(sql, [work], (err, row: any) => {
-          if (err) {
-            process.nextTick(() => reject(err));
-          } else {
-            process.nextTick(() => resolve(row));
-          }
-        });
-
-        db.close();
+      db.get(sql, [work], (err, row: any) => {
+        if (err) {
+          process.nextTick(() => reject(err));
+        } else {
+          process.nextTick(() => resolve(row));
+        }
       });
-    }
 
+      db.close();
+    });
+  }
 
-
+  //Metodo por revisar si esta en uso
   async getWorkExecutionDetailReal(work : number): Promise<WorkExecutionDetail[]> {
     return new Promise<WorkExecutionDetail[]>((resolve, reject) =>{
       let db = new this.sqlite.Database(this.file);
@@ -1527,6 +1581,7 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  //Guardar el detalle de trabajo 
   async saveWorkExecutionDataDetail(o: WorkExecutionDetail): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       try {
@@ -1573,6 +1628,7 @@ export class DatabaseService extends ElectronService {
     });
   }
   
+  //Actualizar el detalle de trabajo
   async updateWorkExecutionDataDetail(o: WorkExecutionDetail): Promise<boolean> {
     return new Promise<boolean>((resolve, reject) => {
       let db = new this.sqlite.Database(this.file);

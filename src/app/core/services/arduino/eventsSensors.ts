@@ -283,8 +283,7 @@ export class SensorState {
         sensorState.data[`${Sensor.CURRENT_TANK}`] = parseFloat(tanqueActual.toFixed(2));
 
         //Condicion para estrcturar la base de datos
-        if( sensorState.waterFlow) {
-
+        if(sensorState.waterFlow) {
            //Creacion de la estructura de Work Execution Detail para ser guardada
            let workDetail : WorkExecutionDetail = {
                id_work_execution : 2,
@@ -292,7 +291,7 @@ export class SensorState {
                time : realNow,
                sended : false,
                precision : '', //Se enevia en vacio pero si lo implementaran la logica esta en el archivo arduino.Service.ts
-               gps :  JSON.stringify(sensorState.data[4]),
+               gps :  JSON.stringify(sensorState.data[`${Sensor.GPS}`]),
                has_events : false,
                events : 'NO HAY  EVENTOS',
                id : 0,
@@ -403,6 +402,7 @@ export class SensorState {
             });
         }
 
+        //Accion que cambia ek estado de el sensor de presion y obtiene el valor del sensor
         @Action(Pressure)
         pressure(ctx: StateContext<SensorStateModel> , action: Pressure){
             ctx.patchState({
@@ -415,6 +415,7 @@ export class SensorState {
             });
         }
 
+        //Accion para cambiar el estado de la valvula derecha y obtener el valor del sensor
         @Action(RightValve)
         rigthvalve(ctx: StateContext<SensorStateModel> , action: RightValve){
             ctx.patchState({
@@ -427,6 +428,7 @@ export class SensorState {
             });
         }
 
+        //Accion para cambiar el estado de la valvula izquierda y obtener el valor del sensor
         @Action(LeftValve)
         leftvalve(ctx: StateContext<SensorStateModel> , action: LeftValve){
             ctx.patchState({
@@ -439,6 +441,7 @@ export class SensorState {
             });
         }
 
+        //Accion para cambiar el estado del el gps y obtener los valores den sensor
         @Action(Gps)
         gps(ctx: StateContext<SensorStateModel> , action: Gps){
             ctx.patchState({
@@ -451,6 +454,7 @@ export class SensorState {
             });
         }
 
+        //Accion para cambiar el estado y obtener el valor de la velocidad
         @Action(Speed)
         speed(ctx: StateContext<SensorStateModel> , action: Speed){
             ctx.patchState({
@@ -463,6 +467,7 @@ export class SensorState {
             });
         }
 
+        //Accion para actualizar el valor de el valor del tanque actual , y cambiar el estado del volumen Inicial
         @Action(UpdateCurrentTank)
         updateCurrentTank(ctx: StateContext<SensorStateModel>, action: UpdateCurrentTank) {
             const state = ctx.getState();
@@ -483,6 +488,7 @@ export class SensorState {
             }
         }
 
+        //Accion no en uso 
         @Action(SetResetApp)
         setResetApp(ctx: StateContext<SensorStateModel>, action: SetResetApp) {
             ctx.patchState({

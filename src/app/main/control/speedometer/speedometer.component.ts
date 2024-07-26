@@ -22,7 +22,7 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
   svg : any;
   gauge : any;
   segDisplay : any;
-  speed$: Observable<number>;
+  speed$: Observable<number>; //Variable de tipo Observable para la velocidad
 
   private maxSpeed : number = 10;
   private arduino : any;
@@ -116,6 +116,7 @@ export class SpeedometerComponent  implements OnInit,OnChanges {
     //   .attr('id', "img_icon_scale")
     //   .attr("xlink:href", "./assets/images/check.png");
 
+    //Obtener el valor de la velocidad y la asignamos en los parametros pedidos para visualizar la velocidad en la interfaz
     let velocidad = this.store.select(SensorState.speed).subscribe({
       next: async (value) => {
         instance.gauge.value(value);

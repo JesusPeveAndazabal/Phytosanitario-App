@@ -13,6 +13,7 @@ export class ModalInicioAppComponent implements OnInit {
 
   ngOnInit() { }
 
+  //Esto es para guardar el volumen
   saveVolume() {
     if (this.volume !== undefined && this.volume !== null && !isNaN(this.volume)) {
       console.log(this.volume);
@@ -20,6 +21,7 @@ export class ModalInicioAppComponent implements OnInit {
     }
   }
 
+  //Cerrar el modal 
   closeModal() {
     this.modalController.dismiss();
   }

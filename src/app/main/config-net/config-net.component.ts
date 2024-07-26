@@ -2,6 +2,9 @@ import { Component } from '@angular/core';
 import { ipcRenderer } from 'electron';
 
 
+/* Componente para conectarse a una red wifi seleccionada */
+/* Descomentar la libreria en /app/main.ts y todo lo referido a esta libreria*/
+
 @Component({
   selector: 'app-config-net',
   templateUrl: './config-net.component.html',

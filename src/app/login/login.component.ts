@@ -41,9 +41,10 @@ export class LoginComponent implements OnInit {
   wExecutionOrder : WorkExecutionOrder | undefined = undefined;
   implementOrder : Array<WorkExecutionOrder> = [];
   filterImplemento : Array<Implement> = [];
-
   public implemento;
-    // currentWorkExecution : WorkExecution | undefined = undefined;
+
+
+    
   constructor(private fb:FormBuilder,
     private dbService : DatabaseService,
     private generalService:GeneralService,
@@ -60,59 +61,55 @@ export class LoginComponent implements OnInit {
   }
 
   async ngOnInit() {
-    // console.log("info correcta login.component.ts");
-    // this.databaseService.openConnection();
-    await this.dbService.openConnection();
-    this.personData = await this.dbService.getPersonData();
-    this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
-    this.workExecution = await this.dbService.getLastWorkExecution();
-    this.implementData = await this.dbService.getImplemenData();
+    await this.dbService.openConnection(); //Abrir la conexion a la base de datos
+    this.personData = await this.dbService.getPersonData(); //Otener los datos de las personas
+    this.workExecutionOrder = await this.dbService.getWorkExecutionOrder(); //Obtener las ordenes de trabajo
+    this.workExecution = await this.dbService.getLastWorkExecution(); //Obtener las Ordenes de trabajo
+    this.implementData = await this.dbService.getImplemenData(); //Obtener los implementos
     this.implementOrder = await this.dbService.getWorkExecutionOrder();
    
-    //Tabala ordenes de trabajo
-    //console.log(this.implementOrder, "Implementos");
-    
-    //Tabala implementos
-    //console.log("ImplementData", this.implementData);
-
     // Obtén el conjunto de todos los type_implement en implementOrder
     const typeImplements = new Set(this.implementOrder.map(order => order.type_implement));
 
     // Filtra implementData para incluir solo implementos con type_implement presentes en typeImplements
     this.filterImplemento = this.implementData.filter(implement => typeImplements.has(implement.typeImplement));
-
-    //console.log("FILTRADO",this.filterImplemento);
-
   }
 
+  //Metodo para obtener el supervisor por la persona
   public get supervisors() : Person[] {
     // console.log(this.personData.filter(p => p.type == PersonType.SUPERVISOR), "personData1");
     return this.personData.filter(p => p.type == PersonType.SUPERVISOR)
   }
 
+  //Metodo para abrir la base de datos
   async ngAfterViewInit() {
-    // await this.loader.present();
-
     await this.databaseService.openConnection();
   }
 
+  //Metodo asincrona para realizar la funcion de sincronizar y guardar el registro de inicio de sesion
   async login(){
-    // console.log(this.formData.valid, "login");
-    //console.log("Ingreso al login : 1 vez");
+
+    //Validamos si el formulario es correcto
     if(this.formData.valid){
+      //Apagar las valvulass
       this.arduinoService.deactivateLeftValve();
       this.arduinoService.deactivateRightValve();
+      //Regular la presion a 0
       this.arduinoService.regulatePressureWithBars(0);
+      //Sincronizar las tablas para poder obtener los datos del servidor y guardarlos en la base de datos
       this.syncPrimaryTables();
-      //console.log("Ingreso a la condicion");
-      // console.log(this.personData.find(person => (person.code == this.formData.value.code)), "personData2");
-      // console.log(firstValueFrom(this.apiService.getPeople(environment.token)), "personData2");
+
+      //Codicion para buscar a las personas por codigo y tipo de persona
       if(this.personData.find(person => (person.code == this.formData.value.code
         || person.document == this.formData.value.code) && person.type == PersonType.OPERADOR))
       {
+        //Guardar el valor del implemento
         this.implemento = this.formData.value.implement;
-        //console.log("TIPOIMPLEMENTOLOGIN" , this.implemento);
+
+        //Guardar el base de datps el registro de inicio de sesion
         await this.databaseService.saveLogin(this.formData.value.code, this.formData.value.implement);
+        
+        //Redireecion al main si se ha guardado
         this.router.navigateByUrl('/main');
         
       }
@@ -122,12 +119,12 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  //Metodo para sincronizar las tablas que se consumen desde el Api
   async syncPrimaryTables() : Promise<boolean>{
-    //console.log("SINCRONIZANDO DATOS ............................")
-    //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
+    
     try{
-      //console.log("EMNTRO AL TRY");
-      // await this.dbService.openConnection();
+
+      //Funciones para sincronizar las tablas de la base de datos 
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
       const farms = await firstValueFrom(this.apiService.getFarm());
@@ -139,20 +136,18 @@ export class LoginComponent implements OnInit {
       const works = await firstValueFrom(this.apiService.getWorks());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
-      // const we = await firstValueFrom(this.apiService.getWE());
-
+    
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
-      // await this.dbService.syncPersonData(people);
+      //Recorrer las personas por persona buscando por Id
       for (const person of people) {
         const existingPerson = await this.dbService.getRecordById('person', person.id);
-        // console.log(existingPerson, "person");
         if (!existingPerson) {
           await this.dbService.syncPersonData([person]);
         }
       }
 
-      // await this.dbService.syncCultivationData(cultivations);
+      //Recorrer los cultivos buscando por Id
       for (const cultivation of cultivations) {
         const existingCultivation = await this.dbService.getRecordById('cultivation', cultivation.id);
         if (!existingCultivation) {
@@ -160,7 +155,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncFarmData(farms);
+      //Recorrer los fundos buscando por Id
       for (const farm of farms) {
         const existingFarm = await this.dbService.getRecordById('farm', farm.id);
         if (!existingFarm) {
@@ -168,7 +163,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncLotsData(lots);
+      //Recorrer los lotes buscando por Id
       for (const lot of lots) {
         const existingLot = await this.dbService.getRecordById('lot', lot.id);
         if (!existingLot) {
@@ -176,7 +171,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzleColorData(nozzleColors);
+      //Recorrer los colores de boquilla buscando por Id
       for (const nozzleColor of nozzleColors) {
         const existingNozzleColor = await this.dbService.getRecordById('nozzle_color', nozzleColor.id);
         if (!existingNozzleColor) {
@@ -184,7 +179,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzleTypeData(nozzleTypes);
+      //Recorrer los tipos de boquilla buscando por Id
       for (const nozzleType of nozzleTypes) {
         const existingNozzleType = await this.dbService.getRecordById('nozzle_type', nozzleType.id);
         if (!existingNozzleType) {
@@ -192,7 +187,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncNozzlesData(nozzles);
+      //Recorrer las boquillas buscando por Id
       for (const nozzle of nozzles) {
         const existingNozzle = await this.dbService.getRecordById('nozzles', nozzle.id);
         if (!existingNozzle) {
@@ -200,7 +195,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncProductData(products);
+      //Recorrer los productos buscando por Id
       for (const product of products) {
         const existingProduct = await this.dbService.getRecordById('product', product.id);
         if (!existingProduct) {
@@ -208,7 +203,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
-      // await this.dbService.syncWorkData(works);
+      //Recorrer las labores buscando por Id
       for (const work of works) {
         const existingWork = await this.dbService.getRecordById('work', work.id);
         if (!existingWork) {
@@ -216,6 +211,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
+      //Recorrer las ordenes de Trabjo buscando por Id
       for (const workOrder of workOrders) {
         const existingWorkOrder = await this.dbService.getRecordById('work_execution_order', workOrder.id);
         if (!existingWorkOrder) {
@@ -231,6 +227,7 @@ export class LoginComponent implements OnInit {
         }
       }
 
+      //Recorrer los implementos buscando por Id
       for (const implement of implementss) {
         const existingImplement = await this.dbService.getRecordById('implement', implement.id);
         if (!existingImplement) {
@@ -249,6 +246,7 @@ export class LoginComponent implements OnInit {
     }
   }
 
+  //Funcion para el toast
   async presentToast(position: 'top' | 'middle' | 'bottom') {
     const toast = await this.toastController.create({
       message: 'No existe operador!',

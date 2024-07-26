@@ -44,16 +44,19 @@ export class ApplicationDataComponent  implements OnInit {
     }
 
     async ngOnInit() {
+
+      //Abrir la conexion a la base de datos
       await this.dbService.openConnection();
   
+      //Consultas a la base de datos 
       this.farms = await this.dbService.getFarmData();
       this.lots = await this.dbService.getLotData();
       this.cultivations = await this.dbService.getCultivationData();
       this.products = await this.dbService.getProductData();
       this.works = await this.dbService.getWorkData();
-  
       this.currentWorkExecution = await this.dbService.getLastWorkExecution();
-      console.log("CURRENTWORK", this.currentWorkExecution);
+
+
       if (this.currentWorkExecution) {
           this.fLots = this.lots.filter(p => p.farm === this.lots.find(l => l.id === this.currentWorkExecution?.lot)?.farm!);
   
@@ -82,24 +85,31 @@ export class ApplicationDataComponent  implements OnInit {
       }
   }
 
+  //Funcion para mostrar los fundos en un select
   farmSelected($event : any){
     //.log($event);
     this.fLots = this.lots.filter(p => p.farm === parseInt($event.detail.value));
     this.formData.controls['lot'].setValue(undefined);
   }
 
+
   get lotOptions(): SelectFilterItem[]{
     return this.fLots.map(i => { return { value : i.id,text: i.name}});
   }
 
+  //Funcion para cerrar el modal en caso la opcion sea 'cancelar'
   cancel() {
     return this.modalCtrl.dismiss(null, 'cancel','application-data-modal');
   }
 
+  //Metodo para confirmar y cerrar el modal
   async confirm() {
-    //console.log("Boton confirmar");
+
     this.isSubmitted = true;
+
+    //Condicion para verificar que el formulario es valido
     if(this.formData.valid){
+      //Estructura para guardar a la base de datos 
       let wExecution : WorkExecution ={
         id : this.currentWorkExecution ? this.currentWorkExecution.id : 0,
         configuration : this.currentWorkExecution ? this.currentWorkExecution.configuration : '',
@@ -114,6 +124,7 @@ export class ApplicationDataComponent  implements OnInit {
 
       wExecution.farm = parseInt(`${wExecution.farm}`);
 
+      //Si la variable currentWorkExecution esta en false , guardamos el registro en la base de datos
       if(!this.currentWorkExecution){
         await this.dbService.saveWorkExecutionData(wExecution)
         .then(async()=>{
@@ -128,6 +139,7 @@ export class ApplicationDataComponent  implements OnInit {
 
       }
       else{
+        //Caso contrario acutalizamos el registro de la ejecucion de trabajo
         await this.dbService.updateWorkExecutionData(wExecution)
         .then(()=>{
           config.lastWorkExecution = wExecution;

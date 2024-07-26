@@ -34,20 +34,15 @@ export class AppComponent implements OnInit {
     private electronService: ElectronService,
     private apiService : ApiService) {
 
-/*     // Configurar la ruta del archivo de registro
-    log.transports.file.file = 'C:\\Users\\BETA\\3D Objects\\PROYECTO ACTUALIZADO\\migracion\\bd\\error.log';
-
-    // Configurar el nivel de registro (opcional)
-    log.transports.file.level = 'error'; // Solo registrar errores */
-
-
+      //Abrir la conexion a la base de datos
       this.databaseService.openConnection();
 
+      //Validar si el servicio de Electron 
       if(this.electronService.isElectron){
-        //log.transports.file.resolvePath = () => path.join( , 'bd/errores.log');
+
         let file = electronService.fs.readFileSync(electronService.path.resolve("bd/","conf.env"),{encoding:'utf-8'});
         
-        //Leyendo el archivo de configuración
+        //Leyendo el archivo de configuración - Borrar el \r si se ejecutara en el procesador
         file.split(`\r\n`).forEach((el)=>{
           let par = el.split("=");
           switch(par[0]){
@@ -90,6 +85,7 @@ export class AppComponent implements OnInit {
       let instance = this;
       let onExecution = false; //Variable de control que evita envíos duplicados y sobre carga del tráfico.
 
+      //Set Interval para el envio al servidor - Recordar que se envia 1 parque con 60 registros
    /*     setInterval(()=>{
         if(!onExecution){
           onExecution = true;
