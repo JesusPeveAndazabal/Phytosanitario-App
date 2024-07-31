@@ -197,25 +197,26 @@ Path=/home/atom/Documentos/
 
 ## Despliegue de Redis en el procesador (Raspberry)
 
-	### Instaladores para el procesador (Raspberry pi 4)
+	** Instaladores para el procesador (Raspberry pi 4) ** :  
 
-	| Comando                  									   | Descripción                                                                          |
-	|--------------------------------------------------------------|--------------------------------------------------------------------------------------|
-	| `pip install adafruit-blinka adafruit-circuitpython-ads1x15` | Instala las biblioteca necesarias para trabajar con sensores analogicos y digitales. |
-	| `pip install redis`      									   | Instala la biblioteca del cliente de Redis para Python 							  |
-	| `pip install RPi.GPIO` 									   | Permite a los scripts de Python interactuar co los pines GPIO                        |
-	| `sudo apt install redis-server`    						   | Instala el servidor Redis en un sistema basado en Debian							  |
-	| `sudo systemctl status redis` 							   | Verifica el estado del servidor de Redis											  |
+  | Comando                        			                           | Descripción                                                                          |
+  |----------------------------------------------------------------|--------------------------------------------------------------------------------------|
+  | `pip install adafruit-blinka adafruit-circuitpython-ads1x15`   | Instala las biblioteca necesarias para trabajar con sensores analogicos y digitales. |
+  | `pip install redis`                                            | Instala la biblioteca del cliente de Redis para Python.									 				    |
+  | `pip install RPi.GPIO` 	                                       | Permite a los scripts de Python interactuar co los pines GPIO.                       |
+  | `sudo apt install redis-server`                                | Instala el servidor Redis en un sistema basado en Debian. 														|
+  | `sudo systemctl status redis` 	                               | Verifica el estado del servidor de Redis.															 				      |      
+ 
 
-	### Instaladores para el procesador (Raspberry pi 5)
+	** Instaladores para el procesador (Raspberry pi 5) ** :
 
-	| Comando                  									                                  | Descripción                                                         |
-	|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
-	| `sudo apt install python3-redis` 							                                  | Instala los paquetes necesarios del cliente Redis para Python3.     |
-	| `sudo apt install redis-server`      						                                  | Instala el servidor Redis en un sistema basado en Debian. 		    |
-	| `sudo systemctl status redis` 							   								  | Verifica el estado del servidor de Redis.	                        |
-	| `sudo pip3 install adafruit-blinka adafruit-circuitpython-ads1x15 --break-system-packages`  | Instala las bibliotecas no disponibles en los repositorios.			|
-	| `sudo apt install python3-gpiozero` 							   							  | Bibioteca que simplifica el control de pines GPIO en el procesador.	|
+  | Comando                        			                                                       | Descripción                                                          |
+  |--------------------------------------------------------------------------------------------|----------------------------------------------------------------------|
+  | `sudo apt install python3-redis`                                                           | Instala los paquetes necesarios del cliente Redis para Python3.      |
+  | `sudo apt install redis-server`                                                            | Instala el servidor Redis en un sistema basado en Debian.						|
+  | `sudo systemctl status redis` 	                                                           | Verifica el estado del servidor de Redis.                            |
+  | `sudo pip3 install adafruit-blinka adafruit-circuitpython-ads1x15 --break-system-packages` | Instala las bibliotecas no disponibles en los repositorios. 					|
+  | `sudo apt install python3-gpiozero` 	                                                     | Bibioteca que simplifica el control de pines GPIO en el procesador.  |      
 
 ## Configurar el arranque del Script de Python si esta usando la conexión por pines y Redis
 
