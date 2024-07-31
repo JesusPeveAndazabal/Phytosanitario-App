@@ -137,26 +137,46 @@ Tenga en cuenta que la recarga en caliente solo está disponible en el proceso R
 
 **La aplicación está optimizada. Solo la carpeta /dist y las dependencias de NodeJS se incluyen en el paquete final.**
 
-### Despliegue en el procesador (Raspberry)
+## Despliegue del Aplicativo en una memoria SD vacia para el procesador (Raspberry)
 
-Después de haber ejecutado los comandos `npm run postinstall` y posteriormente `npm run electron:build` para la construcción
-del ejecutable, encontrará una nueva carpeta `dist` donde se encuentra el ejecutable `.AppImage` este deberá copiarlo en alguna carpeta del raspberry y ejecutar el comando `sudo chmod +x [nombrearchivo].AppImage`  para este ejemplo será en `/home/atom/Documents/Scale`, allí deberá crear una carpeta con el nombre `bd` y crear el 
-al archivo `conf.env` con lo siguientes parámetros:
+- Clonar el sistema operativo en la memoria (para el py4 y py5 son S.O. diferentes)
+- Configurar idioma/pais/zona horaria etc
+- Conectar a internet
+- Activar permisos ssh (está en el icono del rasberry)
+- Remotear desde otra pc por ejempo: ssh atom@192.168.205.50
+- Clonar el proyecto dentro de documentos
+- Ingresar a app.component.ts y quitar \r
+- Guardar con "control x" luego "y" después enter
+- Ir a redis.service.ts (/home/atom/Documentos/Phytosanitario-App/src/app/core/services/arduino) y cambiar la ip por localhost 
+- Ir a atom@raspberrypi y ejecutar el comando curl -fsSL https://fnm.vercel.app/install | bash
+- Ejecutar el comando sudo reboot now
+- Volver a remotear con ssh atom@numero_ip
+- Ejecutar fnm install 18
+- Ejecutar node -v y verificar que tengamos la version 18
+- Ir a la carpeta Phytosanitario-app y ejecutar npm install
+- Ingresar al proyecto (Phytosanitario-App/) y ejecutar el comando npm 'run electron-build'
+
+Luego de haber construido la imagen del aplicativo , dentro de la carpeta 'relese' se creará el archivo .appimage, lo copiamos a documentos y le cambiamos de nombre a ScalePhyto.AppImage
+o el nombre que se desee (recuerde cambiarlo tambien en el archivo de arranque del procesador) , copianmos este archivo a 'Documentos' y ejecutamos el siguiente comando 'sudo chmod +x ScalePhyto.AppImage' , tambien creamos una carpeta bd y dentro el archivo conf.env
 
 ```
-TOKEN=c7f14f4e4339dd99b0ef31e118f722e94fbd1012d8045eb7bab291d12eb4ce85a0
+TOKEN=c7f14f4e4339dd99b0ef31e118f722e94fbd1012d8045eb7bab291d12eb4ce85a0 //
 URL_REST=https://ps-test.fitosatbeta.com
-N_DEVICES=4
-DEVICE_1=COM4
-DEVICE_2=COM29
-DEVICE_3=COM6
-DEVICE_4=COM36
+N_DEVICES=5
+DEVICE_1=/dev/ttyUSB0
+DEVICE_2=/dev/ttyUSB1
+DEVICE_3=/dev/ttyUSB2
+DEVICE_4=/dev/ttyAMA0
+DEVICE_5=/dev/ttyS0
 ```
 
 **Para saber cual es el puerto serial que está usando el Arduino use el comando
 `ls /dev/tty*`** , por lo general será `/dev/ttyACM0` o `/dev/ttyUSB0` , y si esta usando el puerto serial del Procesador en el raspberry pi 4 , el puerto seria 'S0' y si es el raspberry pi 5 el puerto seria 'AMA0'.
 
-Luego crear el archivo .desktop para iniciar automaticamente la aplicacion en Raspberry con el siguiente contenido:
+## Construir la imagen del aplicativo y configurar arranque de la aplicación al iniciar el procesador
+
+- Ingresar a la siguiente ruta : cd .config/autostart/ 
+- Editar el arhivo 'scale.desktop' y si no esta creado , deberia tener este contenido : 
 
 ```
 #!/usr/bin/env xdg-open
@@ -164,21 +184,106 @@ Luego crear el archivo .desktop para iniciar automaticamente la aplicacion en Ra
 Encoding=UTF-8
 Type=Application
 Name=Scale
-Exec=sh -c "cd /home/atom/Documents/Scale; sudo ./[nombre_archivo].AppImage --disable-gpu-sandbox"
+Exec=sh -c "cd /home/atom/Documentos/; ./ScalePhyto.AppImage --disable-gpu-sandbox"
 Terminal=true
 StartupNotify=true
 Name[en_GB]=Scale
 X-KeepTerminal=true
-Path=/home/atom/Documents/Scale
+Path=/home/atom/Documentos/
+
 ```
 
-Luego copiarlo en la carpeta `/home/atom/.config/autostart` *Si no existe, crear la carpeta*
-ejecutar `sudo chmod +x [nombrearchivo].desktop` [Ver Referencia](https://docs.appimage.org/introduction/quickstart.html#using-the-terminal)
+- Si quisiera quitar el arranque de la aplicacion por x motivos , borre el 'cd' y guarde ("Control + x") + 'y' + Enter para confirmar.
 
-A partir de aquí, al momento de iniciar el sistema operativo del Raspberry se ejecutará automáticamente la aplicación Fitosanitario.
+## Despliegue de Redis en el procesador (Raspberry)
 
-### Configurar el S.O. del Raspberry para producción
+	### Instaladores para el procesador (Raspberry pi 4)
 
-- Para cambiar el logo de Raspberry por el que se desee, [ver](https://www.tomshardware.com/how-to/custom-raspberry-pi-splash-screen).
+	| Comando                  									   | Descripción                                                                          |
+	|--------------------------------------------------------------|--------------------------------------------------------------------------------------|
+	| `pip install adafruit-blinka adafruit-circuitpython-ads1x15` | Instala las biblioteca necesarias para trabajar con sensores analogicos y digitales. |
+	| `pip install redis`      									   | Instala la biblioteca del cliente de Redis para Python 							  |
+	| `pip install RPi.GPIO` 									   | Permite a los scripts de Python interactuar co los pines GPIO                        |
+	| `sudo apt install redis-server`    						   | Instala el servidor Redis en un sistema basado en Debian							  |
+	| `sudo systemctl status redis` 							   | Verifica el estado del servidor de Redis											  |
 
-**No olvidar que para ver toda modificación del sistema operativo debe reiniciar el procesador**
+	### Instaladores para el procesador (Raspberry pi 5)
+
+	| Comando                  									                                  | Descripción                                                         |
+	|---------------------------------------------------------------------------------------------|---------------------------------------------------------------------|
+	| `sudo apt install python3-redis` 							                                  | Instala los paquetes necesarios del cliente Redis para Python3.     |
+	| `sudo apt install redis-server`      						                                  | Instala el servidor Redis en un sistema basado en Debian. 		    |
+	| `sudo systemctl status redis` 							   								  | Verifica el estado del servidor de Redis.	                        |
+	| `sudo pip3 install adafruit-blinka adafruit-circuitpython-ads1x15 --break-system-packages`  | Instala las bibliotecas no disponibles en los repositorios.			|
+	| `sudo apt install python3-gpiozero` 							   							  | Bibioteca que simplifica el control de pines GPIO en el procesador.	|
+
+## Configurar el arranque del Script de Python si esta usando la conexión por pines y Redis
+
+- Ingresar a la siguiente ruta : cd /etc/systemd/system/
+- Crear un arhivo que sera un nuevo servicio que añadiras , por ejemplo puede ser "app.service".
+- En este tendra que tener el siguiente contenido : 
+
+```
+[Unit]
+Description=Script de Python para Redis
+After=network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /home/atom/Documentos/"Nombre del script".py
+WorkingDirectory=/home/atom/Documentos
+StandardOutput=inherit
+StandardError=inherit
+Restart=always
+User=atom
+
+[Install]
+WantedBy=multi-user.target
+```
+
+- Despues ingresa los siguientes comandos : 
+
+| Comando                        			| Descripción                                                                                           |
+|-------------------------------------------|-------------------------------------------------------------------------------------------------------|
+| `sudo systemctl daemon-reload`       		| Recargar los cambios añadidos.                                                         				|
+| `sudo systemctl enable "Nombre".service`  | Arrancar el servicio desde que arranca el procesador.									 				|
+| `sudo systemctl status "Nombre".service` 	| Verificar estado del servicio.                                                  		 				|
+| `sudo systemctl start "Nombre".service`   | Iniciar el servicio. 																	 				|
+| `sudo systemctl stop "Nombre".service` 	| Poner en pausa el servicio.															 				|      
+
+## Configurar el Aplicativo Phytosanitario del tractor si se trabajara con Redis
+
+- Ingresar a la carpeta del proyecto, usualmente se encuentra en la siguiente ruta : home/atom/Documentos/Phytosanitario-App/
+- Navegar hasta la carpeta 'Services' y entrar al directorio 'arduino' , y editas el archivo 'redis.service.ts'.
+- En el metodo 'connectToRedis' , cambias el host a 'localhost' si en caso lo arrancaras desde el procesador , pero si estas haciendo pruebas locales deberas cambiar el host a el ip de la red que te quieras conectar, 
+
+** Si se desea modificar o añadir nuevos canales al servicio deberas crear nuevos metodos para subscribirte y/o publicar en ellos. **
+
+## Conectarte remotamente con el procesador para compartir pantalla mediante 'RealVNC'
+
+- Por defecto el procesador pi 4 y el 5 tienen incluido este servicio , para activalor deberas ingresar a la opcion de configuración del Raspberry y activar la opcion de 'VNC' y reiniciar el procesador.
+- Ahora deberas ingresar este comando en la terminal  'ifconfig' , es para que sepas a que ip deberias conectarte por ejemplo puede ser : '192.168.174.124'
+- Esta ip deberas ingresar en el aplicativo RealVNC que tendrias que tener descargado ya , te dejo el link para que lo descargues : https://www.realvnc.com/es/#:~:text=RealVNC%C2%AE%3A%20software%20de%20acceso,escritorio%20y%20dispositivos%20m%C3%B3viles%20%7C%20RealVNC
+- Ingresas el ip , te pedira el usuario y la contraseña de tu procesador y la ingresas , y ya deberias estar conectado remotamente a tu procesador.
+
+### Notas adicionales
+
+** En caso se despliegue el aplicativo en el procesador , revisar los siguiente puntos : **
+
+	- Revisar el app.component.ts , a veces para pruebas locales puede estar comentado el 'setInterval' que es el encargado de enviar los registros al servidor.
+	- Revisar el arduino.service.ts , comentar o descomentar la función que regula de acuerdo a la velocidad : this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);.
+	- Revisar el archivo conf.env si todo esta configurado correctamente , tanto el servidor y los puertos seriales.
+	- Revisar en el archivo redis.service si el 'host' esta correctamente configurado , cuando se trabaja localmente en el procesador solo es 'localhost'.
+
+
+
+
+
+
+
+
+
+ 
+
+
+
+
