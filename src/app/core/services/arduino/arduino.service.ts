@@ -164,8 +164,6 @@ export class ArduinoService {
 
     this.setupSensorSubjects();
     this.checkInternetConnection();
-    //this.regularPresionSiCambio(10);
-    //this.getDistancia();
 
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
       
@@ -206,6 +204,8 @@ export class ArduinoService {
           this.volumenTotalRecuperado = dataValues[`${Sensor.ACCUMULATED_CONSUMO}`];
           this.currentTankRecuperado = dataValues[`${Sensor.CURRENT_TANK}`];
           this.accumulated_distance = dataValues[`${Sensor.ACCUMULATED_HECTARE}`];
+          this.valvulaIzquierda = dataValues[`${Sensor.VALVE_LEFT}`];
+          this.valvulaDerecha = dataValues[`${Sensor.VALVE_RIGHT}`];
 
           //console.log("VOLUMEN RECUPERADO" , this.volumenRecuperado); 
 
@@ -229,24 +229,33 @@ export class ArduinoService {
       next: async (value) =>{
 
         try {
-          if(value && value.data && this.currentWork.configuration){
+          if(value && value.data && this.currentWork && this.currentWork.configuration){
 
-
-            
             //OBTENER LA HORA ACTUAL PARA GUARDAR LOS SEGUNDOS
             this.reealNow =  moment();
+            
+            let data = JSON.parse(value.data);
 
             //Para poder regular la presion a la configurada anteriormente
             if(!this.banderaPresion){
               let presion = JSON.parse(this.currentWork.configuration).pressure;
               this.regulatePressureWithBars(presion);
-              this.activateRightValve();        
-              this.activateLeftValve();
+              if(this.valvulaIzquierda && this.valvulaDerecha){
+                this.activateRightValve(); 
+                this.activateLeftValve();       
+              }else if(this.valvulaIzquierda){
+                this.activateLeftValve(); 
+              }else if(this.valvulaDerecha){
+                this.activateRightValve(); 
+              }
+
               this.banderaPresion = true;
-              //console.log("REGULO LA PRESION");
             }
 
-            let data = JSON.parse(value.data);
+
+            //Para hallar la presion de acuerdo a la velocidad - Comentar de acuerdo al uso
+           /*  this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);
+            this.electronService.log("Velocidad" , data[`${Sensor.SPEED}`]); */
             
             //Condicion para verificar los eventos y actualiarlos sea el caso
             if(this.currentWork && this.currentWork.configuration){
@@ -297,7 +306,7 @@ export class ArduinoService {
                   { latitude : this.coordenadaInicial[0] , longitude : this.coordenadaInicial[1]},
                   { latitude : this.coordenadaFinal[0] , longitude : this.coordenadaFinal[1]},0.01
                 );
-
+                      
                 this.distanciaNgxs += distanciaRecorridaMetros;
                 this.electronService.log("DISTANCIA PRODUCTIVA" , this.distanciaNgxs);
 
@@ -356,9 +365,6 @@ export class ArduinoService {
               value.time = value.time.startOf('seconds');
             }
             
-            //Para hallar la presion de acuerdo a la velocidad
-            //this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);
-
             //Seconds - actualizar el valor de el time
             this.reealNow = this.reealNow.startOf('seconds');
 
@@ -382,9 +388,7 @@ export class ArduinoService {
 
   //Funcion para buscar por sensor en los dispositivos - Actualmente solo funciona cuando se trabajara con arduinos o puertos seriales
   findBySensor(sensor : number): ArduinoDevice{
-
     return this.listArduinos.find(p => p.sensors.some(x => x == sensor))!;
-
   }
   
   //Metodo no usado por el momento
@@ -401,29 +405,32 @@ export class ArduinoService {
   }
 
   // Función para calcular la presión basada en la velocidad
-  /* public calcularPresion(velocidad: number): number {
+  public calcularPresion(velocidad: number): number {
     // Definición del factor de calibración y el offset
-    const FACTOR_CALIBRACION: number = 0.99; // Ejemplo de valor
-    const OFFSET: number = -1.67; // Ejemplo de valor, ajusta según sea necesario
+    const FACTOR_CALIBRACION: number = 1.50; // Ejemplo de valor
+    const OFFSET: number = -1.99; // Ejemplo de valor, ajusta según sea necesario
     // Aplica la fórmula para calcular la presión
-    const presion = FACTOR_CALIBRACION * velocidad + OFFSET;
+    const presion = FACTOR_CALIBRACION * velocidad + OFFSET;  
     const presionRedondeada = Math.round(presion * 10) / 10; // Redondea a un decimal
-    console.log("PRESION CALCULADA" , presionRedondeada);
+    this.electronService.log("PRESION CALCULADA" , presionRedondeada);
     return presionRedondeada;
-  } */
+  }
 
   // Método para enviar el valor de presión que se le asignará si hay un cambio significativo
- /*  public regularPresionSiCambio(velocidad: number): void {
+  public regularPresionSiCambio(velocidad: number): void {
 
     const presionActual = this.calcularPresion(velocidad);
+    this.electronService.log("Se obtuvo la presion actual" , presionActual);
 
     if (this.lastPressure === null || Math.abs(presionActual - this.lastPressure) >= 0.5) {
       this.regulatePressureWithBars(presionActual);
+      this.electronService.log("Entro a la funcion para regular" , presionActual);
       this.lastPressure = presionActual;
     } else {
       console.log("No hay cambio significativo en la presión, no se enviará comando.");
     }
-  } */
+
+  }
 
   //Metodo para enviar el valor de presion que se le asignara
   public regulatePressureWithBars(bars: number): void {

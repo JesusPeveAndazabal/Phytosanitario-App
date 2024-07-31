@@ -54,6 +54,7 @@ export class GpsComponent  implements OnInit,AfterViewInit,OnChanges {
   loadMarkers() {
     //verufuca si hay una configuracion definida, si existe config.gps , si es un array y si tiene mas de un elemento
     if (config && config.gps && Array.isArray(config.gps) && config.gps.length > 1) {
+      console.log("CONFIG GPS", config.gps[0][0] , config.gps[0][1]);
         if (!this.wasCentered && this.map) {
             this.map.setCenter({ lat: config.gps[0][0], lng: config.gps[0][1] });
             this.wasCentered = true;
