@@ -79,6 +79,7 @@
     "moment": "2.29.4",
     "ngx-bootstrap": "11.0.0",
     "ngx-cookie-service": "16.1.0",
+    "node-wifi": "2.0.16",
     "primeflex": "3.3.0",
     "primeicons": "6.0.1",
     "primeng": "16.1.0",

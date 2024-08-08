@@ -1,38 +1,59 @@
-<!-- Componente para conectarse a una red que seleccione el usuario  -->
- 
-<!-- <p>config-net works!</p>
+<ion-header>
+  <ion-toolbar>
+    <ion-title id="tituloRecarga">
+      <strong>Configuraciones de Red</strong>
+    </ion-title>
+    <ion-buttons slot="start">
+      <ion-button (click)="closeModal()"><strong>Cancelar</strong></ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
 
+<ion-content>
+  <div class="wifi-config-container">
+    <button class="scan-button" (click)="scanearRedesWifi()">Escanear Redes WiFi</button>
 
-  <ion-header>
-    <ion-toolbar>
-      <ion-title id="tituloRecarga">
-        <strong>Volumen del Tanque</strong>
-      </ion-title>
-      <ion-buttons slot="start">
-        <ion-button (click)="closeModal()"><strong>Cancelar</strong></ion-button>
-      </ion-buttons>
-    </ion-toolbar>
-  </ion-header>
-  
-  <ion-content> -->
-     <!-- Botï¿½n para escanear redes WiFi -->
-<!--   <button (click)="scanearRedesWifi()">Escanear Redes WiFi</button> -->
-
-  <!-- Lista de redes WiFi escaneadas -->
-<!--   <ul *ngIf="availableNetworks.length > 0">
-    <li *ngFor="let network of availableNetworks">
-      {{ network.ssid }} ({{ network.signal_level }} dBm)
-      <button (click)="selectedNetwork = network">Seleccionar</button>
-    </li>
-  </ul> -->
-
-  <!-- Formulario para conexiï¿½n a red WiFi -->
-<!--     <div *ngIf="selectedNetwork.ssid">
-        <h3>Conectar a {{ selectedNetwork.ssid }}</h3>
-        <label>ContraseÃ±a:</label>
-        <input type="password" [(ngModel)]="password"><br>
-    <button (click)="conectarRedWifi()">Conectar</button>
+    <div *ngIf="availableNetworks.length > 0" class="networks-list">
+      <h2>Redes Disponibles</h2>
+      <ul>
+        <li *ngFor="let network of availableNetworks" (click)="selectNetwork(network)" data-bs-toggle="modal" data-bs-target="#exampleModal" [class.selected]="selectedNetwork?.ssid === network.ssid">
+          {{ network.ssid }} {{ network.signalLevel }}
+          <i *ngIf="connectedNetwork?.ssid === network.ssid" class="bi bi-wifi" style="margin-left: 300px; color: greenyellow;font-size: 24px;"></i>
+        </li>
+      </ul>
     </div>
 
-  </ion-content>
-   -->
+    <div *ngIf="!availableNetworks.length" class="no-networks">
+      <p>No se encontraron redes WiFi disponibles. Intenta escanear nuevamente.</p>
+    </div>
+  </div>
+
+  <!-- Modal -->
+  <div class="modal fade" id="exampleModal" tabindex="-1" aria-labelledby="exampleModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h1 class="modal-title fs-5" style="margin-left: 18%;" id="exampleModalLabel">Conectar a {{ selectedNetwork.ssid }}</h1>
+        </div>
+        <div class="modal-body">
+          <form action="">
+            <div class="mb-3">
+              <label for="password" style="text-align: center;" class="form-label">Contraseña : </label>
+              <input [type]="showPassword ? 'text' : 'password'" [(ngModel)]="password" id="password" class="form-control" placeholder="Introduce la contraseña" appKeyboardWifi>
+              <div class="form-check" (click)="togglePasswordVisibility()">
+                <input class="form-check-input" type="checkbox" value="" id="flexCheckChecked" >
+                <label class="form-check-label" for="flexCheckChecked">
+                  Mostrar Contraseña :
+                </label>
+              </div>  
+            </div>
+          </form>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal" (click)="resetPassword()">Cerrar</button>
+          <button type="button" class="btn btn-primary" data-bs-dismiss="modal" (click)="conectarRedWifi()">Conectar</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>

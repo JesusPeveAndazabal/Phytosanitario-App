@@ -1,0 +1,26 @@
+//Estilos para el teclado numerico
+
+.simple-keyboard {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    width: 100%;
+    z-index: 999999999999999;
+    max-height: 100%;
+    font-size: 15px;
+}
+
+.simple-keyboard.myTheme1 {
+  height: 42%;
+  border-radius: 0;
+  border-bottom-right-radius: 5px;
+  border-bottom-left-radius: 5px;
+}
+
+/* AJUSTAR EL TAMAÑO DE LOS BOTONES */
+:host ::ng-deep .hg-theme-default .hg-button {
+  height: 80px !important; /* Ajusta este tamaño según tus necesidades */
+  padding: 5px !important; /* Ajusta este padding según tus necesidades */
+  font-size: 45px !important; /* Ajusta este tamaño según tus necesidades */
+}

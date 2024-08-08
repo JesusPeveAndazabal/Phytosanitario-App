@@ -63,7 +63,7 @@ export class ArduinoDevice {
           this.isReconnecting = true;  
           this.isConnected = false;
           //console.log('Arduino disconnected. Reconnecting...' , this.isReconnecting);
-
+          
           // Intentar reconectar después de un breve período
           setTimeout(() => {
               this.connectToDevice(port, baudrate, autoOpen);
@@ -202,6 +202,7 @@ export class ArduinoDevice {
               }
 
               break;
+              
           }
         }
 

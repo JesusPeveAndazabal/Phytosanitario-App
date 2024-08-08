@@ -1,0 +1,90 @@
+#wifi-config-container {
+    padding: 16px;
+  }
+  
+  #tituloRecarga {
+    text-align: center;
+    font-weight: bold;
+  }
+  
+  .scan-button, .connect-button {
+    display: block;
+    width: 36%;
+    padding: 10px;
+    margin-top: 12px;
+    margin-bottom: 8px;
+    margin-left: 193px;
+    background-color: #3880ff;
+    color: #fff;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+  }
+  
+  .scan-button:hover, .connect-button:hover {
+    background-color: #3171e0;
+  }
+  
+  .networks-list h2, .selected-network h2 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    text-align: center;
+  }
+  
+  .networks-list ul {
+    list-style-type: none;
+    padding: 0;
+  }
+  
+  .networks-list li {
+    padding: 10px;
+    margin-bottom: 5px;
+    border-radius: 5px;
+    cursor: pointer;
+    background-color: #f0f0f0;
+    margin-left: 14px;
+    width: 95%;
+  }
+  
+  .networks-list li.selected {
+    background-color: #3880ff;
+    color: #fff;
+  }
+  
+  .selected-network input {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 20px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+  }
+  
+  .no-networks p {
+    text-align: center;
+    color: #888;
+  }
+  
+  .password-container {
+    position: relative;
+  }
+  
+  .password-container input {
+    width: calc(100% - 40px); /* Ajusta el ancho del input para dejar espacio para el icono */
+    padding-right: 40px; /* Añade padding para evitar la superposición del texto con el icono */
+  }
+  
+  .password-container ion-icon {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    cursor: pointer;
+  }
+  
+  .form-check{
+    margin-left: 6px;
+    margin-top: 14px;
+  }
+
+  

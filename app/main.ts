@@ -1,21 +1,21 @@
-import { app, BrowserWindow, Menu, screen,session  } from 'electron';
+import { app, BrowserWindow, ipcMain, Menu, screen, session } from 'electron';
 import * as path from 'path';
 import * as fs from 'fs';
 import * as url from 'url';
 import * as logger from 'electron-log';
 import * as unhandled from 'electron-unhandled';
 import * as electronInputMenu from 'electron-input-menu';
-/* import * as wifi from 'node-wifi'; */
+import * as wifi from 'node-wifi';
 
 let win: BrowserWindow = null;
 const args = process.argv.slice(1),
   serve = args.some(val => val === '--serve');
 
-/* // Inicializaciï¿½n de wifi
+// Inicializaciï¿½n de wifi
 wifi.init({
   iface: null // Usa la interfaz por defecto (generalmente wlan0 en Pi)
 });
- */
+
 
 function createWindow(): BrowserWindow {
   setupLogger();
@@ -35,11 +35,11 @@ function createWindow(): BrowserWindow {
       nodeIntegration: true,
       allowRunningInsecureContent: (serve) ? true : false,
       contextIsolation: false,  // false if you want to run e2e test with Spectron
-      partition : "persist:name",
+      partition: "persist:name",
 
     },
   });
-  win.webContents.session.cookies.set({url:"http://localhost",name:"test",value:"tval"});
+  win.webContents.session.cookies.set({ url: "http://localhost", name: "test", value: "tval" });
   // win.on("ready-to-show",()=>{
   //   session.defaultSession.cookies.flushStore();
   // })
@@ -55,32 +55,32 @@ function createWindow(): BrowserWindow {
     let pathIndex = './index.html';
     if (fs.existsSync(path.join(__dirname, '../dist/index.html'))) {
       // Path when running electron in local folder
-     pathIndex = '../dist/index.html';
-   }
-
-   
-/*   // Escuchar solicitud de escaneo de redes WiFi
-  ipcMain.handle('scan-wifi', async (event, args) => {
-    try {
-      let networks = await wifi.scan();
-      return networks;
-    } catch (error) {
-      console.error('Error al escanear redes WiFi:', error);
-      return [];
+      pathIndex = '../dist/index.html';
     }
-  });
 
-  // Manejar solicitud de conexiï¿½n a una red WiFi especï¿½fica
-  ipcMain.handle('connect-wifi', async (event, args) => {
-    const { ssid, password } = args;
-    try {
-      await wifi.connect({ ssid, password });
-      return { success: true };
-    } catch (error) {
-      console.error(`Error al conectar a la red WiFi ${ssid}:`, error);
-      return { success: false, error };
-    }
-  }); */
+
+    // Maneja el evento scan-wifi
+    ipcMain.handle('scan-wifi', async () => {
+      try {
+        const networks = await wifi.scan();
+        console.log("ELECTRON ", networks);
+        return networks;
+      } catch (error) {
+        console.error('Error al escanear redes WiFi:', error);
+        throw error;
+      }
+    });
+
+    // Maneja el evento connect-wifi
+    ipcMain.handle('connect-wifi', async (event, { ssid, password }) => {
+      try {
+        await wifi.connect({ ssid, password });
+        return { success: true };
+      } catch (error) {
+        console.error(`Error al conectar a la red WiFi ${ssid}:`, error);
+        return { success: false, error };
+      }
+    });
 
     win.loadURL(url.format({
       pathname: path.join(__dirname, pathIndex),
@@ -120,7 +120,7 @@ function setupLogger() {
   logger.transports.file.maxSize = 5 * 1024 * 1024;
 
   // Write to this file, must be set before first logging
-  logger.transports.file.resolvePath = () => path.resolve("bd/log/","log.log");
+  logger.transports.file.resolvePath = () => path.resolve("bd/log/", "log.log");
   // fs.createWriteStream options, must be set before first logging
   //logger.transports.file.streamConfig = {flags: 'w'};
 
@@ -130,7 +130,7 @@ function setupLogger() {
   //unhandled
   unhandled({
     logger: (error) => {
-        logger.error(error);
+      logger.error(error);
     },
     showDialog: false,
   });

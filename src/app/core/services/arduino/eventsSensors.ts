@@ -8,6 +8,13 @@ import { getDistance} from 'geolib';
 import { DatabaseService } from '../database/database.service';
 
 
+//COMPONENTE
+/* DISPARA */
+//ACCION
+/* MODIFICA O MUTA EL ESTADO */
+//ESTADO
+/* NOTIFICA AL COMPONENTE */
+
 
 export class WaterFlow {
     static readonly type = '[Sensor] waterFlow';
@@ -80,7 +87,7 @@ export class volumenRecuperado {
 }
 
 
-export interface SensorStateModel {
+export interface    SensorStateModel {
     data : {
         1 : number,
         2 : number,
@@ -245,12 +252,10 @@ export class SensorState {
         return sensorState.data[`${Sensor.ACCUMULATED_VOLUME}`];
     }
 
-    
     //Selector donde se estructurar la base de datos
     @Selector([SensorState])
     static evaluarDispositivos(sensorState : SensorStateModel)
     {
-
         //Retornar Valor de WorkExecutionDetail
         let realNow = moment();
         let currentSecond = realNow.format('seconds');

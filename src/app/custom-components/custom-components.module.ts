@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 
 import { SelectFilterComponent } from './select-filter/select-filter.component';
 import { IonSearchbar, IonicModule } from '@ionic/angular';
+import { KeyboardWifiComponent } from './keyboard-wifi/keyboard-wifi.component';
 
 
 @NgModule({
@@ -14,6 +15,7 @@ import { IonSearchbar, IonicModule } from '@ionic/angular';
   ],
   declarations: [
     SelectFilterComponent,
+    KeyboardWifiComponent,
     
   ],
   exports : [

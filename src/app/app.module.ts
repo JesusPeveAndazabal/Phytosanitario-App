@@ -23,13 +23,14 @@ import { NgxsModule } from '@ngxs/store';
 import { NgxsLoggerPluginModule } from '@ngxs/logger-plugin';
 import { ValveState } from '../app/core/state/valve.state';
 import { SensorState } from './core/services/arduino/eventsSensors';
+import { KeyboardWifiDirective } from './core/directives/keyboard-wifi.directive';
 // import { ElectronService } from './core/services';
 // AoT requires an exported function for factories
 const httpLoaderFactory = (http: HttpClient): TranslateHttpLoader =>  new TranslateHttpLoader(http, './assets/i18n/', '.json');
 
 @NgModule({
   declarations: [
-    AppComponent
+    AppComponent,
   ],
   imports: [
     DropdownModule,

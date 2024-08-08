@@ -26,6 +26,7 @@ import { WindowMaximizeIcon } from 'primeng/icons/windowmaximize';
 import { waitForAsync } from '@angular/core/testing';
 import { RedisService } from './redis.service';
 import { Subscription } from 'rxjs';
+import { JsonPipe } from '@angular/common';
 
 
 //Este se comporta como el device_manager
@@ -160,7 +161,7 @@ export class ArduinoService {
 
   private sensorSubjectMap: Map<Sensor, Subject<number|number[]>> = new Map();
 
-  constructor( private electronService: ElectronService , private databaseService : DatabaseService , private store: Store, private redisService : RedisService) {
+  constructor( private electronService: ElectronService ,private databaseService : DatabaseService , private store: Store, private redisService : RedisService) {
 
     this.setupSensorSubjects();
     this.checkInternetConnection();
@@ -169,28 +170,18 @@ export class ArduinoService {
       
       if(workExecution){
         this.currentWork = workExecution;
-        //this.electronService.log("CURRENTWORK" , this.currentWork);
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       } 
 
     });
 
-    //Bucle para recorrer los dispositivos 
+    //Bucle para recorrer los dispositivos  - Funcionable solo cuando se trabaja con dispositivos seriales
     for(let i = 1; i <= Configuration.nDevices; i++){
-
       this.listArduinos.push(
         new ArduinoDevice(Configuration[`device${i}`],115200,true,electronService,store)
       );
-
     }
-
-    //COMPONENTE
-    /* DISPARA */
-    //ACCION
-    /* MODIFICA O MUTA EL ESTADO */
-    //ESTADO
-    /* NOTIFICA AL COMPONENTE */
 
     if(this.isServiceRestarting){
     
@@ -208,7 +199,7 @@ export class ArduinoService {
           this.valvulaDerecha = dataValues[`${Sensor.VALVE_RIGHT}`];
 
           //console.log("VOLUMEN RECUPERADO" , this.volumenRecuperado); 
-
+          
           //Actualiza el estado del volumen
           this.store.dispatch(new volumenRecuperado ({ [`${Sensor.VOLUMEN_RECUPERADO}`]: this.volumenRecuperado }));
           // Actualiza el estado del volumen acumulado
@@ -228,6 +219,7 @@ export class ArduinoService {
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
       next: async (value) =>{
 
+
         try {
           if(value && value.data && this.currentWork && this.currentWork.configuration){
 
@@ -235,6 +227,15 @@ export class ArduinoService {
             this.reealNow =  moment();
             
             let data = JSON.parse(value.data);
+                    
+              this.hasGPSData = data[Sensor.GPS] !== undefined && data[Sensor.GPS] !== null;
+              
+              //SI HAY DATOS ESTA EN TRUE Y SINO EN FALSE      
+              if (data[`${Sensor.GPS}`]) {
+                this.dataGps = true;
+              } else {
+                this.dataGps = false;
+              }
 
             //Para poder regular la presion a la configurada anteriormente
             if(!this.banderaPresion){
@@ -252,10 +253,8 @@ export class ArduinoService {
               this.banderaPresion = true;
             }
 
-
             //Para hallar la presion de acuerdo a la velocidad - Comentar de acuerdo al uso
-           /*  this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);
-            this.electronService.log("Velocidad" , data[`${Sensor.SPEED}`]); */
+            this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);
             
             //Condicion para verificar los eventos y actualiarlos sea el caso
             if(this.currentWork && this.currentWork.configuration){
@@ -287,7 +286,6 @@ export class ArduinoService {
               //Actualizar el tiempo de ejecucion del trabajo 
               await this.databaseService.updateTimeExecution(this.currentWork);
               
-
               //Condicion para hallar la distancia recorrida productiva - NO NOLVIDAR PONER LA CONDICION DE LA VELOCIDAD > 0 
               if(data[`${Sensor.WATER_FLOW}`] > 0 && this.banderaDistancia && data[`${Sensor.PRESSURE}`] > 1.5 && data[`${Sensor.SPEED}`] > 0){
                 // Registra las coordenadas GPS actuales
@@ -301,7 +299,7 @@ export class ArduinoService {
                 // Registra las coordenadas finales 
                 this.coordenadaFinal = data[`${Sensor.GPS}`];
                 this.electronService.log("Segunda condicion y corrdenada Final" , this.coordenadaFinal);
-
+                  
                 const distanciaRecorridaMetros = getDistance(
                   { latitude : this.coordenadaInicial[0] , longitude : this.coordenadaInicial[1]},
                   { latitude : this.coordenadaFinal[0] , longitude : this.coordenadaFinal[1]},0.01
@@ -313,7 +311,7 @@ export class ArduinoService {
                 this.store.dispatch(new AcumularDistancia({ [`${Sensor.ACCUMULATED_HECTARE}`]: this.distanciaNgxs }));
                 this.banderaDistancia = true;
               }
-
+              
               //Condicion para dar los eventod
                //EVENTO DE CAUDAL
               if (data[Sensor.WATER_FLOW] > this.caudalNominal * 0.90 && data[Sensor.WATER_FLOW] < this.caudalNominal * 1.1) {
@@ -373,6 +371,7 @@ export class ArduinoService {
               this.now = this.reealNow;
               if(this.currentWork && this.isRunning){
                 await this.databaseService.saveWorkExecutionDataDetail(value);
+                
               } 
             }           
           } 
@@ -410,33 +409,35 @@ export class ArduinoService {
     const FACTOR_CALIBRACION: number = 1.50; // Ejemplo de valor
     const OFFSET: number = -1.99; // Ejemplo de valor, ajusta según sea necesario
     // Aplica la fórmula para calcular la presión
-    const presion = FACTOR_CALIBRACION * velocidad + OFFSET;  
-    const presionRedondeada = Math.round(presion * 10) / 10; // Redondea a un decimal
-    this.electronService.log("PRESION CALCULADA" , presionRedondeada);
-    return presionRedondeada;
+    let presion = FACTOR_CALIBRACION * velocidad + OFFSET;
+    
+    // Redondea la presión al múltiplo más cercano de 0.5
+    presion = Math.round(presion * 2) / 2;
+    
+    this.electronService.log("PRESION CALCULADA", presion);
+    return presion;
   }
 
   // Método para enviar el valor de presión que se le asignará si hay un cambio significativo
   public regularPresionSiCambio(velocidad: number): void {
-
     const presionActual = this.calcularPresion(velocidad);
-    this.electronService.log("Se obtuvo la presion actual" , presionActual);
 
+    this.electronService.log("Diferencia de presión:", Math.abs(presionActual - this.lastPressure));
+              
     if (this.lastPressure === null || Math.abs(presionActual - this.lastPressure) >= 0.5) {
+      this.electronService.log("Entro a la funcion para regular", presionActual);
       this.regulatePressureWithBars(presionActual);
-      this.electronService.log("Entro a la funcion para regular" , presionActual);
       this.lastPressure = presionActual;
     } else {
       console.log("No hay cambio significativo en la presión, no se enviará comando.");
     }
-
   }
 
   //Metodo para enviar el valor de presion que se le asignara
   public regulatePressureWithBars(bars: number): void {
 
     const regulatorId = Sensor.PRESSURE_REGULATOR;
-    // Convertir el valor de bares segÃºn sea necesario, por ejemplo, asumamos que estÃ¡ en la misma unidad que se usÃ³ en el script original
+    // Convertir el valor de bares segun sea necesario, por ejemplo, asumamos que estÃ¡ en la misma unidad que se usÃ³ en el script original
     const barPressure = bars;
     // Aqui­ deberas incluir la logica para enviar el comando al dispositivo, por ejemplo:
     const command = JSON.stringify({ 22 : barPressure });
@@ -520,7 +521,7 @@ export class ArduinoService {
     this.store.dispatch(new ActivateRightValve());
     const command = JSON.stringify({ 21 : true });
     this.redisService.sendCommand(command);
-    this.electronService.log("Comando activar valvula derecha", command);
+    //this.electronService.log("Comando activar valvula derecha", command);
 
   }
 
@@ -531,7 +532,7 @@ export class ArduinoService {
     this.store.dispatch(new DeactivateRightValve());
     const command = JSON.stringify({ 21 : false });
     this.redisService.sendCommand(command);
-    this.electronService.log("Comando desactivar valvula derecha", command);
+    //this.electronService.log("Comando desactivar valvula derecha", command);
 
   }
 
@@ -575,7 +576,7 @@ export class ArduinoService {
 
   //Este es el encargado de generar y emitir eventos de actualizaciÃ³n
   private setupSensorSubjects(): void {
-
+    
     // Crear Subject para cada tipo de sensor
     const sensorTypes: Sensor[] = Object.values(Sensor).filter(value => typeof value === 'number') as Sensor[];
     sensorTypes.forEach((sensorType) => {

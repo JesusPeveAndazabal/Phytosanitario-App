@@ -10,7 +10,7 @@
               <span class="pi pi-home" style="font-size:171%;"></span>
             </ion-fab-button>
             <ion-fab-button id="internet-conection" shape="round" size="large" 
-            class="m-0" [ngClass]="{'internet-button-on': arduinoService.conectInternet, 'internet-button-off': !arduinoService.conectInternet}">
+            class="m-0" [ngClass]="{'internet-button-on': arduinoService.conectInternet, 'internet-button-off': !arduinoService.conectInternet}" (click)="abrirInternet()">
             <i class="bi bi-wifi" style="font-size:171%;"></i>
             </ion-fab-button>
             <ion-fab-button *ngIf="canStart" shape="round" size="large" class="m-0" [ngClass]="{'unselected-fab-button': currentRoute != '/main/gps', 'selected-fab-button': currentRoute == '/main/gps', 'gps-button-on': arduinoService.dataGps, 'gps-button-off': !arduinoService.dataGps}" [routerLink]="['/main/gps']">

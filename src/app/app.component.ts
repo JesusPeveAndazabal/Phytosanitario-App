@@ -87,7 +87,7 @@ export class AppComponent implements OnInit {
 
       //Set Interval para el envio al servidor - Recordar que se envia 1 parque con 60 registros
       
-      setInterval(()=>{
+/*       setInterval(()=>{
           if(!onExecution){
             onExecution = true;
 
@@ -193,6 +193,6 @@ export class AppComponent implements OnInit {
           iteration();
 
           }
-      },9000);     
+      },9000);    */  
   } 
 } 

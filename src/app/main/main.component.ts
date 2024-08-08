@@ -20,6 +20,7 @@ import { VolumeComponent } from './control/volume/volume.component';
 import { ElectronService } from '../core/services';
 import { AcumuladoRestaurar, SensorState } from '../core/services/arduino/eventsSensors';
 import { Store } from '@ngxs/store';
+import { ConfigNetComponent } from './config-net/config-net.component';
 
 
 
@@ -120,6 +121,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     //console.log("SE INICIO LA BD")
     let currenttank$ = this.store.select(SensorState.currentTank).subscribe({
       next : async (value) =>{
+        this.arduinoService.checkInternetConnection();
         if(value > 0){
           //Valor de trabajo del valor del tanque
           this.workStatus = this.valorTanque;
@@ -158,6 +160,17 @@ export class MainComponent implements OnInit,AfterViewInit{
       this.loading_message = 'Verificando configuraciones...';
       await this.loader.present();
     }
+  }
+
+  async abrirInternet(){
+    console.log("EVENTO CLICK PARA ABRIR MODAL DE INTERNET");
+    const modal = await this.modalController.create({
+       component: ConfigNetComponent,
+       id : 'config-net-modal',
+       backdropDismiss: false,
+    });
+    modal.present();
+    const {data , role} = await modal.onDidDismiss();
   }
 
   //Funcion para cargar los valores de las personas

@@ -48,7 +48,6 @@ export class OrdenesTrabajoComponent implements OnInit {
   async ngOnInit(){
 
     //Consultas a la base de datos
-
     this.login = await this.dbService.getLogin();
     this.implementData = await this.dbService.getImplemenData();
     this.workExecutionOrder = await this.dbService.getWorkExecutionOrder();
@@ -79,11 +78,9 @@ export class OrdenesTrabajoComponent implements OnInit {
 
     // Almacenar las IDs de las ejecuciones de trabajo finalizadas
     this.finishedWorkExecutionIds = finishedWorkExecutions.map(execution => execution.weorder);
-    //this.electronService.log("FINISHED WORK EXECUTION" , this.finishedWorkExecutionIds);
 
     // Filtrar las órdenes de trabajo para mostrar solo las que no han sido finalizadas
     this.ordenesTrabajoPorTipoImplemento = this.ordenesTrabajoPorTipoImplemento.filter(order => !this.finishedWorkExecutionIds.includes(order.id));
-    //this.electronService.log("ORDENES DE TRABAJO " , this.ordenesTrabajoPorTipoImplemento);
     
     // Inicializar selectedDate con la fecha actual
     this.selectedDate = moment().format('YYYY-MM-DD');
@@ -173,7 +170,7 @@ export class OrdenesTrabajoComponent implements OnInit {
 
       /* Descomentar en prubeas para regular la presion */
       this.arduinoService.regulatePressureWithBars(configExecution.pressure);
-      //this.arduinoService.resetVolumenInit();
+      this.arduinoService.resetVolumenInit();
       this.arduinoService.isRunning = false;
       this.arduinoService.datosCaudal = 0;
       this.arduinoService.dataCurrent = 0;

@@ -106,7 +106,12 @@ export class VolumeComponent  implements OnInit,OnChanges {
     this.localConfig = await this.dbService.getLocalConfig();
     let obtenerLabor = await this.dbService.getLastWorkExecution();
     let workListado = await this.dbService.getWorkData();
-    this.consumo = JSON.parse(this.wExecution.configuration).consume;
+
+    if (this.wExecution && this.wExecution.configuration) {
+      this.consumo = JSON.parse(this.wExecution.configuration).consume;
+    } else {
+      console.error('wExecution o su propiedad configuration no están definidos.');
+    }
 
     // Obtener el id del último trabajo ejecutado
     const workId = obtenerLabor.work;

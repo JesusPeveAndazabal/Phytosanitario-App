@@ -2,20 +2,18 @@ import { Component, ElementRef, OnInit, Renderer2} from '@angular/core';
 import Keyboard from 'simple-keyboard';
 
 @Component({
-  selector: 'app-keyboard',
-  templateUrl: './keyboard.component.html',
-  styleUrls: ['./keyboard.component.scss']
+  selector: 'app-keyboard-wifi',
+  templateUrl: './keyboard-wifi.component.html',
+  styleUrls: ['./keyboard-wifi.component.scss']
 })
-
-//Clase para el teclado para el aplicativo
-export class KeyboardComponent implements OnInit{
-  
+export class KeyboardWifiComponent implements OnInit{
   keyboard: any;
 
   input: ElementRef;
 
-  constructor(private renderer: Renderer2) { }
+  constructor(){}
 
+  
   ngOnInit(): void {
     this.keyboard = new Keyboard({
       onChange: input => this.onChange(input),
@@ -25,21 +23,23 @@ export class KeyboardComponent implements OnInit{
       layout: { 
         //Valores personalizados para tu teclado
         default: [
-          "1 2 3",
-          "4 5 6",
-          "7 8 9 {enter}",
-          ". 0 {bksp}",
+          '` 1 2 3 4 5 6 7 8 9 0 {bksp}',
+          'q w e r t y u i o p \\',
+          'a s d f g h j k l ; \' {enter}',
+          'z x c v b n m , . / ',
+          '.com @ {space}'
         ],
       },
       //Añadir estos 2 valores especiales : Enter y Eliminar
       display: {
         '{bksp}': '⌫',
         '{enter}': '↵',
+        '{space}' : '␣'
       },
     });
     
     this.keyboard.setInput(this.input.nativeElement.value);
-    console.log("KEYBOARD" , this.keyboard.setInput(this.input.nativeElement.value));
+    console.log("KEYBOARD WIFI" , this.keyboard.setInput(this.input.nativeElement.value));
   }
 
   //Metodo para disparar el evento de input si esta escribiendo

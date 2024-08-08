@@ -107,8 +107,6 @@ export class ConfigComponent implements OnInit {
     //console.log("SINCRONIZANDO DATOS ............................")
     //console.log(await firstValueFrom(this.apiService.getPeople(environment.token)), "config.component.ts");
     try{
-      //console.log("EMNTRO AL TRY");
-      // await this.dbService.openConnection();
       const people = await firstValueFrom(this.apiService.getPeople(environment.token));
       const cultivations = await firstValueFrom(this.apiService.getCultivations());
       const farms = await firstValueFrom(this.apiService.getFarm());
@@ -120,8 +118,6 @@ export class ConfigComponent implements OnInit {
       const works = await firstValueFrom(this.apiService.getWorks());
       const workOrders = await firstValueFrom(this.apiService.getWorkOrder());
       const implementss = await firstValueFrom(this.apiService.getImplement());
-      // const we = await firstValueFrom(this.apiService.getWE());
-      //console.log("preople", people);
 
       await this.dbService.openConnection();  // Asegúrate de abrir la conexión antes de guardar
 
@@ -138,8 +134,9 @@ export class ConfigComponent implements OnInit {
       for (const cultivation of cultivations) {
         const existingCultivation = await this.dbService.getRecordById('cultivation', cultivation.id);
         if (!existingCultivation) {
+          //Sincronizar la base de datos , pasando como paremotro el cultivo / await poner una pausa 
           await this.dbService.syncCultivationData([cultivation]);
-        }
+        }  
       }
 
       // await this.dbService.syncFarmData(farms);

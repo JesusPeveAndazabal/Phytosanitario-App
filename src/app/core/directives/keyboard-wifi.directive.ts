@@ -1,10 +1,10 @@
 import { ApplicationRef, ComponentFactoryResolver, ComponentRef, Directive, ElementRef, EmbeddedViewRef, HostListener, Injector, Input } from "@angular/core";
-import { KeyboardComponent } from "../../custom-components/keyboard/keyboard.component";
+import { KeyboardWifiComponent } from "../../custom-components/keyboard-wifi/keyboard-wifi.component";
 
 @Directive({
-  selector: '[appKeyboard]'
+  selector: '[appKeyboardWifi]'
 })
-export class KeyboardDirective {
+export class KeyboardWifiDirective {
 
   @Input() typeKeyboard = '';
 
@@ -14,21 +14,22 @@ export class KeyboardDirective {
   private enableByClick : boolean = false;
 
   constructor(
-	private elementRef: ElementRef,
-	private appRef: ApplicationRef, 
-	private componentFactoryResolver: ComponentFactoryResolver,
-	private injector: Injector) {
-    
+    private elementRef: ElementRef,
+    private appRef: ApplicationRef, 
+    private componentFactoryResolver: ComponentFactoryResolver,
+    private injector: Injector
+  ) {
     this.enableByClick = elementRef.nativeElement.nodeName != "INPUT";
-  }
+   }
 
+   
   @HostListener('focus')
   onFocus(): void {
     
     if (this.componentRef === null) {
         const componentFactory =
               this.componentFactoryResolver.resolveComponentFactory(
-              KeyboardComponent);
+              KeyboardWifiComponent);
         this.componentRef = componentFactory.create(this.injector);
         this.appRef.attachView(this.componentRef.hostView);
         this.keyboard = 
@@ -36,8 +37,9 @@ export class KeyboardDirective {
               .rootNodes[0] as HTMLElement;
 
     }
-    let appKeyboard = document.querySelector("#keyboard");
-    if(!appKeyboard){
+    let appKeyboardWifi = document.querySelector("#keyboard");
+    console.log("CREACION DE DIRECTIVA APPKEYBOARD WIFI" , appKeyboardWifi);
+    if(!appKeyboardWifi){
         document.body.appendChild(this.keyboard);
     }
     this.setTooltipComponentProperties();
@@ -53,9 +55,10 @@ export class KeyboardDirective {
 
   @HostListener('focusout')
   onFocusOut(): void {
-    let appKeyboard = document.querySelector("#keyboard");
-    console.log("CREACION DE DIRECTIVA APPKEYBOARD FOCUSOUT" , appKeyboard);
-    if (this.keyboard && appKeyboard) {     
+    let appKeyboardWifi = document.querySelector("#keyboard");
+    console.log("CREACION DE DIRECTIVA APPKEYBOARD WIFI OUTFOCUS" , appKeyboardWifi);
+    if (this.keyboard && appKeyboardWifi) { 
+        console.log("ENTRO A LA CONDICION" , this.keyboard);    
         document.body.removeChild(this.keyboard);
     }
   }
@@ -69,4 +72,6 @@ export class KeyboardDirective {
     //   this.componentRef.instance.top = bottom;
     }
   }
+
+
 }
