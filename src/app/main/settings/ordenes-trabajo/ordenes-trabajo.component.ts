@@ -39,6 +39,11 @@ export class OrdenesTrabajoComponent implements OnInit {
   selectedDate: string = '';
   nozzleSummary: any[] = []; // Declara la variable nozzleSummary
 
+  //selectedWorkOrderState: "PENDIENTE" | "EJECUTANDO" | "FINALIZADO" = "PENDIENTE"; // Valor por defecto
+  selectedWorkOrderState: { [id: number]: string } = {};
+  selectedWorkOrderId: number | null = null;
+  selectedOrderId: number | null = null; // Variable para almacenar el ID de la orden seleccionada
+
   constructor(private modalCtrl:ModalController , 
     private dbService : DatabaseService , 
     private arduinoService : ArduinoService,
@@ -57,6 +62,7 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.nozzleColor = await this.dbService.getNozzleColorData();
     this.nozzleType = await this.dbService.getNozzleTypeData();
     let finishedWorkExecutions = await this.dbService.getWorkExecutionFinished();
+    this.restoreOrderStates();
 
     // Buscar implemento en la lista
     const implementoEncontrado = this.implementData.find(implemento => implemento.id === this.login.implement);
@@ -85,13 +91,16 @@ export class OrdenesTrabajoComponent implements OnInit {
     // Inicializar selectedDate con la fecha actual
     this.selectedDate = moment().format('YYYY-MM-DD');
     this.filterByDate();
+
   }
 
 
   //Funcion para ordenar por fecha y hora las ordenes de trabajo
   filterByDate() {
     const fechaFiltrada = moment(this.selectedDate).format('YYYY-MM-DD');
-    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder.filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaFiltrada);
+    this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder
+    .filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaFiltrada)
+    .filter(order => !this.finishedWorkExecutionIds.includes(order.id)); // Excluye las órdenes finalizadas;
   }
   
   //Funcion para cerrar el modal en caso se elija Cancelar
@@ -102,9 +111,10 @@ export class OrdenesTrabajoComponent implements OnInit {
 
   //Funcion para obtener la orden que se ha seleccionado
   selectOrder(order: WorkExecutionOrder) {
+    this.electronService.log("SELECTED ORDER" , this.selectedWorkOrder);
     this.selectedWorkOrder = order;
     this.configExecution = JSON.parse(this.selectedWorkOrder.configuration);
-    console.log("THISCONFIG" , this.configExecution.nozzles);
+
   }
 
   //Funcion para onbtener las ordenes que han sido finalizadas
@@ -144,6 +154,7 @@ export class OrdenesTrabajoComponent implements OnInit {
     let configExecution = JSON.parse(this.selectedWorkOrder.configuration);
     //Verificamos que haya una orden seleccionada
     if (this.selectedWorkOrder) {
+    
       //Estructuramos los datos para guardar en la base de datos
       let workExecution: WorkExecution = {
         id :1,
@@ -184,6 +195,12 @@ export class OrdenesTrabajoComponent implements OnInit {
       this.arduinoService.restaurarDistancia = 0;
       this.arduinoService.volumenReseteado = 0;
 
+      // Marca la orden seleccionada como 'EJECUTANDO'
+      this.selectedWorkOrderId = this.selectedWorkOrder.id;
+      
+      // Puedes almacenar el estado en localStorage si deseas que persista entre recargas
+      localStorage.setItem('selectedWorkOrderId', JSON.stringify(this.selectedWorkOrderId));
+
       // Por ejemplo, cerrar el modal
       await this.modalCtrl.dismiss(this.selectedWorkOrder, 'confirm', 'ordenes-trabajo');
       //Guardamos la ejecucion de Trabajo
@@ -197,6 +214,18 @@ export class OrdenesTrabajoComponent implements OnInit {
       this.router.navigateByUrl('/main');
     }
   }
+
+
+  restoreOrderStates() {
+    const savedOrderId = localStorage.getItem('selectedWorkOrderId');
+    this.selectedWorkOrderId = savedOrderId ? JSON.parse(savedOrderId) : null;
+  }
+
+  getOrderStatus(order: WorkExecutionOrder): string {
+    // Devuelve el estado visual de la orden
+    return this.selectedWorkOrderId === order.id ? 'EJECUTANDO' : 'PENDIENTE';
+  }
+
 
   //Obtener un valor booleado en caso haya una configuracion valida o no
   get canStart(): boolean{

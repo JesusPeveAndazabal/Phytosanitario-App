@@ -1540,6 +1540,20 @@ export class DatabaseService extends ElectronService {
     });
   }
 
+  async getLastWorkExecutionDetailOrdenes():Promise<WorkExecutionDetail[]> {
+    return new Promise<WorkExecutionDetail[]>((resolve, reject) => {
+        let db = new this.sqlite.Database(this.file);
+        let sql = "SELECT * FROM work_execution_details";
+        db.all(sql, [], (err, rows: WorkExecutionDetail[]) => {
+            if (err) {
+                process.nextTick(() => reject(err));
+            }
+            process.nextTick(() => resolve(rows));
+        });
+        db.close();
+    });
+  }
+
   //Funcion para obtener el registro de el detalle de ejecuciones de trabajo
   // Función para obtener el registro del detalle de ejecuciones de trabajo
   // Función para obtener el último registro del detalle de ejecuciones de trabajo

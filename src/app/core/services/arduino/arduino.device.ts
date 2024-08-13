@@ -163,7 +163,7 @@ export class ArduinoDevice {
                 const volumeValue = parseFloat(value);
                 if (!isNaN(volumeValue)) {
                   let valSensorVolume = JSON.parse(`{"${Sensor.VOLUME}" : ${volumeValue}}`);
-                  //this.electronService.log("VOLUMEN", valSensorVolume);
+                  this.electronService.log("VOLUMEN", valSensorVolume);
                   this.store.dispatch(new Volumen(valSensorVolume));
                 } else {
                   this.port.write(Buffer.from('OK\n', 'utf-8'));

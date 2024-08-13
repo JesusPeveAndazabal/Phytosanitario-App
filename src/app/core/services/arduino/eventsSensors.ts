@@ -86,6 +86,9 @@ export class volumenRecuperado {
     constructor (public value: {}) {}
 }
 
+export class ResetVolumenAcumulado {
+    static readonly type = '[Sensor] ResetVolumenAcumulado';
+}
 
 export interface    SensorStateModel {
     data : {
@@ -176,6 +179,7 @@ export class SensorState {
     @Selector()
     static volumen (sensorState : SensorStateModel) : number
     {   
+        console.log("VOLUMEN NGXS" , sensorState.data[`${Sensor.VOLUME}`]);
         return sensorState.data[`${Sensor.VOLUME}`] ;
     }
 
@@ -258,9 +262,6 @@ export class SensorState {
     {
         //Retornar Valor de WorkExecutionDetail
         let realNow = moment();
-        let currentSecond = realNow.format('seconds');
-        let coordenadaInicial : number;
-        let coordenadaFinal : number;
         let volumen = sensorState.data[`${Sensor.VOLUME}`] + sensorState.data[`${Sensor.ACCUMULATED_RESTAURAR}`];
 
         //Variable para el consumo por tanque + el recuperado si se reinicia el aplucativo
@@ -289,6 +290,7 @@ export class SensorState {
 
         //Condicion para estrcturar la base de datos
         if(sensorState.waterFlow) {
+           
            //Creacion de la estructura de Work Execution Detail para ser guardada
            let workDetail : WorkExecutionDetail = {
                id_work_execution : 2,
@@ -357,6 +359,13 @@ export class SensorState {
               [Sensor.ACCUMULATED_CONSUMO]: action.value[Sensor.ACCUMULATED_CONSUMO]
             }
           });
+        }
+
+        @Action(ResetVolumenAcumulado)
+        resetVolumenAcumulado(ctx: StateContext<SensorStateModel>) {
+            ctx.patchState({
+                volumenAcumulado : 0
+            });
         }
 
         //Accion para el obtener el valor acumulado

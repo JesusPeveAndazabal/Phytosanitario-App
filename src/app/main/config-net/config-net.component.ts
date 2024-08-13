@@ -49,6 +49,7 @@ export class ConfigNetComponent {
       this.mostrarAlerta('Error', 'Ocurrió un error al intentar conectar a la red.');
     }
   }
+  
 
   conectarConRed(ssid: string, password: string): Promise<{ success: boolean }> {
     // Lógica para conectar con la red WiFi

@@ -169,7 +169,7 @@ export class ArduinoService {
     this.databaseService.getLastWorkExecution().then((workExecution : WorkExecution) => {
       
       if(workExecution){
-        this.currentWork = workExecution;
+        //this.currentWork = workExecution;
         this.tiempoProductivo.set_initial(workExecution.working_time.format("HH:mm:ss"));
         this.tiempoImproductivo.set_initial(workExecution.downtime.format("HH:mm:ss"));
       } 
@@ -219,9 +219,11 @@ export class ArduinoService {
     let database$ = this.store.select(SensorState.evaluarDispositivos).subscribe({
       next: async (value) =>{
 
-
         try {
-          if(value && value.data && this.currentWork && this.currentWork.configuration){
+          if(value && value.data){
+
+            let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
+
 
             //OBTENER LA HORA ACTUAL PARA GUARDAR LOS SEGUNDOS
             this.reealNow =  moment();
@@ -239,7 +241,7 @@ export class ArduinoService {
 
             //Para poder regular la presion a la configurada anteriormente
             if(!this.banderaPresion){
-              let presion = JSON.parse(this.currentWork.configuration).pressure;
+              let presion = JSON.parse(currentWork.configuration).pressure;
               this.regulatePressureWithBars(presion);
               if(this.valvulaIzquierda && this.valvulaDerecha){
                 this.activateRightValve(); 
@@ -254,15 +256,15 @@ export class ArduinoService {
             }
 
             //Para hallar la presion de acuerdo a la velocidad - Comentar de acuerdo al uso
-            this.regularPresionSiCambio(data[`${Sensor.SPEED}`]);
+         /*    this.regularPresionSiCambio(data[`${Sensor.SPEED}`]); */
             
             //Condicion para verificar los eventos y actualiarlos sea el caso
-            if(this.currentWork && this.currentWork.configuration){
+            if(currentWork && currentWork.configuration){
 
               //Para compara los eventos
-              this.caudalNominal = JSON.parse(this.currentWork.configuration).water_flow;
-              this.info = JSON.parse(this.currentWork.configuration).pressure;
-              this.speedalert = JSON.parse(this.currentWork.configuration).speed;
+              this.caudalNominal = JSON.parse(currentWork.configuration).water_flow;
+              this.info = JSON.parse(currentWork.configuration).pressure;
+              this.speedalert = JSON.parse(currentWork.configuration).speed;
               
               //Condicion para tiempo productivo e improductivo y condicion de guardado en la base de datos
               if(data[`${Sensor.WATER_FLOW}`] > 0){
@@ -280,11 +282,11 @@ export class ArduinoService {
               let has_events = false;
 
               //Almacenar el tiempo productivo e improductivo
-              this.currentWork.downtime = this.tiempoImproductivo.time();
-              this.currentWork.working_time = this.tiempoProductivo.time();
+              currentWork.downtime = this.tiempoImproductivo.time();
+              currentWork.working_time = this.tiempoProductivo.time();
 
               //Actualizar el tiempo de ejecucion del trabajo 
-              await this.databaseService.updateTimeExecution(this.currentWork);
+              await this.databaseService.updateTimeExecution(currentWork);
               
               //Condicion para hallar la distancia recorrida productiva - NO NOLVIDAR PONER LA CONDICION DE LA VELOCIDAD > 0 
               if(data[`${Sensor.WATER_FLOW}`] > 0 && this.banderaDistancia && data[`${Sensor.PRESSURE}`] > 1.5 && data[`${Sensor.SPEED}`] > 0){
@@ -357,7 +359,7 @@ export class ArduinoService {
               }
   
               /* Evaulu */
-              value.id_work_execution = this.currentWork.id;
+              value.id_work_execution = currentWork.id;
               value.has_events = has_events;
               value.events = events.join(", ");
               value.time = value.time.startOf('seconds');
@@ -369,7 +371,7 @@ export class ArduinoService {
             //Condicion para guardar en la base de datos cada 4 segundos si no hay caudal y si hay cada 1 segundo
             if (this.reealNow.diff(this.now, 'seconds') >= this.tiempocondicion) {
               this.now = this.reealNow;
-              if(this.currentWork && this.isRunning){
+              if(currentWork && this.isRunning){
                 await this.databaseService.saveWorkExecutionDataDetail(value);
                 
               } 
@@ -454,6 +456,9 @@ export class ArduinoService {
     //envia 0 al volumen recuperado para reiniciarlo
     this.store.dispatch(new volumenRecuperado({ [`${Sensor.VOLUMEN_RECUPERADO}`]: 0 }));
 
+    /* Comando para serial */
+   /*  const command = 'B';
+    this.findBySensor(Sensor.VOLUME).sendCommand(command); */
   }
   
   //Metodo para poder saber si un Arduino/Sensor esta conectado o no

@@ -18,7 +18,7 @@ import { LocalConf } from '../core/models/local_conf';
 import { ModalInicioAppComponent } from './modal-inicio-app/modal-inicio-app.component';
 import { VolumeComponent } from './control/volume/volume.component';
 import { ElectronService } from '../core/services';
-import { AcumuladoRestaurar, SensorState } from '../core/services/arduino/eventsSensors';
+import { AcumuladoRestaurar, AcumuladoVolumen, ResetVolumenAcumulado, SensorState, UpdateCurrentTank, volumenRecuperado } from '../core/services/arduino/eventsSensors';
 import { Store } from '@ngxs/store';
 import { ConfigNetComponent } from './config-net/config-net.component';
 
@@ -88,7 +88,7 @@ export class MainComponent implements OnInit,AfterViewInit{
     public arduinoService : ArduinoService,
     public volumenCompont : VolumeComponent,
     public electronService : ElectronService,
-    public store : Store
+    public store : Store,
     ) {
       // console.log(this.login, "main.component... constructor");
 
@@ -283,7 +283,7 @@ export class MainComponent implements OnInit,AfterViewInit{
             command.data.current_volume = this.volumenTanque;
 
             //Pasar la funcion de inciialzar Contenedor para iniciar el trabajo
-            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on); 
+            this.arduinoService.inicializarContenedor(this.volumenTanque,this.localConfig.vol_alert_on);
             
             //Actualizar el estado de la aplicacion , aca se ha iniciado 
             this.workStatus = WorkStatusChange.START;
@@ -326,8 +326,9 @@ export class MainComponent implements OnInit,AfterViewInit{
               config.lastWorkExecution = false;
               this.arduinoService.isRunning = false;
               this.finished;
-              //this.arduinoService.resetVolumenInit();
-              this.arduinoService.currentRealVolume = 0;
+              this.arduinoService.resetVolumenInit();
+              this.arduinoService.inicializarContenedor(0,this.localConfig.vol_alert_on); 
+              this.store.dispatch(new ResetVolumenAcumulado());
               this.arduinoService.initialVolume = 0;
               this.arduinoService.datosCaudal = 0;
               this.volumenCompont.apagarValvulas(); //Apagamos las electrovalvulas
