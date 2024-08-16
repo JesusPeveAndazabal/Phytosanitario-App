@@ -27,7 +27,7 @@ export class RedisService {
   private connectToRedis(): void {
     const redisOptions = {
       //host: '192.168.160.136', //Host  - cambiar la ip si se conectara a otra red
-      host : '192.168.228.57', //Utilizar si se manejara de forma local
+      host : 'localhost', //Utilizar si se manejara de forma local
       port: 6379, //Puerto predeterminado de redis
       maxRetriesPerRequest: 30, //Intentos para volver a conectarse
       connectTimeout: 10000,  // 10 segundos
@@ -74,13 +74,13 @@ export class RedisService {
   //Funcion para subscribirse al canal de responses
   private subscribeToResponses(): void {
     if (!this.isConnected) {
-
       return;
     }
 
     //Subscribirse a la instancia de redis y al canal responses
     this.subscriberClient.subscribe('responses');
 
+    //Suvsribirse la men saje y subscripción del cliente
     this.subscriberClient.on('message', (channel, message) => {
       console.log(message);
       this.processResponse(message);

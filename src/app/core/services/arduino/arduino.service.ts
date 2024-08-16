@@ -207,6 +207,7 @@ export class ArduinoService {
           // Actualiza el estado con los valores restaurados
           this.store.dispatch(new UpdateCurrentTank(this.currentTankRecuperado, true));
           //Para restaurar la distancia acumulada 
+          this.distanciaNgxs = this.accumulated_distance;
           this.store.dispatch(new restaurarDistancia({ [`${Sensor.ACCUMULATED_HECTARE}`]: this.accumulated_distance }));
           this.store.dispatch(new SetResetApp (false));
         }
@@ -223,7 +224,6 @@ export class ArduinoService {
           if(value && value.data){
 
             let currentWork: WorkExecution = await this.databaseService.getLastWorkExecution();
-
 
             //OBTENER LA HORA ACTUAL PARA GUARDAR LOS SEGUNDOS
             this.reealNow =  moment();
@@ -289,10 +289,10 @@ export class ArduinoService {
               await this.databaseService.updateTimeExecution(currentWork);
               
               //Condicion para hallar la distancia recorrida productiva - NO NOLVIDAR PONER LA CONDICION DE LA VELOCIDAD > 0 
-              if(data[`${Sensor.WATER_FLOW}`] > 0 && this.banderaDistancia && data[`${Sensor.PRESSURE}`] > 1.5 && data[`${Sensor.SPEED}`] > 0){
+              if(data[`${Sensor.WATER_FLOW}`] > 0 && this.banderaDistancia &&  data[`${Sensor.PRESSURE}`] > 1.5 && data[`${Sensor.SPEED}`] > 0){
                 // Registra las coordenadas GPS actuales
                 this.coordenadaInicial = data[`${Sensor.GPS}`];
-                //this.coordenadaInicial = [-14.226863988770043, -75.7029061667782],
+                //this.coordenadaInicial = [-14.226863177171317, -75.70296933733088],
                 this.electronService.log("Primera condicion y corrdenada Inicial" , this.coordenadaInicial);
                 this.banderaDistancia = false;
 
@@ -300,6 +300,7 @@ export class ArduinoService {
 
                 // Registra las coordenadas finales 
                 this.coordenadaFinal = data[`${Sensor.GPS}`];
+                //this.coordenadaFinal = [-14.226137978716327, -75.69952384067822];
                 this.electronService.log("Segunda condicion y corrdenada Final" , this.coordenadaFinal);
                   
                 const distanciaRecorridaMetros = getDistance(

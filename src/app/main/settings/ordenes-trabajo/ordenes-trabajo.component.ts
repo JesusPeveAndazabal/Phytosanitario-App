@@ -39,6 +39,9 @@ export class OrdenesTrabajoComponent implements OnInit {
   selectedDate: string = '';
   nozzleSummary: any[] = []; // Declara la variable nozzleSummary
 
+  // Declara un nuevo array para almacenar los IDs de órdenes confirmadas
+  confirmedWorkOrderIds: number[] = [];
+
   //selectedWorkOrderState: "PENDIENTE" | "EJECUTANDO" | "FINALIZADO" = "PENDIENTE"; // Valor por defecto
   selectedWorkOrderState: { [id: number]: string } = {};
   selectedWorkOrderId: number | null = null;
@@ -92,6 +95,15 @@ export class OrdenesTrabajoComponent implements OnInit {
     this.selectedDate = moment().format('YYYY-MM-DD');
     this.filterByDate();
 
+    const storedConfirmedOrders = localStorage.getItem('confirmedWorkOrderIds');
+    if (storedConfirmedOrders) {
+      this.confirmedWorkOrderIds = JSON.parse(storedConfirmedOrders);
+    }
+  }
+
+    // Función para verificar si la orden está confirmada
+  isOrderConfirmed(order: WorkExecutionOrder): boolean {
+    return this.confirmedWorkOrderIds.includes(order.id);
   }
 
 
@@ -100,8 +112,8 @@ export class OrdenesTrabajoComponent implements OnInit {
     const fechaFiltrada = moment(this.selectedDate).format('YYYY-MM-DD');
     this.ordenesTrabajoPorTipoImplemento = this.workExecutionOrder
     .filter(order => moment(order.date_start).format('YYYY-MM-DD') === fechaFiltrada)
-    .filter(order => !this.finishedWorkExecutionIds.includes(order.id)); // Excluye las órdenes finalizadas;
-  }
+   /*  .filter(order => !this.finishedWorkExecutionIds.includes(order.id)); // Excluye las órdenes finalizadas; */
+  }                                                                                                                                                                    
   
   //Funcion para cerrar el modal en caso se elija Cancelar
   cancel() {
@@ -154,7 +166,9 @@ export class OrdenesTrabajoComponent implements OnInit {
     let configExecution = JSON.parse(this.selectedWorkOrder.configuration);
     //Verificamos que haya una orden seleccionada
     if (this.selectedWorkOrder) {
-    
+      this.confirmedWorkOrderIds.push(this.selectedWorkOrder.id);
+      // Almacena la lista actualizada en localStorage
+      localStorage.setItem('confirmedWorkOrderIds', JSON.stringify(this.confirmedWorkOrderIds));
       //Estructuramos los datos para guardar en la base de datos
       let workExecution: WorkExecution = {
         id :1,
@@ -222,6 +236,11 @@ export class OrdenesTrabajoComponent implements OnInit {
   }
 
   getOrderStatus(order: WorkExecutionOrder): string {
+  
+    // Si la orden está finalizada, retorna 'FINALIZADO'
+  if (this.finishedWorkExecutionIds.includes(order.id)) {
+    return 'FINALIZADO';
+  }
     // Devuelve el estado visual de la orden
     return this.selectedWorkOrderId === order.id ? 'EJECUTANDO' : 'PENDIENTE';
   }

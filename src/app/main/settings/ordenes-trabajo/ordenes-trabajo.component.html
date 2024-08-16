@@ -17,14 +17,19 @@
   </ion-item>    
   <ion-accordion-group>
     <ion-accordion *ngFor="let order of ordenesTrabajoPorTipoImplemento; let i = index" [value]="i" [class.selected]="order === selectedWorkOrder">
-      <ion-item slot="header" (click)="selectOrder(order)">
-        <div class="horizontal-align">
-          <ion-label><strong>Orden de Trabajo N° {{ i + 1}}</strong></ion-label>
-          <ion-badge [color]="getOrderStatus(order) === 'EJECUTANDO' ? 'success' : 'warning'" style="color: black;">
+      <ion-item slot="header" (click)="selectOrder(order)" 
+      [class.disabled]="isOrderConfirmed(order)">
+      <div class="horizontal-align">
+        <ion-label><strong>Orden de Trabajo N° {{ i + 1}}</strong></ion-label>
+        <ion-badge 
+            [color]="getOrderStatus(order) === 'EJECUTANDO' ? 'success' 
+                    : getOrderStatus(order) === 'PENDIENTE' ? 'warning' 
+                    : 'danger'" 
+            style="color: black;">
             {{ getOrderStatus(order) }}
-          </ion-badge>
-        </div>
-      </ion-item>
+      </ion-badge>
+      </div>
+    </ion-item>
       <div class="ion-padding" slot="content" *ngIf="selectedWorkOrder === order">
         <ion-label><strong>Labor: </strong>{{ selectedWorkOrder.work_name }}</ion-label>
         <ion-label>&nbsp;&nbsp;</ion-label> <!-- Agregamos espacio en blanco -->

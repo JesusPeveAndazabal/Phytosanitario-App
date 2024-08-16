@@ -35,22 +35,29 @@ export class ConfigNetComponent {
   }
 
   async conectarRedWifi() {
-    try {
-      const result = await this.conectarConRed(this.selectedNetwork.ssid, this.password);
-      console.log("RED SELECCIONADA", this.selectedNetwork.ssid);
-      if (result.success) {
-        this.connectedNetwork = this.selectedNetwork;  // Guardar la red conectada
-        this.resetPassword();
-        this.mostrarAlerta('Conexión exitosa', `Conectado a la red ${this.selectedNetwork.ssid}`);
-      } else {
-        this.mostrarAlerta('Error de conexión', 'No se pudo conectar a la red.');
-      }
-    } catch (error) {
-      this.mostrarAlerta('Error', 'Ocurrió un error al intentar conectar a la red.');
+
+    if (!this.selectedNetwork || !this.selectedNetwork.ssid || !this.password) {
+      console.error('Debe seleccionar una red WiFi y proporcionar una contraseña.');
+      return;
     }
+
+    ipcRenderer.invoke('connect-wifi', { ssid: this.selectedNetwork.ssid, password: this.password })
+      .then((response: any) => {
+        if (response.success) {
+          this.connectedNetwork = this.selectedNetwork;  // Guardar la red conectada
+          this.resetPassword();
+          console.log(`Conectado exitosamente a la red WiFi ${this.selectedNetwork.ssid}`);
+        } else {
+          console.error(`Error al conectar a la red WiFi ${this.selectedNetwork.ssid}:`, response.error);
+        }
+      })
+      .catch((error: any) => {
+        console.error(`Error al conectar a la red WiFi ${this.selectedNetwork.ssid}:`, error);
+      });
+    
   }
   
-
+ 
   conectarConRed(ssid: string, password: string): Promise<{ success: boolean }> {
     // Lógica para conectar con la red WiFi
     return Promise.resolve({ success: true }); // Simulación de resultado exitoso

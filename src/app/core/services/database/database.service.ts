@@ -61,6 +61,7 @@ export class DatabaseService extends ElectronService {
         let db = new instance.sqlite.Database(instance.file);
         return process.nextTick(() => resolve(db));
       } else {
+          localStorage.clear();
           console.log("Creating DB file...");
           instance.fs.openSync(instance.file, "w");
           let db = new instance.sqlite.Database(instance.file);
